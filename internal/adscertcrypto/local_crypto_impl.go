@@ -5,8 +5,8 @@ import (
 	"crypto/sha256"
 	"fmt"
 
-	"github.com/IABTechLab/adscert_server/internal/adscertcounterparty"
-	"github.com/IABTechLab/adscert_server/internal/formats"
+	"github.com/IABTechLab/adscert/internal/adscertcounterparty"
+	"github.com/IABTechLab/adscert/internal/formats"
 	"github.com/golang/glog"
 )
 

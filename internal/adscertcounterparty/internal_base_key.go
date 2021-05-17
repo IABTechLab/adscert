@@ -4,7 +4,7 @@ import (
 	"crypto/rand"
 	"fmt"
 
-	"github.com/IABTechLab/adscert_server/internal/formats"
+	"github.com/IABTechLab/adscert/internal/formats"
 	"github.com/golang/glog"
 	"golang.org/x/crypto/curve25519"
 )
