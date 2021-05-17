@@ -6,7 +6,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/IABTechLab/adscert_server/internal/adscertcounterparty"
+	"github.com/IABTechLab/adscert/internal/adscertcounterparty"
 	"github.com/golang/glog"
 	"golang.org/x/crypto/curve25519"
 )

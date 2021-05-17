@@ -1,8 +1,8 @@
 package adscert
 
 import (
-	"github.com/IABTechLab/adscert_server/internal/adscert"
-	"github.com/IABTechLab/adscert_server/internal/adscertcrypto"
+	"github.com/IABTechLab/adscert/internal/adscert"
+	"github.com/IABTechLab/adscert/internal/adscertcrypto"
 )
 
 type adsCertVerifier struct {

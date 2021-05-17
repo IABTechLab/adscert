@@ -7,7 +7,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/IABTechLab/adscert_server/internal/formats"
+	"github.com/IABTechLab/adscert/internal/formats"
 	"github.com/golang/glog"
 )
 

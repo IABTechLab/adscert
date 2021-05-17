@@ -3,7 +3,7 @@ package adscert
 import (
 	crypto_rand "crypto/rand"
 
-	"github.com/IABTechLab/adscert_server/internal/adscertcrypto"
+	"github.com/IABTechLab/adscert/internal/adscertcrypto"
 )
 
 // AuthenticatedConnectionsSigner generates a signature intended for the

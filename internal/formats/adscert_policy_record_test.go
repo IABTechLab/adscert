@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/IABTechLab/adscert_server/internal/formats"
+	"github.com/IABTechLab/adscert/internal/formats"
 	"github.com/google/go-cmp/cmp"
 )
 
