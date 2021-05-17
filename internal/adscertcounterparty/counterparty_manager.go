@@ -67,7 +67,7 @@ type counterpartyManager struct {
 
 func NewCounterpartyManager(dnsResolver DNSResolver, base64PrivateKeys []string) CounterpartyAPI {
 	cm := &counterpartyManager{
-		ticker:      time.NewTicker(30 * time.Second), // Make this configurable.
+		ticker:      time.NewTicker(30 * time.Second), //TODO Make this configurable.
 		wakeUp:      make(chan struct{}, 1),
 		dnsResolver: dnsResolver,
 	}

@@ -10,18 +10,15 @@ type adsCertVerifier struct {
 	verifier adscert.AuthenticatedConnectionsSigner
 }
 
-func NewAdsCertVerifier(domains []string) adsCertVerifier {
+func NewAdsCertVerifier(domains []string, privateKeys []string) adsCertVerifier {
 	var av adsCertVerifier
 	// TODO use domains to create allowlist of messages to verify
-	// and domains to lookup
+	// which domains to allow verfication on
 	av.domains = domains
 
-	// TODO: Verify private keys are not needed on server side
-	privateKeysBase64 := adscertcrypto.GenerateFakePrivateKeysForTesting(domains[0])
-
-	// TODO: support multiple domains in dns resolver and assocaited keys
+	// TODO: support multiple domains in dns resolver and associated keys
 	av.verifier = adscert.NewAuthenticatedConnectionsSigner(
-		adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(domains[0], privateKeysBase64, false))
+		adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(domains[0], privateKeys, false))
 
 	return av
 }
@@ -45,7 +42,7 @@ type adsCertSigner struct {
 func NewAdsCertSigner(privateKeys []string, originDomain string) *adsCertSigner {
 	as := new(adsCertSigner)
 
-	// TODO: Why is this take an array of keys?
+	// TODO: Why does this take an array of keys?
 	as.signer = adscert.NewAuthenticatedConnectionsSigner(
 		adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(originDomain, privateKeys, false))
 
