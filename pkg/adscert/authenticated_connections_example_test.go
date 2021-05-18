@@ -15,6 +15,27 @@ func ExampleAuthenticatedConnectionsSigner_SignAuthenticatedConnection() {
 	signer := adscert.NewAuthenticatedConnectionsSigner(signatory)
 
 	// TODO: Add ability to seed PRNG for nonce and clock to generate deterministic results.
+	//
+	// Curtis notes:
+	// 
+	// # Clock interface
+	// We can either use an existing project such as https://github.com/benbjohnson/clock to
+	// provide this interface, or we can provide our own interface.  There are two areas where
+	// the existing project could be useful:
+	//
+	// 1) providing an interface for Clock.Now() to inject a stable timestamp generator.
+	// 2) providing an interface to obtain a mockable Ticker that can be programmatically
+	//    triggered.
+	//
+	// Since the benbjohnson/clock module doesn't depend on any other modules, I'm inclined
+	// to say that this would be OK to include.
+	//	
+	// # PRNG seed or mock PRNG
+	// See the "crypto/rand" package.
+	// Reader is a global, shared instance of a cryptographically secure random number generator
+	// and is an instance of io.Reader.  It can be overwritten with a reference to an alternative
+	// implementation (which seems to be frightfully insecure and one of the reasons why supply
+	// chain attacks are an important risk to mitigate). 
 	signatory.SynchronizeForTesting("destination-verifier.com")
 
 	// Determine the request parameters to sign.
@@ -45,7 +66,10 @@ func ExampleAuthenticatedConnectionsSigner_VerifyAuthenticatedConnection() {
 
 	// Determine the request parameters to sign.
 	// Destination URL must be assembled by application based on path, HTTP Host header.
-	// TODO: assemble sample code to show this based on HTTP package.
+	// See examples/verifier/example-verifier.go for more details on how to construct this URL.
+	// Obtaining the invoked hostname may be impacted by reverse proxy servers, load balancing
+	// software, CDNs, or other middleware solutions, so some experimentation may be needed
+	// to customize URL reconstruction within your environment.
 	destinationURL := "https://ads.destination-verifier.com/request-ads"
 	body := []byte("{'id': '12345'}")
 	messageToVerify := "from=origin-signer.com&from_key=a1b2c3&invoking=destination-verifier.com&nonce=ZRC3FNU3skLS&status=0&timestamp=210426T163109&to=destination-verifier.com&to_key=a1b2c3; sigb=HLIYY-dTGn6D&sigu=Sbe5OWsUlFXU"
