@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/IABTechLab/adscert/internal/adscert"
 	"github.com/IABTechLab/adscert/internal/adscertcrypto"
+	"github.com/IABTechLab/adscert/pkg/adscert"
 )
 
 func ExampleAuthenticatedConnectionsSigner_SignAuthenticatedConnection() {
