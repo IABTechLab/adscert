@@ -7,11 +7,6 @@ Ads.cert is an open source implementation of the ads.cert 2.0 protocol.
 
 TODO: bit more
 
-## Quick Start
-
-TODO: Write simple example of integrating
-Learn more -> go docs
-
 ## Examples
 
 ### Start the verifier
