@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/IABTechLab/adscert/internal/adscert"
 	"github.com/IABTechLab/adscert/internal/adscertcrypto"
+	"github.com/IABTechLab/adscert/pkg/adscert"
 	"github.com/golang/glog"
 )
 
