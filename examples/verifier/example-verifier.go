@@ -6,8 +6,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/IABTechLab/adscert/internal/adscertcrypto"
 	"github.com/IABTechLab/adscert/pkg/adscert"
+	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
 	"github.com/golang/glog"
 )
 

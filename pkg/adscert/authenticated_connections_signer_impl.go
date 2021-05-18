@@ -7,8 +7,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/IABTechLab/adscert/internal/adscertcrypto"
 	"github.com/IABTechLab/adscert/internal/formats"
+	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
 	"golang.org/x/net/publicsuffix"
 )
 
