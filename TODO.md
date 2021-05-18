@@ -7,3 +7,4 @@
 - Create release process to cut releases and versions for go mod
 - Build and host keygen tool in gitlab actions
 - Review internal and see if any can be exposed to bring offering past ephermeral in process stage
+- DNS audit trail
