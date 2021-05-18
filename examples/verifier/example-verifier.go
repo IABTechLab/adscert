@@ -1,12 +1,61 @@
 package main
 
 import (
-	"github.com/IABTechLab/adscert"
-	"github.com/davecgh/go-spew/spew"
+	"flag"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+
+	"github.com/IABTechLab/adscert/internal/adscert"
+	"github.com/IABTechLab/adscert/internal/adscertcrypto"
+	"github.com/golang/glog"
+)
+
+var (
+	hostCallsign            = flag.String("host_callsign", "", "ads.cert callsign for the originating party")
+	useFakeKeyGeneratingDNS = flag.Bool("use_fake_key_generating_dns_for_testing", false,
+		"When enabled, this code skips performing real DNS lookups and instead simulates DNS-based keys by generating a key pair based on the domain name.")
 )
 
 func main() {
-	domains := []string{"_delivery._adscert.ssai-serving.tk", "_delivery._adscert.exchange-holding-company.ga"}
-	adsCertVerifier := adscert.NewAdsCertVerifier(domains)
-	spew.Dump(adsCertVerifier)
+	flag.Parse()
+
+	glog.Info("Starting demo server.")
+
+	privateKeysBase64 := adscertcrypto.GenerateFakePrivateKeysForTesting(*hostCallsign)
+
+	demoServer := &DemoServer{
+		Signer: adscert.NewAuthenticatedConnectionsSigner(
+			adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(*hostCallsign, privateKeysBase64, *useFakeKeyGeneratingDNS)),
+	}
+	http.HandleFunc("/request", demoServer.HandleRequest)
+	http.ListenAndServe(":8090", nil)
+}
+
+type DemoServer struct {
+	Signer adscert.AuthenticatedConnectionsSigner
+}
+
+func (s *DemoServer) HandleRequest(w http.ResponseWriter, req *http.Request) {
+	signatureHeaders := req.Header["X-Ads-Cert-Auth"]
+
+	// Make a copy of the URL struct so that we can reconstruct what the client sent.
+	reconstructedURL := *req.URL
+	reconstructedURL.Scheme = "http" // TODO: Fix so that this can handle HTTPS too.
+	reconstructedURL.Host = req.Host
+
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		req.Response.Status = "500 Server Error"
+		return
+	}
+
+	verification, err := s.Signer.VerifyAuthenticatedConnection(
+		adscert.AuthenticatedConnectionSignatureParams{
+			DestinationURL:           reconstructedURL.String(),
+			RequestBody:              body,
+			SignatureMessageToVerify: signatureHeaders,
+		})
+
+	fmt.Fprintf(w, "You invoked %s with headers %v and verification %v %v\n", reconstructedURL.String(), req.Header, verification.BodyValid, verification.URLValid)
 }
