@@ -23,6 +23,7 @@ func (c *authenticatedConnectionsSigner) SignAuthenticatedConnection(params Auth
 	response := AuthenticatedConnectionSignature{}
 	signatureRequest := adscertcrypto.AuthenticatedConnectionSigningPackage{}
 
+	// TODO Force to UTC
 	signatureRequest.Timestamp = time.Now().Format("060102T150405")
 
 	if signatureRequest.Nonce, err = c.generateNonce(); err != nil {
