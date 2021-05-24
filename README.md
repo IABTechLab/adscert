@@ -3,9 +3,9 @@
 ![Build/Test](https://github.com/IABTechLab/adscert/actions/workflows/go.yml/badge.svg)
 
 
-Ads.cert is an open source implementation of the ads.cert 2.0 protocol.
+ads.cert is an open source implementation of the [ads.cert Authenticated Connections protocol](https://docs.google.com/document/d/1Aq2wpQDRnCLsNWxKsiEqrBZPYWMPdPNP_XyMeJwM748/edit?usp=sharing).
 
-TODO: bit more
+Please see the [ads.cert Open Source Software Implementer's Guide](https://docs.google.com/document/d/13lYrBBI66Wjq9woDAoPwXPWRZaMXglTE9wdoH-uW_nM/edit?usp=sharing) for background on the Authenticated Connections protocol, guidance on how to use this software package, and directions for publishing your public key(s) via DNS.
 
 ## Examples
 
