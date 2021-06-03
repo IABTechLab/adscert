@@ -23,7 +23,7 @@ func (c *authenticatedConnectionsSigner) SignAuthenticatedConnection(params Auth
 	response := AuthenticatedConnectionSignature{}
 	signatureRequest := adscertcrypto.AuthenticatedConnectionSigningPackage{}
 
-	// Time is UTC.
+	// TODO Force to UTC
 	signatureRequest.Timestamp = time.Now().Format("060102T150405")
 
 	if signatureRequest.Nonce, err = c.generateNonce(); err != nil {
@@ -52,11 +52,7 @@ func (c *authenticatedConnectionsSigner) VerifyAuthenticatedConnection(params Au
 	if err := assembleRequestInfo(&params, &verificationRequest.RequestInfo); err != nil {
 		return response, fmt.Errorf("error parsing request URL: %v", err)
 	}
-
-	// TODO: change this so that the verification request can pass multiple signature messages.
-	// Let the signatory pick through the multiple messages (if present) and figure out what
-	// to do with them.
-	verificationRequest.SignatureMessage = params.SignatureMessageToVerify[0]
+	verificationRequest.SignatureMessage = params.SignatureMessageToVerify[0] // TODO fix me
 
 	verifyReply, err := c.signatory.VerifySigningPackage(&verificationRequest)
 	if err != nil {
@@ -72,7 +68,7 @@ func (c *authenticatedConnectionsSigner) VerifyAuthenticatedConnection(params Au
 func assembleRequestInfo(params *AuthenticatedConnectionSignatureParams, requestInfo *adscertcrypto.RequestInfo) error {
 	parsedURL, tldPlusOne, err := parseURLComponents(params.DestinationURL)
 	if err != nil {
-		// TODO: switch to using a named error message indicating URL parse failure.
+		// TODO: generate a signature message indicating URL parse failure.
 		return fmt.Errorf("unable to parse destination URL: %v", err)
 	}
 

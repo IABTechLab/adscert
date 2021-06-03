@@ -66,14 +66,6 @@ type counterpartyManager struct {
 }
 
 func NewCounterpartyManager(dnsResolver DNSResolver, base64PrivateKeys []string) CounterpartyAPI {
-	// Curtis notes:
-	//
-	// The current state of the counterparty manager isn't ideal since it doesn't have a good
-	// separation of concerns.  The design doc outlines a better structure where the DNS crawl
-	// process and shared secret indexing process are split out from each other, letting the
-	// counterparty manager focus on just maintaining a replica of the shared secret cache +
-	// the DNS crawl interest list.
-
 	cm := &counterpartyManager{
 		ticker:      time.NewTicker(30 * time.Second), //TODO Make this configurable.
 		wakeUp:      make(chan struct{}, 1),
@@ -87,16 +79,7 @@ func NewCounterpartyManager(dnsResolver DNSResolver, base64PrivateKeys []string)
 	}
 	cm.myPrivateKeys = myPrivateKeys
 
-	// TODO: properly be able to identify the current private key to use.
-	//
-	// Curtis notes:
-	// See the design doc for the keyring configuration file concepts and key lifecycle state
-	// machine. Basically we want to use the key in the KEY_STATUS_ACTIVE_PRIMARY state, as
-	// it has been published in DNS for adequate time for counterparties verifying our signature
-	// to have crawled it from DNS.
-	//
-	// Ideally rotation to a new signing key doesn't happen all-at-once but can instead be rolled
-	// out in a controlled fashion.
+	// TODO: properly be able to identify the current private key to use
 	for _, privateKey := range cm.myPrivateKeys {
 		cm.currentPrivateKey = privateKey.alias
 		break
