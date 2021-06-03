@@ -4,9 +4,12 @@ import (
 	"bufio"
 	"bytes"
 	crypto_rand "crypto/rand"
+	"crypto/sha256"
 	"flag"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/IABTechLab/adscert/pkg/adscert"
@@ -23,6 +26,8 @@ var (
 
 	originCallsign = flag.String("origin_callsign", "", "ads.cert callsign for the originating party")
 
+	logFile = flag.String("log_file", "", "write signature and hashes to file for offline verification")
+
 	useFakeKeyGeneratingDNS = flag.Bool("use_fake_key_generating_dns_for_testing", false,
 		"When enabled, this code skips performing real DNS lookups and instead simulates DNS-based keys by generating a key pair based on the domain name.")
 )
@@ -34,6 +39,18 @@ func main() {
 
 	privateKeysBase64 := adscertcrypto.GenerateFakePrivateKeysForTesting(*originCallsign)
 
+	var fileLogger *log.Logger
+	if *logFile != "" {
+		file, err := os.OpenFile(*logFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+		if err != nil {
+			glog.Fatal(err)
+		}
+		defer file.Close()
+
+		fileLogger = log.New(file, "", 0)
+		log.SetOutput(file)
+	}
+
 	demoClient := DemoClient{
 		Signer: adscert.NewAuthenticatedConnectionsSigner(
 			adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(*originCallsign, privateKeysBase64, *useFakeKeyGeneratingDNS), crypto_rand.Reader),
@@ -44,6 +61,8 @@ func main() {
 
 		ActuallySendRequest: *sendRequests,
 		Ticker:              time.NewTicker(*frequency),
+
+		FileLogger: fileLogger,
 	}
 	demoClient.StartRequestLoop()
 }
@@ -57,6 +76,8 @@ type DemoClient struct {
 
 	ActuallySendRequest bool
 	Ticker              *time.Ticker
+
+	FileLogger *log.Logger
 }
 
 func (c *DemoClient) StartRequestLoop() {
@@ -87,8 +108,15 @@ func (c *DemoClient) initiateRequest() error {
 
 	glog.Infof("Requesting URL %s %s with headers %v", req.Method, req.URL, req.Header)
 
+	if *logFile != "" {
+		urlHash := sha256.Sum256([]byte(c.DestinationURL))
+		bodyHash := sha256.Sum256([]byte(c.Body))
+
+		c.FileLogger.Printf("%s,%s,%s", urlHash, bodyHash, signature.SignatureMessages)
+	}
+
 	if c.ActuallySendRequest {
-		glog.Info("Sendng request...")
+		glog.Info("Sending request...")
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			return fmt.Errorf("error sending HTTP request: %v", err)

@@ -1,4 +1,4 @@
-# ads.cert 
+# ads.cert
 
 ![Build/Test](https://github.com/IABTechLab/adscert/actions/workflows/go.yml/badge.svg)
 
@@ -11,8 +11,8 @@ This is a proof of concept and not meant for use in its current form.
 --host_callsign is the domain of the verifying server
 
 In this example we use exchange-holding-company.ga which
-is leveraged in this insecure example to generate a consistent 
-private key.  
+is leveraged in this insecure example to generate a consistent
+private key.
 
 Note: The private key generated here should never be used in a production environment.  This is for demo purposes only.
 
@@ -52,6 +52,14 @@ go run examples/signer/example-signer.go --frequency 5s --logtostderr --body '{"
 ```
 
 The two services will output log to stderr
+
+### Sign requests and log to file
+Alternatively, you can start the signing server to periodically log the hashed url and request to a log file that can be verified offline.
+
+Start the signing server to log to logfile path.
+```
+go run examples/signer/example-signer.go --frequency 5s --logtostderr --body '{"sample": "request"}' --origin_callsign=ssai-serving.tk --url='http://ads.ad-exchange.tk:8090/request?param1=example&param2=another'
+```
 
 
 ## Contributing
