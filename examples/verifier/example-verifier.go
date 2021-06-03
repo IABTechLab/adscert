@@ -40,8 +40,11 @@ func (s *DemoServer) HandleRequest(w http.ResponseWriter, req *http.Request) {
 	signatureHeaders := req.Header["X-Ads-Cert-Auth"]
 
 	// Make a copy of the URL struct so that we can reconstruct what the client sent.
+	// Obtaining the invoked hostname may be impacted by reverse proxy servers, load balancing
+	// software, CDNs, or other middleware solutions, so some experimentation may be needed
+	// to customize URL reconstruction within your environment.
 	reconstructedURL := *req.URL
-	reconstructedURL.Scheme = "http" // TODO: Fix so that this can handle HTTPS too.
+	reconstructedURL.Scheme = "http" // For testing only: production systems would use https.
 	reconstructedURL.Host = req.Host
 
 	body, err := ioutil.ReadAll(req.Body)

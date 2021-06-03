@@ -23,7 +23,10 @@ type AuthenticatedConnectionVerificationPackage struct {
 }
 
 type AuthenticatedConnectionVerificationResponse struct {
-	// TODO: provide more details on verification
 	BodyValid bool
 	URLValid  bool
+
+	// Curtis notes:
+	// See the comments on AuthenticatedConnectionVerification for requirements about what this
+	// API needs to return.
 }

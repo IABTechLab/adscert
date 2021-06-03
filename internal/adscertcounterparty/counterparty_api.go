@@ -47,6 +47,7 @@ type SharedSecret interface {
 }
 
 func (cs CounterpartyStatus) String() string {
-	// TODO: figure out something better and figure out how much info to disclose.
+	// TODO: This was just a proof-of-concept for signature statuses. The design doc has a more
+	// up-to-date representation of structured outcome codes.
 	return fmt.Sprintf("%d", cs)
 }
