@@ -24,7 +24,7 @@ TXT "v=adcrtd k=x25519 h=sha256 p=bBvfZUTPDGIFiOq-WivBoOEYWM5mA1kaEfpDaoYtfHg"
 
 Start the verifying server
 ```
-go run examples/verifier/example-verifier.go --host_callsign=exchange-holding-company.ga --logtostderr
+go run examples/verifier/server/verifier-server.go --host_callsign=exchange-holding-company.ga --logtostderr
 ```
 
 ### Start the signer
@@ -54,13 +54,18 @@ go run examples/signer/example-signer.go --frequency 5s --logtostderr --body '{"
 The two services will output log to stderr
 
 ### Sign requests and log to file
-Alternatively, you can start the signing server to periodically log the hashed url and request to a log file that can be verified offline.
+Alternatively, you can start the signing server to periodically log the invocating url, signature, hashed url, and hashed request to a log file that can be verified offline.
 
 Start the signing server to log to logfile path.
 ```
-go run examples/signer/example-signer.go --frequency 5s --logtostderr --body '{"sample": "request"}' --origin_callsign=ssai-serving.tk --url='http://ads.ad-exchange.tk:8090/request?param1=example&param2=another'
+go run examples/signer/example-signer.go --frequency 5s --logtostderr --body '{"sample": "request"}' --origin_callsign=ssai-serving.tk --url='http://ads.ad-exchange.tk:8090/request?param1=example&param2=another' --log_file=requests.log
 ```
 
+### Verify log file
+The log parser verifier will verify all entries in the log file and output a summary.
+```
+go run examples/verifier/log-parser/verifier-parser.go --host_callsign=exchange-holding-company.ga --logtostderr --log_file=requests.log
+```
 
 ## Contributing
 Report bugs, request features and suggest improvements [on Github](https://github.com/InteractiveAdvertisingBureau/adscert_server/issues)

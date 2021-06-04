@@ -5,6 +5,7 @@ import (
 	"bytes"
 	crypto_rand "crypto/rand"
 	"crypto/sha256"
+	"encoding/base64"
 	"flag"
 	"fmt"
 	"log"
@@ -12,6 +13,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/IABTechLab/adscert/internal/utils"
 	"github.com/IABTechLab/adscert/pkg/adscert"
 	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
 	"github.com/golang/glog"
@@ -111,8 +113,13 @@ func (c *DemoClient) initiateRequest() error {
 	if *logFile != "" {
 		urlHash := sha256.Sum256([]byte(c.DestinationURL))
 		bodyHash := sha256.Sum256([]byte(c.Body))
-
-		c.FileLogger.Printf("%s,%s,%s", urlHash, bodyHash, signature.SignatureMessages)
+		_, tldPlusOne, err := utils.ParseURLComponents(c.DestinationURL)
+		if err != nil {
+			return fmt.Errorf("error parsing destination url: %s", err)
+		}
+		invocationHostname := tldPlusOne
+		fmt.Println(signature.SignatureMessages)
+		c.FileLogger.Printf("%s,%s,%s,%s", invocationHostname, signature.SignatureMessages[0], base64.StdEncoding.EncodeToString(urlHash[:]), base64.StdEncoding.EncodeToString(bodyHash[:]))
 	}
 
 	if c.ActuallySendRequest {

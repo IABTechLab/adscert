@@ -4,12 +4,11 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"io"
-	"net/url"
 	"time"
 
 	"github.com/IABTechLab/adscert/internal/formats"
+	"github.com/IABTechLab/adscert/internal/utils"
 	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
-	"golang.org/x/net/publicsuffix"
 )
 
 type authenticatedConnectionsSigner struct {
@@ -49,8 +48,8 @@ func (c *authenticatedConnectionsSigner) SignAuthenticatedConnection(params Auth
 
 	return response, nil
 }
-
 func (c *authenticatedConnectionsSigner) VerifyAuthenticatedConnection(params AuthenticatedConnectionSignatureParams) (AuthenticatedConnectionVerification, error) {
+
 	response := AuthenticatedConnectionVerification{}
 	verificationRequest := adscertcrypto.AuthenticatedConnectionVerificationPackage{}
 
@@ -74,8 +73,23 @@ func (c *authenticatedConnectionsSigner) VerifyAuthenticatedConnection(params Au
 	return response, nil
 }
 
+func (c *authenticatedConnectionsSigner) VerifyAuthenticatedConnectionWithPackage(verificationRequest adscertcrypto.AuthenticatedConnectionVerificationPackage) (AuthenticatedConnectionVerification, error) {
+
+	response := AuthenticatedConnectionVerification{}
+
+	verifyReply, err := c.signatory.VerifySigningPackage(&verificationRequest)
+	if err != nil {
+		return response, fmt.Errorf("error verifying signing package: %v", err)
+	}
+
+	response.BodyValid = verifyReply.BodyValid
+	response.URLValid = verifyReply.URLValid
+
+	return response, nil
+}
+
 func assembleRequestInfo(params *AuthenticatedConnectionSignatureParams, requestInfo *adscertcrypto.RequestInfo) error {
-	parsedURL, tldPlusOne, err := parseURLComponents(params.DestinationURL)
+	parsedURL, tldPlusOne, err := utils.ParseURLComponents(params.DestinationURL)
 	if err != nil {
 		// TODO: switch to using a named error message indicating URL parse failure.
 		return fmt.Errorf("unable to parse destination URL: %v", err)
@@ -90,18 +104,6 @@ func assembleRequestInfo(params *AuthenticatedConnectionSignatureParams, request
 	copy(requestInfo.BodyHash[:], bodyHash[:])
 
 	return nil
-}
-
-func parseURLComponents(destinationURL string) (*url.URL, string, error) {
-	parsedDestURL, err := url.Parse(destinationURL)
-	if err != nil {
-		return nil, "", err
-	}
-	tldPlusOne, err := publicsuffix.EffectiveTLDPlusOne(parsedDestURL.Hostname())
-	if err != nil {
-		return nil, "", err
-	}
-	return parsedDestURL, tldPlusOne, nil
 }
 
 func (c *authenticatedConnectionsSigner) generateNonce() (string, error) {

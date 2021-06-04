@@ -13,6 +13,7 @@ type AuthenticatedConnectionsSigner interface {
 	SignAuthenticatedConnection(params AuthenticatedConnectionSignatureParams) (AuthenticatedConnectionSignature, error)
 
 	VerifyAuthenticatedConnection(params AuthenticatedConnectionSignatureParams) (AuthenticatedConnectionVerification, error)
+	VerifyAuthenticatedConnectionWithPackage(params adscertcrypto.AuthenticatedConnectionVerificationPackage) (AuthenticatedConnectionVerification, error)
 }
 
 // NewAuthenticatedConnectionsSigner creates a new signer instance for creating
