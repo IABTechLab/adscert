@@ -118,7 +118,7 @@ func (c *DemoClient) initiateRequest() error {
 			return fmt.Errorf("error parsing destination url: %s", err)
 		}
 		invocationHostname := tldPlusOne
-		fmt.Println(signature.SignatureMessages)
+
 		c.FileLogger.Printf("%s,%s,%s,%s", invocationHostname, signature.SignatureMessages[0], base64.StdEncoding.EncodeToString(urlHash[:]), base64.StdEncoding.EncodeToString(bodyHash[:]))
 	}
 
