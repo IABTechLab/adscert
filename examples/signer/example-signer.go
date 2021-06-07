@@ -41,7 +41,7 @@ func main() {
 
 	privateKeysBase64 := adscertcrypto.GenerateFakePrivateKeysForTesting(*originCallsign)
 
-	var fileLogger *log.Logger
+	var signatureFileLogger *log.Logger
 	if *signatureLogFile != "" {
 		file, err := os.OpenFile(*signatureLogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 		if err != nil {
@@ -49,7 +49,7 @@ func main() {
 		}
 		defer file.Close()
 
-		fileLogger = log.New(file, "", 0)
+		signatureFileLogger = log.New(file, "", 0)
 	}
 
 	demoClient := DemoClient{
@@ -63,7 +63,7 @@ func main() {
 		ActuallySendRequest: *sendRequests,
 		Ticker:              time.NewTicker(*frequency),
 
-		FileLogger: fileLogger,
+		SignatureFileLogger: signatureFileLogger,
 	}
 	demoClient.StartRequestLoop()
 }
@@ -78,7 +78,7 @@ type DemoClient struct {
 	ActuallySendRequest bool
 	Ticker              *time.Ticker
 
-	FileLogger *log.Logger
+	SignatureFileLogger *log.Logger
 }
 
 func (c *DemoClient) StartRequestLoop() {
@@ -109,16 +109,15 @@ func (c *DemoClient) initiateRequest() error {
 
 	glog.Infof("Requesting URL %s %s with headers %v", req.Method, req.URL, req.Header)
 
-	if c.FileLogger != nil {
-		urlHash := sha256.Sum256([]byte(c.DestinationURL))
-		bodyHash := sha256.Sum256([]byte(c.Body))
-		_, tldPlusOne, err := utils.ParseURLComponents(c.DestinationURL)
+	if c.SignatureFileLogger != nil {
+		_, invocationHostname, err := utils.ParseURLComponents(c.DestinationURL)
 		if err != nil {
 			return fmt.Errorf("error parsing destination url: %s", err)
 		}
-		invocationHostname := tldPlusOne
+		urlHash := sha256.Sum256([]byte(c.DestinationURL))
+		bodyHash := sha256.Sum256([]byte(c.Body))
 
-		c.FileLogger.Printf("%s,%s,%s,%s", invocationHostname, signature.SignatureMessages[0], base64.StdEncoding.EncodeToString(urlHash[:]), base64.StdEncoding.EncodeToString(bodyHash[:]))
+		c.SignatureFileLogger.Printf("%s,%s,%s,%s", invocationHostname, signature.SignatureMessages[0], base64.StdEncoding.EncodeToString(urlHash[:]), base64.StdEncoding.EncodeToString(bodyHash[:]))
 	}
 
 	if c.ActuallySendRequest {
