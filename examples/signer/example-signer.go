@@ -28,7 +28,7 @@ var (
 
 	originCallsign = flag.String("origin_callsign", "", "ads.cert callsign for the originating party")
 
-	logFile = flag.String("log_file", "", "write signature and hashes to file for offline verification")
+	signatureLogFile = flag.String("signature_log_file", "", "write signature and hashes to file for offline verification")
 
 	useFakeKeyGeneratingDNS = flag.Bool("use_fake_key_generating_dns_for_testing", false,
 		"When enabled, this code skips performing real DNS lookups and instead simulates DNS-based keys by generating a key pair based on the domain name.")
@@ -42,15 +42,14 @@ func main() {
 	privateKeysBase64 := adscertcrypto.GenerateFakePrivateKeysForTesting(*originCallsign)
 
 	var fileLogger *log.Logger
-	if *logFile != "" {
-		file, err := os.OpenFile(*logFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	if *signatureLogFile != "" {
+		file, err := os.OpenFile(*signatureLogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 		if err != nil {
 			glog.Fatal(err)
 		}
 		defer file.Close()
 
 		fileLogger = log.New(file, "", 0)
-		log.SetOutput(file)
 	}
 
 	demoClient := DemoClient{
@@ -110,7 +109,7 @@ func (c *DemoClient) initiateRequest() error {
 
 	glog.Infof("Requesting URL %s %s with headers %v", req.Method, req.URL, req.Header)
 
-	if *logFile != "" {
+	if c.FileLogger != nil {
 		urlHash := sha256.Sum256([]byte(c.DestinationURL))
 		bodyHash := sha256.Sum256([]byte(c.Body))
 		_, tldPlusOne, err := utils.ParseURLComponents(c.DestinationURL)

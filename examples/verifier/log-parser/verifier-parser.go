@@ -16,7 +16,7 @@ var (
 	hostCallsign            = flag.String("host_callsign", "", "ads.cert callsign for the originating party")
 	useFakeKeyGeneratingDNS = flag.Bool("use_fake_key_generating_dns_for_testing", false,
 		"When enabled, this code skips performing real DNS lookups and instead simulates DNS-based keys by generating a key pair based on the domain name.")
-	logFile = flag.String("log_file", "", "Verify all logged signatures and hashes in file")
+	signatureLogFile = flag.String("signature_log_file", "", "Verify all logged signatures and hashes in file")
 )
 
 func main() {
@@ -24,7 +24,7 @@ func main() {
 
 	glog.Info("Verifying log file.")
 
-	file, err := os.Open(*logFile)
+	file, err := os.Open(*signatureLogFile)
 	if err != nil {
 		glog.Fatalf("Failed to open file: %s", err)
 	}

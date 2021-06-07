@@ -56,15 +56,15 @@ The two services will output log to stderr
 ### Sign requests and log to file
 Alternatively, you can start the signing server to periodically log the invocating url, signature, hashed url, and hashed request to a log file that can be verified offline.
 
-Start the signing server to log to logfile path.
+Start the signing server to log to signature_log_file path.
 ```
-go run examples/signer/example-signer.go --frequency 5s --logtostderr --body '{"sample": "request"}' --origin_callsign=ssai-serving.tk --url='http://ads.ad-exchange.tk:8090/request?param1=example&param2=another' --log_file=requests.log
+go run examples/signer/example-signer.go --frequency 5s --logtostderr --body '{"sample": "request"}' --origin_callsign=ssai-serving.tk --url='http://ads.ad-exchange.tk:8090/request?param1=example&param2=another' --signature_log_file=requests.log
 ```
 
 ### Verify log file
 The log parser verifier will verify all entries in the log file and output a summary.
 ```
-go run examples/verifier/log-parser/verifier-parser.go --host_callsign=exchange-holding-company.ga --logtostderr --log_file=requests.log
+go run examples/verifier/log-parser/verifier-parser.go --host_callsign=exchange-holding-company.ga --logtostderr --signature_log_file=requests.log
 ```
 
 ## Contributing
