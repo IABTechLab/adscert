@@ -35,10 +35,7 @@ func main() {
 		adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(*hostCallsign, privateKeysBase64, *useFakeKeyGeneratingDNS),
 	)
 
-	var logCount int
-	var errorCount int
-	var validRequestCount int
-	var validUrlCount int
+	var logCount, parseErrorCount, verifyErrorCount, validRequestCount, validUrlCount int
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -46,14 +43,14 @@ func main() {
 		line := scanner.Text()
 		verificationPackage, err := parseLog(line)
 		if err != nil {
-			errorCount++
+			parseErrorCount++
 			glog.Errorf("Error parsing log: ", err)
 			continue
 		}
 
 		verification, err := signer.VerifyAuthenticatedConnectionWithPackage(*verificationPackage)
 		if err != nil {
-			errorCount++
+			verifyErrorCount++
 			glog.Errorf("unable to verify message: ", err)
 			continue
 		}
@@ -67,7 +64,7 @@ func main() {
 		glog.Infof("Valid Request Body: %t, Valid Request URL: %t", verification.BodyValid, verification.URLValid)
 	}
 
-	glog.Infof("\n--- Summary --- \nlogEntries: %d, errors: %d, validRequests: %d, validUrls: %d", logCount, errorCount, validRequestCount, validUrlCount)
+	glog.Infof("\n--- Summary --- \nlogEntries: %d, parseErrors: %d, verificationErrors: %d, validRequests: %d, validUrls: %d", logCount, parseErrorCount, verifyErrorCount, validRequestCount, validUrlCount)
 
 	if err := scanner.Err(); err != nil {
 		glog.Fatal("Error reading line: %s ", err)
