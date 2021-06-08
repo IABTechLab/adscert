@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	crypto_rand "crypto/rand"
 	"flag"
 	"fmt"
 	"net/http"
@@ -35,7 +36,7 @@ func main() {
 
 	demoClient := DemoClient{
 		Signer: adscert.NewAuthenticatedConnectionsSigner(
-			adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(*originCallsign, privateKeysBase64, *useFakeKeyGeneratingDNS)),
+			adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(*originCallsign, privateKeysBase64, *useFakeKeyGeneratingDNS), crypto_rand.Reader),
 
 		Method:         *method,
 		DestinationURL: *destinationURL,

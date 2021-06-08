@@ -1,23 +1,43 @@
 package adscert_test
 
 import (
+	crypto_rand "crypto/rand"
 	"fmt"
 	"log"
+	"math/rand"
+	"time"
 
 	"github.com/IABTechLab/adscert/pkg/adscert"
 	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
 )
 
-func ExampleAuthenticatedConnectionsSigner_SignAuthenticatedConnection() {
-	adsCertCallsign := "origin-signer.com"
+func prepareAuthentication(adsCertCallsign string, destinationVerifierUrl string) (adscertcrypto.AuthenticatedConnectionsSignatory, *rand.Rand) {
 	signatory := adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(
 		adsCertCallsign, adscertcrypto.GenerateFakePrivateKeysForTesting(adsCertCallsign), true)
-	signer := adscert.NewAuthenticatedConnectionsSigner(signatory)
+
+	// set seed to 0 to retrieve deterministic random reader.
+	randomReader := rand.New(rand.NewSource(0))
+
+	signatory.SynchronizeForTesting(destinationVerifierUrl)
+
+	return signatory, randomReader
+}
+
+// function to return fixed time for testing purpose.
+func customTimeFunc() time.Time {
+	return time.Date(2001, time.January, 1, 1, 1, 1, 1, time.UTC)
+}
+
+func ExampleAuthenticatedConnectionsSigner_SignAuthenticatedConnection() {
+	adsCertCallsign := "origin-signer.com"
+	destinationVerifierUrl := "destination-verifier.com"
+	signatory, randomReader := prepareAuthentication(adsCertCallsign, destinationVerifierUrl)
+	signer := adscert.NewAuthenticatedConnectionsSigner(signatory, randomReader)
 
 	// TODO: Add ability to seed PRNG for nonce and clock to generate deterministic results.
 	//
 	// Curtis notes:
-	// 
+	//
 	// # Clock interface
 	// We can either use an existing project such as https://github.com/benbjohnson/clock to
 	// provide this interface, or we can provide our own interface.  There are two areas where
@@ -29,14 +49,13 @@ func ExampleAuthenticatedConnectionsSigner_SignAuthenticatedConnection() {
 	//
 	// Since the benbjohnson/clock module doesn't depend on any other modules, I'm inclined
 	// to say that this would be OK to include.
-	//	
+	//
 	// # PRNG seed or mock PRNG
 	// See the "crypto/rand" package.
 	// Reader is a global, shared instance of a cryptographically secure random number generator
 	// and is an instance of io.Reader.  It can be overwritten with a reference to an alternative
 	// implementation (which seems to be frightfully insecure and one of the reasons why supply
-	// chain attacks are an important risk to mitigate). 
-	signatory.SynchronizeForTesting("destination-verifier.com")
+	// chain attacks are an important risk to mitigate).
 
 	// Determine the request parameters to sign.
 	destinationURL := "https://ads.destination-verifier.com/request-ads"
@@ -46,13 +65,14 @@ func ExampleAuthenticatedConnectionsSigner_SignAuthenticatedConnection() {
 		adscert.AuthenticatedConnectionSignatureParams{
 			DestinationURL: destinationURL,
 			RequestBody:    body,
+			CustomTime:     customTimeFunc,
 		})
 	if err != nil {
 		log.Fatal("unable to sign message: ", err)
 	}
 
 	fmt.Print("Signature passed via X-Ads-Cert-Auth: ", signature.SignatureMessages)
-	// Output: Signature passed via X-Ads-Cert-Auth: [from=origin-signer.com&from_key=a1b2c3&invoking=destination-verifier.com&nonce=ZRC3FNU3skLS&status=0&timestamp=210426T163109&to=destination-verifier.com&to_key=a1b2c3; sigb=HLIYY-dTGn6D&sigu=Sbe5OWsUlFXU]
+	// Output: Signature passed via X-Ads-Cert-Auth: [from=origin-signer.com&from_key=r-BSNk&invoking=destination-verifier.com&nonce=AZT9wvov_MBB&status=0&timestamp=010101T010101&to=destination-verifier.com&to_key=i-HvLK; sigb=2dtJtvfSVDLX&sigu=gZUNJnfe29cv]
 
 }
 
@@ -60,7 +80,7 @@ func ExampleAuthenticatedConnectionsSigner_VerifyAuthenticatedConnection() {
 	adsCertCallsign := "destination-verifier.com"
 	signatory := adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(
 		adsCertCallsign, adscertcrypto.GenerateFakePrivateKeysForTesting(adsCertCallsign), true)
-	signer := adscert.NewAuthenticatedConnectionsSigner(signatory)
+	signer := adscert.NewAuthenticatedConnectionsSigner(signatory, crypto_rand.Reader)
 
 	signatory.SynchronizeForTesting("origin-signer.com")
 
@@ -70,9 +90,10 @@ func ExampleAuthenticatedConnectionsSigner_VerifyAuthenticatedConnection() {
 	// Obtaining the invoked hostname may be impacted by reverse proxy servers, load balancing
 	// software, CDNs, or other middleware solutions, so some experimentation may be needed
 	// to customize URL reconstruction within your environment.
+	// TODO: assemble sample code to show this based on HTTP package.
 	destinationURL := "https://ads.destination-verifier.com/request-ads"
 	body := []byte("{'id': '12345'}")
-	messageToVerify := "from=origin-signer.com&from_key=a1b2c3&invoking=destination-verifier.com&nonce=ZRC3FNU3skLS&status=0&timestamp=210426T163109&to=destination-verifier.com&to_key=a1b2c3; sigb=HLIYY-dTGn6D&sigu=Sbe5OWsUlFXU"
+	messageToVerify := "from=origin-signer.com&from_key=r-BSNk&invoking=destination-verifier.com&nonce=0MrwlrWfFd8M&status=0&timestamp=210601T145830&to=destination-verifier.com&to_key=i-HvLK; sigb=gbGVdxLF8w0L&sigu=PtcBVz_6JUlP"
 
 	verification, err := signer.VerifyAuthenticatedConnection(
 		adscert.AuthenticatedConnectionSignatureParams{

@@ -1,6 +1,7 @@
 package main
 
 import (
+	crypto_rand "crypto/rand"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -26,7 +27,7 @@ func main() {
 
 	demoServer := &DemoServer{
 		Signer: adscert.NewAuthenticatedConnectionsSigner(
-			adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(*hostCallsign, privateKeysBase64, *useFakeKeyGeneratingDNS)),
+			adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(*hostCallsign, privateKeysBase64, *useFakeKeyGeneratingDNS), crypto_rand.Reader),
 	}
 	http.HandleFunc("/request", demoServer.HandleRequest)
 	http.ListenAndServe(":8090", nil)

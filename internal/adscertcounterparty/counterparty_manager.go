@@ -98,8 +98,12 @@ func NewCounterpartyManager(dnsResolver DNSResolver, base64PrivateKeys []string)
 	// Ideally rotation to a new signing key doesn't happen all-at-once but can instead be rolled
 	// out in a controlled fashion.
 	for _, privateKey := range cm.myPrivateKeys {
-		cm.currentPrivateKey = privateKey.alias
-		break
+		// since iterating over a map is non-deterministic, we can make sure to set the key
+		// either if it is not already set or it is alphabetically less than current key at the index when
+		// iterating over the private keys map.
+		if cm.currentPrivateKey == "" || cm.currentPrivateKey < privateKey.alias {
+			cm.currentPrivateKey = privateKey.alias
+		}
 	}
 
 	cm.counterparties.Store(counterpartyMap{})
