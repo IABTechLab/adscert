@@ -58,13 +58,13 @@ Alternatively, you can start the signing server to periodically log the invocati
 
 Start the signing server to log to signature_log_file path.
 ```
-go run examples/signer/example-signer.go --frequency 5s --logtostderr --body '{"sample": "request"}' --origin_callsign=ssai-serving.tk --url='http://ads.ad-exchange.tk:8090/request?param1=example&param2=another' --signature_log_file=requests.log
+go run examples/signer/example-signer.go --frequency 1s --logtostderr --body '{"sample": "request"}' --origin_callsign=ssai-serving.tk --url='http://ads.ad-exchange.tk:8090/request?param1=example&param2=another' --signature_log_file=requests.log
 ```
 
 ### Verify log file
 The log parser verifier will verify all entries in the log file and output a summary.
 ```
-go run examples/verifier/log-parser/verifier-parser.go --host_callsign=exchange-holding-company.ga --logtostderr --signature_log_file=requests.log
+go run examples/verifier/log-parser/verifier-parser.go --origin_callsign=ssai-serving.tk --host_callsign=exchange-holding-company.ga --logtostderr --signature_log_file=requests.log
 ```
 
 ## Contributing

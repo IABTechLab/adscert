@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"crypto/rand"
 	"encoding/base64"
 	"flag"
 	"os"
@@ -13,7 +14,8 @@ import (
 )
 
 var (
-	hostCallsign            = flag.String("host_callsign", "", "ads.cert callsign for the originating party")
+	hostCallsign            = flag.String("host_callsign", "", "ads.cert callsign for the host party")
+	originCallsign          = flag.String("origin_callsign", "", "ads.cert callsign for the originating party")
 	useFakeKeyGeneratingDNS = flag.Bool("use_fake_key_generating_dns_for_testing", false,
 		"When enabled, this code skips performing real DNS lookups and instead simulates DNS-based keys by generating a key pair based on the domain name.")
 	signatureLogFile = flag.String("signature_log_file", "", "Verify all logged signatures and hashes in file")
@@ -31,8 +33,13 @@ func main() {
 	defer file.Close()
 
 	privateKeysBase64 := adscertcrypto.GenerateFakePrivateKeysForTesting(*hostCallsign)
+
+	signatory := adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(*hostCallsign, privateKeysBase64, *useFakeKeyGeneratingDNS)
+	// Force an update to the counter-party manager for known origin callsign before processing log
+	signatory.SynchronizeForTesting(*originCallsign)
 	signer := adscert.NewAuthenticatedConnectionsSigner(
-		adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(*hostCallsign, privateKeysBase64, *useFakeKeyGeneratingDNS),
+		signatory,
+		rand.Reader,
 	)
 
 	var logCount, parseErrorCount, verifyErrorCount, validRequestCount, validUrlCount int

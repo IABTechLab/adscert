@@ -117,7 +117,7 @@ func (c *DemoClient) initiateRequest() error {
 		urlHash := sha256.Sum256([]byte(c.DestinationURL))
 		bodyHash := sha256.Sum256([]byte(c.Body))
 
-		c.SignatureFileLogger.Printf("%s,%s,%s,%s", invocationHostname, signature.SignatureMessages[0], base64.StdEncoding.EncodeToString(urlHash[:]), base64.StdEncoding.EncodeToString(bodyHash[:]))
+		c.SignatureFileLogger.Printf("%s,%s,%s,%s", invocationHostname, signature.SignatureMessages[0], base64.StdEncoding.EncodeToString(bodyHash[:]), base64.StdEncoding.EncodeToString(urlHash[:]))
 	}
 
 	if c.ActuallySendRequest {
