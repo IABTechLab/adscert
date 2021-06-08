@@ -55,6 +55,8 @@ func main() {
 			continue
 		}
 
+		// verification only returns an error if there are issues trying to validate the signatures
+		// as opposed to whether the signatures are actually valid or not.
 		verification, err := signer.VerifyAuthenticatedConnectionWithPackage(*verificationPackage)
 		if err != nil {
 			verifyErrorCount++

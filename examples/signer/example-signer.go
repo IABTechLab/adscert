@@ -49,7 +49,7 @@ func main() {
 		}
 		defer file.Close()
 
-		signatureFileLogger = log.New(file, "", 0)
+		signatureFileLogger = log.New(file, "" /*=prefix*/, 0 /*=flag=*/)
 	}
 
 	demoClient := DemoClient{
