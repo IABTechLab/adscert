@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"crypto/rand"
 	"encoding/base64"
 	"flag"
 	"os"
@@ -39,7 +38,6 @@ func main() {
 	signatory.SynchronizeForTesting(*originCallsign)
 	signer := adscert.NewAuthenticatedConnectionsSigner(
 		signatory,
-		rand.Reader,
 	)
 
 	var logCount, parseErrorCount, verifyErrorCount, validRequestCount, validUrlCount int
