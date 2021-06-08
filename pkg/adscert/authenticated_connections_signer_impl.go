@@ -23,8 +23,13 @@ func (c *authenticatedConnectionsSigner) SignAuthenticatedConnection(params Auth
 	response := AuthenticatedConnectionSignature{}
 	signatureRequest := adscertcrypto.AuthenticatedConnectionSigningPackage{}
 
-	// Time is UTC.
-	signatureRequest.Timestamp = time.Now().Format("060102T150405")
+	// if custom time function exists in params
+	customTime := params.CustomTime
+	if customTime == nil {
+		// otherwise fall back to original time.Now function
+		customTime = time.Now
+	}
+	signatureRequest.Timestamp = customTime().UTC().Format("060102T150405")
 
 	if signatureRequest.Nonce, err = c.generateNonce(); err != nil {
 		return response, err

@@ -1,7 +1,8 @@
 package adscert
 
 import (
-	crypto_rand "crypto/rand"
+	"io"
+	"time"
 
 	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
 )
@@ -16,10 +17,10 @@ type AuthenticatedConnectionsSigner interface {
 
 // NewAuthenticatedConnectionsSigner creates a new signer instance for creating
 // ads.cert Authenticated Connections signatures.
-func NewAuthenticatedConnectionsSigner(signatory adscertcrypto.AuthenticatedConnectionsSignatory) AuthenticatedConnectionsSigner {
+func NewAuthenticatedConnectionsSigner(signatory adscertcrypto.AuthenticatedConnectionsSignatory, reader io.Reader) AuthenticatedConnectionsSigner {
 	return &authenticatedConnectionsSigner{
 		signatory:    signatory,
-		secureRandom: crypto_rand.Reader,
+		secureRandom: reader,
 	}
 }
 
@@ -36,9 +37,11 @@ type AuthenticatedConnectionSignatureParams struct {
 	// that output the hash as raw bytes or base64 encoded... maybe the API provides the option
 	// to choose which variant is easier to work with depending on the logging technique they use.
 
-
 	// When verifying an existing set of signatures, also include these values.
 	SignatureMessageToVerify []string
+
+	// optional field to pass as custom time.
+	CustomTime func() time.Time
 }
 
 // AuthenticatedConnectionSignature represents a signature conforming to the
