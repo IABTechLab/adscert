@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"crypto/rand"
 	"encoding/base64"
 	"flag"
 	"os"
@@ -38,6 +39,7 @@ func main() {
 	signatory.SynchronizeForTesting(*originCallsign)
 	signer := adscert.NewAuthenticatedConnectionsSigner(
 		signatory,
+		rand.Reader,
 	)
 
 	var logCount, parseErrorCount, verifyErrorCount, validRequestCount, validUrlCount int
@@ -98,14 +100,8 @@ func parseLog(log string) (*adscert.AuthenticatedConnectionSignatureParams, erro
 
 	return &adscert.AuthenticatedConnectionSignatureParams{
 		InvocationHostname:       InvocationHostname,
-		HashedRequestBody:        hashedRequestBody,
-		HashedDestinationURL:     hashedDestinationURL,
+		HashedRequestBody:        &hashedRequestBody,
+		HashedDestinationURL:     &hashedDestinationURL,
 		SignatureMessageToVerify: []string{signaturesHeader},
-		// RequestInfo: adscertcrypto.RequestInfo{
-		// 	InvocationHostname: invocationHostname,
-		// 	URLHash:            hashedDestinationURL,
-		// 	BodyHash:           hashedRequestBody,
-		// },
-		// SignatureMessage: string(signaturesHeader),
 	}, nil
 }

@@ -29,10 +29,10 @@ func NewAuthenticatedConnectionsSigner(signatory adscertcrypto.AuthenticatedConn
 type AuthenticatedConnectionSignatureParams struct {
 	DestinationURL       string
 	InvocationHostname   string
-	HashedDestinationURL [32]byte
+	HashedDestinationURL *[32]byte
 
 	RequestBody       []byte
-	HashedRequestBody [32]byte
+	HashedRequestBody *[32]byte
 
 	// Curtis notes:
 	// For offline verification, we need to have this message have the option to pass in the

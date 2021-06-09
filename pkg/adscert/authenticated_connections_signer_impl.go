@@ -91,15 +91,15 @@ func assembleRequestInfo(params *AuthenticatedConnectionSignatureParams, request
 		requestInfo.InvocationHostname = params.InvocationHostname
 	}
 
-	if len(params.HashedDestinationURL) > 0 {
-		requestInfo.URLHash = params.HashedDestinationURL
+	if params.HashedDestinationURL != nil {
+		requestInfo.URLHash = *params.HashedDestinationURL
 	} else {
 		urlHash := sha256.Sum256([]byte(parsedURL.String()))
 		copy(requestInfo.URLHash[:], urlHash[:])
 	}
 
-	if len(params.HashedRequestBody) > 0 {
-		requestInfo.BodyHash = params.HashedRequestBody
+	if params.HashedRequestBody != nil {
+		requestInfo.BodyHash = *params.HashedRequestBody
 	} else {
 		bodyHash := sha256.Sum256(params.RequestBody)
 		copy(requestInfo.BodyHash[:], bodyHash[:])
