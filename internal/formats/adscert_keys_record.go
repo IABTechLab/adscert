@@ -2,6 +2,8 @@ package formats
 
 import (
 	"strings"
+
+	"github.com/IABTechLab/adscert/internal/logger"
 )
 
 type ParsedPublicKey struct {

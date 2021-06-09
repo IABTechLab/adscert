@@ -3,6 +3,7 @@ package utils
 import (
 	"net/url"
 
+	"github.com/IABTechLab/adscert/internal/logger"
 	"golang.org/x/net/publicsuffix"
 )
 

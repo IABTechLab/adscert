@@ -101,7 +101,7 @@ func NewCounterpartyManager(dnsResolver DNSResolver, base64PrivateKeys []string)
 		// since iterating over a map is non-deterministic, we can make sure to set the key
 		// either if it is not already set or it is alphabetically less than current key at the index when
 		// iterating over the private keys map.
-		if cm.currentPrivateKey == "" || cm.currentPrivateKey > privateKey.alias {
+		if cm.currentPrivateKey == "" || cm.currentPrivateKey < privateKey.alias {
 			cm.currentPrivateKey = privateKey.alias
 		}
 	}
