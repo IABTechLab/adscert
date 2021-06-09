@@ -85,7 +85,7 @@ func (lgr *logger) Info(format string, v ...interface{}) {
 	}
 }
 
-// Warn logs a message if log level allows to do so.
+// Warning logs a message if log level allows to do so.
 func (lgr *logger) Warning(format string, v ...interface{}) {
 	if lgr.level <= WARNING {
 		if l, ok := lgr.Logger.(*log.Logger); ok {
@@ -107,6 +107,7 @@ func (lgr *logger) Error(format string, v ...interface{}) {
 	}
 }
 
+// Alert logs a message if log level allows to do so.
 func (lgr *logger) Alert(format string, v ...interface{}) {
 	if lgr.level <= ALERT {
 		if l, ok := lgr.Logger.(*log.Logger); ok {
@@ -117,6 +118,7 @@ func (lgr *logger) Alert(format string, v ...interface{}) {
 	}
 }
 
+// Fatal logs a message if log level allows to do so.
 func (lgr *logger) Fatal(format string, v ...interface{}) {
 	if lgr.level <= FATAL {
 		if l, ok := lgr.Logger.(*log.Logger); ok {
