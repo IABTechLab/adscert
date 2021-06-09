@@ -16,7 +16,7 @@ type authenticatedConnectionsSigner struct {
 	secureRandom io.Reader
 	clock        clock.Clock
 
-	signatory adscertcrypto.AuthenticatedConnectionsSignatory	
+	signatory adscertcrypto.AuthenticatedConnectionsSignatory
 }
 
 func (c *authenticatedConnectionsSigner) SignAuthenticatedConnection(params AuthenticatedConnectionSignatureParams) (AuthenticatedConnectionSignature, error) {

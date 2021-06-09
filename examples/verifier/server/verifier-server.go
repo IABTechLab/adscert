@@ -28,7 +28,7 @@ func main() {
 
 	demoServer := &DemoServer{
 		Signer: adscert.NewAuthenticatedConnectionsSigner(
-			adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(*hostCallsign, privateKeysBase64, *useFakeKeyGeneratingDNS), crypto_rand.Reader,clock.New()),
+			adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(*hostCallsign, privateKeysBase64, *useFakeKeyGeneratingDNS), crypto_rand.Reader, clock.New()),
 	}
 	http.HandleFunc("/request", demoServer.HandleRequest)
 	http.ListenAndServe(":8090", nil)
