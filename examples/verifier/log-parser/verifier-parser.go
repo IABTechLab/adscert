@@ -46,19 +46,19 @@ func main() {
 	for scanner.Scan() {
 		logCount++
 		line := scanner.Text()
-		verificationPackage, err := parseLog(line)
+		signatureParams, err := parseLog(line)
 		if err != nil {
 			parseErrorCount++
-			glog.Errorf("Error parsing log: ", err)
+			glog.Errorf("Error parsing log: %s", err)
 			continue
 		}
 
 		// verification only returns an error if there are issues trying to validate the signatures
 		// as opposed to whether the signatures are actually valid or not.
-		verification, err := signer.VerifyAuthenticatedConnectionWithPackage(*verificationPackage)
+		verification, err := signer.VerifyAuthenticatedConnection(*signatureParams)
 		if err != nil {
 			verifyErrorCount++
-			glog.Errorf("unable to verify message: ", err)
+			glog.Errorf("unable to verify message: %s", err)
 			continue
 		}
 
@@ -74,16 +74,16 @@ func main() {
 	glog.Infof("\n--- Summary --- \nlogEntries: %d, parseErrors: %d, verificationErrors: %d, validRequests: %d, validUrls: %d", logCount, parseErrorCount, verifyErrorCount, validRequestCount, validUrlCount)
 
 	if err := scanner.Err(); err != nil {
-		glog.Fatal("Error reading line: %s ", err)
+		glog.Fatalf("Error reading line: %s ", err)
 	}
 }
 
-func parseLog(log string) (*adscertcrypto.AuthenticatedConnectionVerificationPackage, error) {
+func parseLog(log string) (*adscert.AuthenticatedConnectionSignatureParams, error) {
 	parsedLog := strings.Split(log, ",")
 
 	var hashedRequestBody [32]byte
 	var hashedDestinationURL [32]byte
-	invocationHostname := parsedLog[0]
+	InvocationHostname := parsedLog[0]
 	signaturesHeader := parsedLog[1]
 	hashedRequestBodyBytes, err := base64.StdEncoding.DecodeString(parsedLog[2])
 	if err != nil {
@@ -96,12 +96,16 @@ func parseLog(log string) (*adscertcrypto.AuthenticatedConnectionVerificationPac
 	copy(hashedRequestBody[:], hashedRequestBodyBytes[:32])
 	copy(hashedDestinationURL[:], hashedDestinationURLBytes[:32])
 
-	return &adscertcrypto.AuthenticatedConnectionVerificationPackage{
-		RequestInfo: adscertcrypto.RequestInfo{
-			InvocationHostname: invocationHostname,
-			URLHash:            hashedDestinationURL,
-			BodyHash:           hashedRequestBody,
-		},
-		SignatureMessage: string(signaturesHeader),
+	return &adscert.AuthenticatedConnectionSignatureParams{
+		InvocationHostname:       InvocationHostname,
+		HashedRequestBody:        hashedRequestBody,
+		HashedDestinationURL:     hashedDestinationURL,
+		SignatureMessageToVerify: []string{signaturesHeader},
+		// RequestInfo: adscertcrypto.RequestInfo{
+		// 	InvocationHostname: invocationHostname,
+		// 	URLHash:            hashedDestinationURL,
+		// 	BodyHash:           hashedRequestBody,
+		// },
+		// SignatureMessage: string(signaturesHeader),
 	}, nil
 }

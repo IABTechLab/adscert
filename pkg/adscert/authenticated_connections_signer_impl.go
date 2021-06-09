@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"io"
+	"net/url"
 	"time"
 
 	"github.com/IABTechLab/adscert/internal/formats"
@@ -73,35 +74,36 @@ func (c *authenticatedConnectionsSigner) VerifyAuthenticatedConnection(params Au
 	return response, nil
 }
 
-func (c *authenticatedConnectionsSigner) VerifyAuthenticatedConnectionWithPackage(verificationRequest adscertcrypto.AuthenticatedConnectionVerificationPackage) (AuthenticatedConnectionVerification, error) {
-
-	response := AuthenticatedConnectionVerification{}
-
-	verifyReply, err := c.signatory.VerifySigningPackage(&verificationRequest)
-	if err != nil {
-		return response, fmt.Errorf("error verifying signing package: %v", err)
-	}
-
-	response.BodyValid = verifyReply.BodyValid
-	response.URLValid = verifyReply.URLValid
-
-	return response, nil
-}
-
 func assembleRequestInfo(params *AuthenticatedConnectionSignatureParams, requestInfo *adscertcrypto.RequestInfo) error {
-	parsedURL, tldPlusOne, err := utils.ParseURLComponents(params.DestinationURL)
-	if err != nil {
-		// TODO: switch to using a named error message indicating URL parse failure.
-		return fmt.Errorf("unable to parse destination URL: %v", err)
+	var parsedURL *url.URL
+
+	if params.InvocationHostname == "" {
+		var tldPlusOne string
+		var err error
+
+		parsedURL, tldPlusOne, err = utils.ParseURLComponents(params.DestinationURL)
+		if err != nil {
+			// TODO: switch to using a named error message indicating URL parse failure.
+			return fmt.Errorf("unable to parse destination URL: %v", err)
+		}
+		requestInfo.InvocationHostname = tldPlusOne
+	} else {
+		requestInfo.InvocationHostname = params.InvocationHostname
 	}
 
-	requestInfo.InvocationHostname = tldPlusOne
+	if len(params.HashedDestinationURL) > 0 {
+		requestInfo.URLHash = params.HashedDestinationURL
+	} else {
+		urlHash := sha256.Sum256([]byte(parsedURL.String()))
+		copy(requestInfo.URLHash[:], urlHash[:])
+	}
 
-	urlHash := sha256.Sum256([]byte(parsedURL.String()))
-	copy(requestInfo.URLHash[:], urlHash[:])
-
-	bodyHash := sha256.Sum256(params.RequestBody)
-	copy(requestInfo.BodyHash[:], bodyHash[:])
+	if len(params.HashedRequestBody) > 0 {
+		requestInfo.BodyHash = params.HashedRequestBody
+	} else {
+		bodyHash := sha256.Sum256(params.RequestBody)
+		copy(requestInfo.BodyHash[:], bodyHash[:])
+	}
 
 	return nil
 }
