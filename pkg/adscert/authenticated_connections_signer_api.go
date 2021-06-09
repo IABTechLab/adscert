@@ -27,8 +27,12 @@ func NewAuthenticatedConnectionsSigner(signatory adscertcrypto.AuthenticatedConn
 // AuthenticatedConnectionSignatureParams captures parameters for the
 // SignAuthenticatedConnection operation.
 type AuthenticatedConnectionSignatureParams struct {
-	DestinationURL string
-	RequestBody    []byte
+	DestinationURL       string
+	InvocationHostname   string
+	HashedDestinationURL *[32]byte
+
+	RequestBody       []byte
+	HashedRequestBody *[32]byte
 
 	// Curtis notes:
 	// For offline verification, we need to have this message have the option to pass in the

@@ -4,11 +4,16 @@ import (
 	"bufio"
 	"bytes"
 	crypto_rand "crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
 	"flag"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 	"time"
 
+	"github.com/IABTechLab/adscert/internal/utils"
 	"github.com/IABTechLab/adscert/pkg/adscert"
 	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
 	"github.com/golang/glog"
@@ -23,6 +28,8 @@ var (
 
 	originCallsign = flag.String("origin_callsign", "", "ads.cert callsign for the originating party")
 
+	signatureLogFile = flag.String("signature_log_file", "", "write signature and hashes to file for offline verification")
+
 	useFakeKeyGeneratingDNS = flag.Bool("use_fake_key_generating_dns_for_testing", false,
 		"When enabled, this code skips performing real DNS lookups and instead simulates DNS-based keys by generating a key pair based on the domain name.")
 )
@@ -34,6 +41,17 @@ func main() {
 
 	privateKeysBase64 := adscertcrypto.GenerateFakePrivateKeysForTesting(*originCallsign)
 
+	var signatureFileLogger *log.Logger
+	if *signatureLogFile != "" {
+		file, err := os.OpenFile(*signatureLogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+		if err != nil {
+			glog.Fatal(err)
+		}
+		defer file.Close()
+
+		signatureFileLogger = log.New(file, "" /*=prefix*/, 0 /*=flag=*/)
+	}
+
 	demoClient := DemoClient{
 		Signer: adscert.NewAuthenticatedConnectionsSigner(
 			adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(*originCallsign, privateKeysBase64, *useFakeKeyGeneratingDNS), crypto_rand.Reader),
@@ -44,6 +62,8 @@ func main() {
 
 		ActuallySendRequest: *sendRequests,
 		Ticker:              time.NewTicker(*frequency),
+
+		SignatureFileLogger: signatureFileLogger,
 	}
 	demoClient.StartRequestLoop()
 }
@@ -57,6 +77,8 @@ type DemoClient struct {
 
 	ActuallySendRequest bool
 	Ticker              *time.Ticker
+
+	SignatureFileLogger *log.Logger
 }
 
 func (c *DemoClient) StartRequestLoop() {
@@ -87,8 +109,19 @@ func (c *DemoClient) initiateRequest() error {
 
 	glog.Infof("Requesting URL %s %s with headers %v", req.Method, req.URL, req.Header)
 
+	if c.SignatureFileLogger != nil {
+		_, invocationHostname, err := utils.ParseURLComponents(c.DestinationURL)
+		if err != nil {
+			return fmt.Errorf("error parsing destination url: %s", err)
+		}
+		urlHash := sha256.Sum256([]byte(c.DestinationURL))
+		bodyHash := sha256.Sum256([]byte(c.Body))
+
+		c.SignatureFileLogger.Printf("%s,%s,%s,%s", invocationHostname, signature.SignatureMessages[0], base64.StdEncoding.EncodeToString(bodyHash[:]), base64.StdEncoding.EncodeToString(urlHash[:]))
+	}
+
 	if c.ActuallySendRequest {
-		glog.Info("Sendng request...")
+		glog.Info("Sending request...")
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			return fmt.Errorf("error sending HTTP request: %v", err)
