@@ -9,6 +9,7 @@ import (
 
 	"github.com/IABTechLab/adscert/pkg/adscert"
 	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
+	"github.com/benbjohnson/clock"
 )
 
 func prepareAuthentication(adsCertCallsign string, destinationVerifierUrl string) (adscertcrypto.AuthenticatedConnectionsSignatory, *rand.Rand) {
@@ -24,15 +25,18 @@ func prepareAuthentication(adsCertCallsign string, destinationVerifierUrl string
 }
 
 // function to return fixed time for testing purpose.
-func customTimeFunc() time.Time {
+func customTimeForTest() time.Time {
 	return time.Date(2001, time.January, 1, 1, 1, 1, 1, time.UTC)
 }
 
 func ExampleAuthenticatedConnectionsSigner_SignAuthenticatedConnection() {
+	mockClock := clock.NewMock()
+	mockClock.Set(customTimeForTest())
+
 	adsCertCallsign := "origin-signer.com"
 	destinationVerifierUrl := "destination-verifier.com"
 	signatory, randomReader := prepareAuthentication(adsCertCallsign, destinationVerifierUrl)
-	signer := adscert.NewAuthenticatedConnectionsSigner(signatory, randomReader)
+	signer := adscert.NewAuthenticatedConnectionsSigner(signatory, randomReader, mockClock)
 
 	// TODO: Add ability to seed PRNG for nonce and clock to generate deterministic results.
 	//
@@ -65,7 +69,6 @@ func ExampleAuthenticatedConnectionsSigner_SignAuthenticatedConnection() {
 		adscert.AuthenticatedConnectionSignatureParams{
 			DestinationURL: destinationURL,
 			RequestBody:    body,
-			CustomTime:     customTimeFunc,
 		})
 	if err != nil {
 		log.Fatal("unable to sign message: ", err)
@@ -77,10 +80,13 @@ func ExampleAuthenticatedConnectionsSigner_SignAuthenticatedConnection() {
 }
 
 func ExampleAuthenticatedConnectionsSigner_VerifyAuthenticatedConnection() {
+	mockClock := clock.NewMock()
+	mockClock.Set(customTimeForTest())
+
 	adsCertCallsign := "destination-verifier.com"
 	signatory := adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(
 		adsCertCallsign, adscertcrypto.GenerateFakePrivateKeysForTesting(adsCertCallsign), true)
-	signer := adscert.NewAuthenticatedConnectionsSigner(signatory, crypto_rand.Reader)
+	signer := adscert.NewAuthenticatedConnectionsSigner(signatory, crypto_rand.Reader, mockClock)
 
 	signatory.SynchronizeForTesting("origin-signer.com")
 
