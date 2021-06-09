@@ -9,6 +9,7 @@ import (
 
 	"github.com/IABTechLab/adscert/pkg/adscert"
 	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
+	"github.com/benbjohnson/clock"
 	"github.com/golang/glog"
 )
 
@@ -27,7 +28,7 @@ func main() {
 
 	demoServer := &DemoServer{
 		Signer: adscert.NewAuthenticatedConnectionsSigner(
-			adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(*hostCallsign, privateKeysBase64, *useFakeKeyGeneratingDNS), crypto_rand.Reader),
+			adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(*hostCallsign, privateKeysBase64, *useFakeKeyGeneratingDNS), crypto_rand.Reader,clock.New()),
 	}
 	http.HandleFunc("/request", demoServer.HandleRequest)
 	http.ListenAndServe(":8090", nil)

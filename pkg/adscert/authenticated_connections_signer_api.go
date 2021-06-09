@@ -2,9 +2,9 @@ package adscert
 
 import (
 	"io"
-	"time"
 
 	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
+	"github.com/benbjohnson/clock"
 )
 
 // AuthenticatedConnectionsSigner generates a signature intended for the
@@ -17,10 +17,11 @@ type AuthenticatedConnectionsSigner interface {
 
 // NewAuthenticatedConnectionsSigner creates a new signer instance for creating
 // ads.cert Authenticated Connections signatures.
-func NewAuthenticatedConnectionsSigner(signatory adscertcrypto.AuthenticatedConnectionsSignatory, reader io.Reader) AuthenticatedConnectionsSigner {
+func NewAuthenticatedConnectionsSigner(signatory adscertcrypto.AuthenticatedConnectionsSignatory, reader io.Reader, clock clock.Clock) AuthenticatedConnectionsSigner {
 	return &authenticatedConnectionsSigner{
 		signatory:    signatory,
 		secureRandom: reader,
+		clock:        clock,
 	}
 }
 
@@ -43,9 +44,6 @@ type AuthenticatedConnectionSignatureParams struct {
 
 	// When verifying an existing set of signatures, also include these values.
 	SignatureMessageToVerify []string
-
-	// optional field to pass as custom time.
-	CustomTime func() time.Time
 }
 
 // AuthenticatedConnectionSignature represents a signature conforming to the

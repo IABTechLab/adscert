@@ -10,6 +10,7 @@ import (
 
 	"github.com/IABTechLab/adscert/pkg/adscert"
 	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
+	"github.com/benbjohnson/clock"
 	"github.com/golang/glog"
 )
 
@@ -40,6 +41,7 @@ func main() {
 	signer := adscert.NewAuthenticatedConnectionsSigner(
 		signatory,
 		rand.Reader,
+		clock.New(),
 	)
 
 	var logCount, parseErrorCount, verifyErrorCount, validRequestCount, validUrlCount int

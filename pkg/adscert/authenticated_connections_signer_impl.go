@@ -5,17 +5,18 @@ import (
 	"fmt"
 	"io"
 	"net/url"
-	"time"
 
 	"github.com/IABTechLab/adscert/internal/formats"
 	"github.com/IABTechLab/adscert/internal/utils"
 	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
+	"github.com/benbjohnson/clock"
 )
 
 type authenticatedConnectionsSigner struct {
 	secureRandom io.Reader
+	clock        clock.Clock
 
-	signatory adscertcrypto.AuthenticatedConnectionsSignatory
+	signatory adscertcrypto.AuthenticatedConnectionsSignatory	
 }
 
 func (c *authenticatedConnectionsSigner) SignAuthenticatedConnection(params AuthenticatedConnectionSignatureParams) (AuthenticatedConnectionSignature, error) {
@@ -23,13 +24,7 @@ func (c *authenticatedConnectionsSigner) SignAuthenticatedConnection(params Auth
 	response := AuthenticatedConnectionSignature{}
 	signatureRequest := adscertcrypto.AuthenticatedConnectionSigningPackage{}
 
-	// if custom time function exists in params
-	customTime := params.CustomTime
-	if customTime == nil {
-		// otherwise fall back to original time.Now function
-		customTime = time.Now
-	}
-	signatureRequest.Timestamp = customTime().UTC().Format("060102T150405")
+	signatureRequest.Timestamp = c.clock.Now().UTC().Format("060102T150405")
 
 	if signatureRequest.Nonce, err = c.generateNonce(); err != nil {
 		return response, err

@@ -16,6 +16,7 @@ import (
 	"github.com/IABTechLab/adscert/internal/utils"
 	"github.com/IABTechLab/adscert/pkg/adscert"
 	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
+	"github.com/benbjohnson/clock"
 	"github.com/golang/glog"
 )
 
@@ -54,7 +55,7 @@ func main() {
 
 	demoClient := DemoClient{
 		Signer: adscert.NewAuthenticatedConnectionsSigner(
-			adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(*originCallsign, privateKeysBase64, *useFakeKeyGeneratingDNS), crypto_rand.Reader),
+			adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(*originCallsign, privateKeysBase64, *useFakeKeyGeneratingDNS), crypto_rand.Reader, clock.New()),
 
 		Method:         *method,
 		DestinationURL: *destinationURL,
