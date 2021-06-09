@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/IABTechLab/adscert/internal/formats"
-	"github.com/golang/glog"
+	"github.com/IABTechLab/adscert/internal/logger"
 	"golang.org/x/crypto/curve25519"
 )
 
@@ -59,7 +59,7 @@ func asKeyMap(adsCertKeys formats.AdsCertKeys) keyMap {
 			alias: keyAlias(k.KeyAlias),
 		}
 		if n := copy(x25519Key.keyBytes[:], k.PublicKeyBytes); n != 32 {
-			glog.Warningf("wrong number of bytes copied for key alias %s: %d != 32", k.KeyAlias, n)
+			logger.Logger.Warning("wrong number of bytes copied for key alias %s: %d != 32", k.KeyAlias, n)
 			continue
 		}
 		result[x25519Key.alias] = x25519Key
@@ -71,6 +71,7 @@ func asKeyMap(adsCertKeys formats.AdsCertKeys) keyMap {
 func calculateSharedSecret(myPrivate *x25519Key, theirPublic *x25519Key) (*x25519Key, error) {
 	secret, err := curve25519.X25519(myPrivate.keyBytes[:], theirPublic.keyBytes[:])
 	if err != nil {
+		logger.Logger.Error("Error calculating shared secret: ", err)
 		return nil, err
 	}
 

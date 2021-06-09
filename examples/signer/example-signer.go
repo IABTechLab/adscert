@@ -13,11 +13,11 @@ import (
 	"os"
 	"time"
 
+	"github.com/IABTechLab/adscert/internal/logger"
 	"github.com/IABTechLab/adscert/internal/utils"
 	"github.com/IABTechLab/adscert/pkg/adscert"
 	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
 	"github.com/benbjohnson/clock"
-	"github.com/golang/glog"
 )
 
 var (
@@ -38,7 +38,7 @@ var (
 func main() {
 	flag.Parse()
 
-	glog.Info("Starting demo client.")
+	logger.Logger.Info("Starting demo client.")
 
 	privateKeysBase64 := adscertcrypto.GenerateFakePrivateKeysForTesting(*originCallsign)
 
@@ -46,7 +46,7 @@ func main() {
 	if *signatureLogFile != "" {
 		file, err := os.OpenFile(*signatureLogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 		if err != nil {
-			glog.Fatal(err)
+			logger.Logger.Fatal("error", err)
 		}
 		defer file.Close()
 
@@ -86,7 +86,7 @@ func (c *DemoClient) StartRequestLoop() {
 	c.initiateRequest()
 	for range c.Ticker.C {
 		if err := c.initiateRequest(); err != nil {
-			glog.Warningf("Error sending request: %v", err)
+			logger.Logger.Warning("Error sending request: %v", err)
 		}
 	}
 }
@@ -103,12 +103,12 @@ func (c *DemoClient) initiateRequest() error {
 			RequestBody:    c.Body,
 		})
 	if err != nil {
-		glog.Warningf("unable to sign message (continuing...): %v", err)
+		logger.Logger.Warning("unable to sign message (continuing...): %v", err)
 	}
 
 	req.Header["X-Ads-Cert-Auth"] = signature.SignatureMessages
 
-	glog.Infof("Requesting URL %s %s with headers %v", req.Method, req.URL, req.Header)
+	logger.Logger.Info("Requesting URL %s %s with headers %v", req.Method, req.URL, req.Header)
 
 	if c.SignatureFileLogger != nil {
 		_, invocationHostname, err := utils.ParseURLComponents(c.DestinationURL)
@@ -122,7 +122,7 @@ func (c *DemoClient) initiateRequest() error {
 	}
 
 	if c.ActuallySendRequest {
-		glog.Info("Sending request...")
+		logger.Logger.Info("Sending request...")
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			return fmt.Errorf("error sending HTTP request: %v", err)
@@ -136,7 +136,7 @@ func (c *DemoClient) initiateRequest() error {
 			return fmt.Errorf("error reading response: %v", err)
 		}
 	} else {
-		glog.Info("(Request not actually sent)")
+		logger.Logger.Info("(Request not actually sent)")
 	}
 	return nil
 }

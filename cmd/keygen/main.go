@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
+	"github.com/IABTechLab/adscert/internal/logger"
 	"golang.org/x/crypto/curve25519"
 )
 
@@ -15,7 +16,7 @@ import (
 func main() {
 	publicKey, privateKey, err := GenerateKeyPair()
 	if err != nil {
-		fmt.Printf("Error: failed to generate key pair: %v", err)
+		logger.Logger.Error("Error: failed to generate key pair: %v", err)
 	}
 	fmt.Println("Randomly generated key pair")
 	fmt.Printf("Public key:  %s\n", publicKey)

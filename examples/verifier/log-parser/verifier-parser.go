@@ -8,10 +8,10 @@ import (
 	"os"
 	"strings"
 
+	"github.com/IABTechLab/adscert/internal/logger"
 	"github.com/IABTechLab/adscert/pkg/adscert"
 	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
 	"github.com/benbjohnson/clock"
-	"github.com/golang/glog"
 )
 
 var (
@@ -25,11 +25,11 @@ var (
 func main() {
 	flag.Parse()
 
-	glog.Info("Verifying log file.")
+	logger.Logger.Info("Verifying log file.")
 
 	file, err := os.Open(*signatureLogFile)
 	if err != nil {
-		glog.Fatalf("Failed to open file: %s", err)
+		logger.Logger.Fatal("Failed to open file: %s", err)
 	}
 	defer file.Close()
 
@@ -53,7 +53,7 @@ func main() {
 		signatureParams, err := parseLog(line)
 		if err != nil {
 			parseErrorCount++
-			glog.Errorf("Error parsing log: %s", err)
+			logger.Logger.Error("Error parsing log: %s", err)
 			continue
 		}
 
@@ -62,7 +62,7 @@ func main() {
 		verification, err := signer.VerifyAuthenticatedConnection(*signatureParams)
 		if err != nil {
 			verifyErrorCount++
-			glog.Errorf("unable to verify message: %s", err)
+			logger.Logger.Error("unable to verify message: %s", err)
 			continue
 		}
 
@@ -72,13 +72,13 @@ func main() {
 		if verification.URLValid {
 			validUrlCount++
 		}
-		glog.Infof("Valid Request Body: %t, Valid Request URL: %t", verification.BodyValid, verification.URLValid)
+		logger.Logger.Info("Valid Request Body: %t, Valid Request URL: %t", verification.BodyValid, verification.URLValid)
 	}
 
-	glog.Infof("\n--- Summary --- \nlogEntries: %d, parseErrors: %d, verificationErrors: %d, validRequests: %d, validUrls: %d", logCount, parseErrorCount, verifyErrorCount, validRequestCount, validUrlCount)
+	logger.Logger.Info("\n--- Summary --- \nlogEntries: %d, parseErrors: %d, verificationErrors: %d, validRequests: %d, validUrls: %d", logCount, parseErrorCount, verifyErrorCount, validRequestCount, validUrlCount)
 
 	if err := scanner.Err(); err != nil {
-		glog.Fatalf("Error reading line: %s ", err)
+		logger.Logger.Fatal("Error reading line: %s ", err)
 	}
 }
 
@@ -91,6 +91,7 @@ func parseLog(log string) (*adscert.AuthenticatedConnectionSignatureParams, erro
 	signaturesHeader := parsedLog[1]
 	hashedRequestBodyBytes, err := base64.StdEncoding.DecodeString(parsedLog[2])
 	if err != nil {
+		logger.Logger.Error("Error decoding string: ", err)
 		return nil, err
 	}
 	hashedDestinationURLBytes, err := base64.StdEncoding.DecodeString(parsedLog[3])

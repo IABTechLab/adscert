@@ -7,7 +7,7 @@ import (
 
 	"github.com/IABTechLab/adscert/internal/adscertcounterparty"
 	"github.com/IABTechLab/adscert/internal/formats"
-	"github.com/golang/glog"
+	"github.com/IABTechLab/adscert/internal/logger"
 )
 
 type AuthenticatedConnectionsSignatory interface {
@@ -70,7 +70,7 @@ func (s *localAuthenticatedConnectionsSignatory) embossSingleMessage(request *Au
 		return "", fmt.Errorf("error constructing authenticated connection signature format: %v", err)
 	}
 
-	glog.Infof("Counterparty info: %+v", counterparty)
+	logger.Logger.Info("Counterparty info: %+v", counterparty)
 
 	if !counterparty.HasSharedSecret() {
 		return acs.EncodeMessage(), nil
@@ -78,7 +78,7 @@ func (s *localAuthenticatedConnectionsSignatory) embossSingleMessage(request *Au
 
 	sharedSecret := counterparty.SharedSecret()
 
-	glog.Infof("trying signature %s %s %s", sharedSecret.LocalKeyID(), counterparty.GetAdsCertIdentityDomain(), sharedSecret.RemoteKeyID())
+	logger.Logger.Info("trying signature %s %s %s", sharedSecret.LocalKeyID(), counterparty.GetAdsCertIdentityDomain(), sharedSecret.RemoteKeyID())
 
 	if err = acs.AddParametersForSignature(sharedSecret.LocalKeyID(),
 		counterparty.GetAdsCertIdentityDomain(),
@@ -101,29 +101,29 @@ func (s *localAuthenticatedConnectionsSignatory) VerifySigningPackage(request *A
 		return response, fmt.Errorf("signature decode failure: %v", err)
 	}
 
-	glog.Infof("parsed ACS: %+v", acs)
+	logger.Logger.Info("parsed ACS: %+v", acs)
 
 	// Validate invocation hostname matches request
 	if acs.GetAttributeInvoking() != request.RequestInfo.InvocationHostname {
 		// TODO: Unrelated signature error
-		glog.Infof("unrelated signature %s versus %s", acs.GetAttributeInvoking(), request.RequestInfo.InvocationHostname)
+		logger.Logger.Info("unrelated signature %s versus %s", acs.GetAttributeInvoking(), request.RequestInfo.InvocationHostname)
 		return response, fmt.Errorf("unrelated signature %s versus %s", acs.GetAttributeInvoking(), request.RequestInfo.InvocationHostname)
 	}
 
 	// Look up originator by callsign
 	signatureCounterparty, err := s.counterpartyManager.LookUpSignatureCounterpartyByCallsign(acs.GetAttributeFrom())
 	if err != nil {
-		glog.Info("counterparty lookup error")
+		logger.Logger.Info("counterparty lookup error")
 		return response, err
 	}
 
 	if !signatureCounterparty.HasSharedSecret() {
 		// TODO: shared secret missing error
-		glog.Info("no shared secret")
+		logger.Logger.Info("no shared secret")
 		return response, nil
 	}
 
-	glog.Info("checking signatures")
+	logger.Logger.Info("checking signatures")
 	bodyHMAC, urlHMAC := generateSignatures(signatureCounterparty, []byte(acs.EncodeMessage()), request.RequestInfo.BodyHash[:], request.RequestInfo.URLHash[:])
 	response.BodyValid, response.URLValid = acs.CompareSignatures(bodyHMAC, urlHMAC)
 	return response, nil
