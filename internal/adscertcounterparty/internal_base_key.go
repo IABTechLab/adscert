@@ -109,6 +109,7 @@ func privateKeysToKeyMap(privateKeys []string) (keyMap, error) {
 	for _, privateKeyBase64 := range privateKeys {
 		privateKey, err := parseKeyFromString(privateKeyBase64)
 		if err != nil {
+			logger.Logger.Error("Error parsing key: ", err)
 			return nil, err
 		}
 
@@ -127,6 +128,7 @@ func parseKeyFromString(base64EncodedKey string) (*x25519Key, error) {
 	var key x25519Key
 	rawKeyBytes, err := formats.ParseBase64EncodedKey(base64EncodedKey, 32)
 	if err != nil {
+		logger.Logger.Error("Error parsing encoded key: ", err)
 		return nil, err
 	}
 	if n := copy(key.keyBytes[:], rawKeyBytes); n != 32 {

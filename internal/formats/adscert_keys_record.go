@@ -57,6 +57,7 @@ func DecodeAdsCertKeysRecord(keysRecord string) (*AdsCertKeys, error) {
 		case "p":
 			publicKeyBytes, err := ParseBase64EncodedKey(value, 32)
 			if err != nil {
+				logger.Logger.Error("Error decoding encoded public key: ", err)
 				return nil, err
 			}
 			parsedKeys.PublicKeys = append(parsedKeys.PublicKeys,

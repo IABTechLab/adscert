@@ -91,11 +91,12 @@ func parseLog(log string) (*adscert.AuthenticatedConnectionSignatureParams, erro
 	signaturesHeader := parsedLog[1]
 	hashedRequestBodyBytes, err := base64.StdEncoding.DecodeString(parsedLog[2])
 	if err != nil {
-		logger.Logger.Error("Error decoding string: ", err)
+		logger.Logger.Error("Error decoding request body string: ", err)
 		return nil, err
 	}
 	hashedDestinationURLBytes, err := base64.StdEncoding.DecodeString(parsedLog[3])
 	if err != nil {
+		logger.Logger.Error("Error decoding destination URL string: ", err)
 		return nil, err
 	}
 	copy(hashedRequestBody[:], hashedRequestBodyBytes[:32])

@@ -49,12 +49,14 @@ func (s *localAuthenticatedConnectionsSignatory) EmbossSigningPackage(request *A
 	// TODO: psl cleanup
 	invocationCounterparty, err := s.counterpartyManager.LookUpInvocationCounterpartyByHostname(request.RequestInfo.InvocationHostname)
 	if err != nil {
+		logger.Logger.Error("Error looking up invocation counterparty: ", err)
 		return nil, err
 	}
 
 	for _, counterparty := range invocationCounterparty.GetSignatureCounterparties() {
 		message, err := s.embossSingleMessage(request, counterparty)
 		if err != nil {
+			logger.Logger.Error("Error embossing message: ", err)
 			return nil, err
 		}
 		response.SignatureMessages = append(response.SignatureMessages, message)
