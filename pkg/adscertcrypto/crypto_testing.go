@@ -13,19 +13,16 @@ import (
 
 func GenerateFakePrivateKeysForTesting(adscertCallsign string) []string {
 	_, primaryPrivateKey := GenerateFakeKeyPairFromDomainNameForTesting("_delivery._adscert." + adscertCallsign)
-	_, alternatePrivateKey := GenerateFakeKeyPairFromDomainNameForTesting("alternate._delivery._adscert." + adscertCallsign)
 	return []string{
 		base64.RawURLEncoding.EncodeToString(primaryPrivateKey[:]),
-		base64.RawURLEncoding.EncodeToString(alternatePrivateKey[:])}
+	}
 }
 
 func GenerateFakeAdsCertRecordForTesting(adscertCallsign string) string {
 	primaryPublicKey, _ := GenerateFakeKeyPairFromDomainNameForTesting(adscertCallsign)
-	alternatePublicKey, _ := GenerateFakeKeyPairFromDomainNameForTesting("alternate." + adscertCallsign)
-
-	return fmt.Sprintf("v=adcrtd k=x25519 h=sha256 p=%s p=%s",
+	return fmt.Sprintf("v=adcrtd k=x25519 h=sha256 p=%s",
 		base64.RawURLEncoding.EncodeToString(primaryPublicKey[:]),
-		base64.RawURLEncoding.EncodeToString(alternatePublicKey[:]))
+	)
 }
 
 func GenerateFakeKeyPairFromDomainNameForTesting(adscertCallsign string) ([32]byte, [32]byte) {
