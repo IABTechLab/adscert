@@ -108,7 +108,7 @@ func (c *DemoClient) initiateRequest() error {
 
 	req.Header["X-Ads-Cert-Auth"] = signature.SignatureMessages
 
-	glog.Infof("Requesting URL %s %s with headers %v", req.Method, req.URL, req.Header)
+	glog.Infof("Requesting URL %s %s with signature %s", req.Method, req.URL, signature)
 
 	if c.SignatureFileLogger != nil {
 		_, invocationHostname, err := utils.ParseURLComponents(c.DestinationURL)
@@ -122,7 +122,6 @@ func (c *DemoClient) initiateRequest() error {
 	}
 
 	if c.ActuallySendRequest {
-		glog.Info("Sending request...")
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			return fmt.Errorf("error sending HTTP request: %v", err)
@@ -130,7 +129,7 @@ func (c *DemoClient) initiateRequest() error {
 
 		scanner := bufio.NewScanner(resp.Body)
 		for i := 0; scanner.Scan() && i < 5; i++ {
-			fmt.Println(scanner.Text())
+			glog.Infof("Received reply: %s", scanner.Text())
 		}
 		if err := scanner.Err(); err != nil {
 			return fmt.Errorf("error reading response: %v", err)

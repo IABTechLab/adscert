@@ -1,6 +1,7 @@
 package adscert
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
@@ -53,11 +54,28 @@ type AuthenticatedConnectionSignatureParams struct {
 type AuthenticatedConnectionSignature struct {
 	SignatureMessages []string
 
-	// Curtis notes:
-	// See AuthenticatedConnectionVerification below for notes about signature metadata. We'll want
-	// to expose structured data about the outcomes of signing operations so that the integrator
+	// Exposes structured data about the outcomes of signing operations so that the integrator
 	// can use that information for monitoring and analytics (e.g. monitoring the distribution
 	// of signature outcome status codes.)
+	SignatureInfo []adscertcrypto.SignatureInfo
+	
+	// Curtis notes:
+	// See AuthenticatedConnectionVerification below for notes about signature metadata.  We
+	// should make the signing and verification API consistent about how metadata gets surfaced.
+}
+
+// String provides a summary of the generated signature, including the
+// originating and destination parties.  It also includes the keys used.
+// Signature responses containing multiple values will be concatentated into one
+// string, where applicable.
+func (acs *AuthenticatedConnectionSignature) String() string {
+	var result string
+
+	for i, si := range acs.SignatureInfo {
+		result += fmt.Sprintf("[%d]{%s}", i, si)
+	}
+
+	return result
 }
 
 // AuthenticatedConnectionVerification captures the results of verifying a

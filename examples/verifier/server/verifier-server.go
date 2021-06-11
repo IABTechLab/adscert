@@ -62,5 +62,5 @@ func (s *DemoServer) HandleRequest(w http.ResponseWriter, req *http.Request) {
 			SignatureMessageToVerify: signatureHeaders,
 		})
 
-	fmt.Fprintf(w, "You invoked %s with headers %v and verification %v %v\n", reconstructedURL.String(), req.Header, verification.BodyValid, verification.URLValid)
+	fmt.Fprintf(w, "You invoked %s with X-Ads-Cert-Auth headers %v and verification body:%v URL:%v\n", reconstructedURL.String(), req.Header["X-Ads-Cert-Auth"], verification.BodyValid, verification.URLValid)
 }

@@ -74,9 +74,11 @@ func ExampleAuthenticatedConnectionsSigner_SignAuthenticatedConnection() {
 		log.Fatal("unable to sign message: ", err)
 	}
 
-	fmt.Print("Signature passed via X-Ads-Cert-Auth: ", signature.SignatureMessages)
+	fmt.Printf("Signature passed via X-Ads-Cert-Auth: %s\n\n", signature.SignatureMessages)
+	fmt.Printf("Structured metadata: %s\n", signature.SignatureInfo)
 	// Output: Signature passed via X-Ads-Cert-Auth: [from=origin-signer.com&from_key=r-BSNk&invoking=destination-verifier.com&nonce=AZT9wvov_MBB&status=0&timestamp=010101T010101&to=destination-verifier.com&to_key=i-HvLK; sigb=2dtJtvfSVDLX&sigu=gZUNJnfe29cv]
-
+	//
+	// Structured metadata: [Status  From origin-signer.com:r-BSNk Invoking destination-verifier.com To destination-verifier.com:i-HvLK Header "from=origin-signer.com&from_key=r-BSNk&invoking=destination-verifier.com&nonce=AZT9wvov_MBB&status=0&timestamp=010101T010101&to=destination-verifier.com&to_key=i-HvLK; sigb=2dtJtvfSVDLX&sigu=gZUNJnfe29cv"]
 }
 
 func ExampleAuthenticatedConnectionsSigner_VerifyAuthenticatedConnection() {
