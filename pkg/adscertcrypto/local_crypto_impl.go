@@ -53,44 +53,52 @@ func (s *localAuthenticatedConnectionsSignatory) EmbossSigningPackage(request *A
 	}
 
 	for _, counterparty := range invocationCounterparty.GetSignatureCounterparties() {
-		message, err := s.embossSingleMessage(request, counterparty)
+		signatureInfo, err := s.embossSingleMessage(request, counterparty)
 		if err != nil {
 			return nil, err
 		}
-		response.SignatureMessages = append(response.SignatureMessages, message)
+		response.SignatureInfo = append(response.SignatureInfo, *signatureInfo)
 	}
 
 	return response, nil
 }
 
-func (s *localAuthenticatedConnectionsSignatory) embossSingleMessage(request *AuthenticatedConnectionSigningPackage, counterparty adscertcounterparty.SignatureCounterparty) (string, error) {
-
+func (s *localAuthenticatedConnectionsSignatory) embossSingleMessage(request *AuthenticatedConnectionSigningPackage, counterparty adscertcounterparty.SignatureCounterparty) (*SignatureInfo, error) {
 	acs, err := formats.NewAuthenticatedConnectionSignature(counterparty.GetStatus().String(), s.originCallsign, request.RequestInfo.InvocationHostname)
 	if err != nil {
-		return "", fmt.Errorf("error constructing authenticated connection signature format: %v", err)
+		return nil, fmt.Errorf("error constructing authenticated connection signature format: %v", err)
 	}
 
-	glog.Infof("Counterparty info: %+v", counterparty)
+	signatureInfo := &SignatureInfo{
+		FromDomain:     s.originCallsign,
+		InvokingDomain: request.RequestInfo.InvocationHostname,
+	}
 
 	if !counterparty.HasSharedSecret() {
-		return acs.EncodeMessage(), nil
+		signatureInfo.SignatureMessage = acs.EncodeMessage()
+		return signatureInfo, nil
 	}
 
 	sharedSecret := counterparty.SharedSecret()
-
-	glog.Infof("trying signature %s %s %s", sharedSecret.LocalKeyID(), counterparty.GetAdsCertIdentityDomain(), sharedSecret.RemoteKeyID())
 
 	if err = acs.AddParametersForSignature(sharedSecret.LocalKeyID(),
 		counterparty.GetAdsCertIdentityDomain(),
 		sharedSecret.RemoteKeyID(),
 		request.Timestamp,
 		request.Nonce); err != nil {
-		return "", fmt.Errorf("error adding signature params: %v", err)
+		// TODO: Figure out how we want to expose structured metadata for failed signing ops.
+		return nil, fmt.Errorf("error adding signature params: %v", err)
 	}
+
+	// TODO: SignatureInfo needs to include the signature operation status.
+	signatureInfo.FromKey = sharedSecret.LocalKeyID()
+	signatureInfo.ToDomain = counterparty.GetAdsCertIdentityDomain()
+	signatureInfo.ToKey = sharedSecret.RemoteKeyID()
 
 	message := acs.EncodeMessage()
 	bodyHMAC, urlHMAC := generateSignatures(counterparty, []byte(message), request.RequestInfo.BodyHash[:], request.RequestInfo.URLHash[:])
-	return message + formats.EncodeSignatureSuffix(bodyHMAC, urlHMAC), nil
+	signatureInfo.SignatureMessage = message + formats.EncodeSignatureSuffix(bodyHMAC, urlHMAC)
+	return signatureInfo, nil
 }
 
 func (s *localAuthenticatedConnectionsSignatory) VerifySigningPackage(request *AuthenticatedConnectionVerificationPackage) (*AuthenticatedConnectionVerificationResponse, error) {
@@ -100,8 +108,6 @@ func (s *localAuthenticatedConnectionsSignatory) VerifySigningPackage(request *A
 	if err != nil {
 		return response, fmt.Errorf("signature decode failure: %v", err)
 	}
-
-	glog.Infof("parsed ACS: %+v", acs)
 
 	// Validate invocation hostname matches request
 	if acs.GetAttributeInvoking() != request.RequestInfo.InvocationHostname {
@@ -123,7 +129,6 @@ func (s *localAuthenticatedConnectionsSignatory) VerifySigningPackage(request *A
 		return response, nil
 	}
 
-	glog.Info("checking signatures")
 	bodyHMAC, urlHMAC := generateSignatures(signatureCounterparty, []byte(acs.EncodeMessage()), request.RequestInfo.BodyHash[:], request.RequestInfo.URLHash[:])
 	response.BodyValid, response.URLValid = acs.CompareSignatures(bodyHMAC, urlHMAC)
 	return response, nil

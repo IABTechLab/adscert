@@ -40,7 +40,14 @@ func (c *authenticatedConnectionsSigner) SignAuthenticatedConnection(params Auth
 		return response, fmt.Errorf("error embossing signing package: %v", err)
 	}
 
-	response.SignatureMessages = embossReply.SignatureMessages
+	// Enumerate the signature messages in an easy-to-use slice that the
+	// integrating application can put into the HTTP header message in one line.
+	for _, si := range embossReply.SignatureInfo {
+		response.SignatureMessages = append(response.SignatureMessages, si.SignatureMessage)
+	}
+
+	// Provide structured metadata about the signing operation.
+	response.SignatureInfo = embossReply.SignatureInfo
 
 	return response, nil
 }

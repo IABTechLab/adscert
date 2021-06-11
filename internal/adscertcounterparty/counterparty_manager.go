@@ -143,7 +143,6 @@ func (c *signatureCounterparty) GetStatus() CounterpartyStatus {
 }
 
 func (c *signatureCounterparty) HasSharedSecret() bool {
-	glog.Infof("current shared secret: %+v", c.counterpartyInfo.currentSharedSecret)
 	return c.counterpartyInfo.allSharedSecrets[c.counterpartyInfo.currentSharedSecret] != nil
 }
 
