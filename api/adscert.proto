@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package api;
+
+option go_package = "github.com/IABTechLab/adscert/internal/api";
+
+message AuthenticatedConnectionSignatureParams {
+    string destination_url = 1;
+    bytes request_body = 2;
+}
+
+message AuthenticatedConnectionSignature {
+    repeated string signatures = 1;
+}
+
+message AuthenticatedConnectionVerificationParams {
+    string destination_url = 1;
+    bytes request_body = 2;
+    repeated string signatures = 3;
+}
+
+message AuthenticatedConnectionVerification {
+    bool body_valid = 1;
+    bool url_valid = 2;
+}
+
+service AdsCert {
+    rpc SignAuthenticatedConnection(AuthenticatedConnectionSignatureParams) returns (AuthenticatedConnectionSignature) {}
+    rpc VerifyAuthenticatedConnection(AuthenticatedConnectionVerificationParams) returns (AuthenticatedConnectionVerification){}
+}
