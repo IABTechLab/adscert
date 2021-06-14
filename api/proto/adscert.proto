@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package api;
+
+option go_package = "/cmd/internal/api";
+
+message AuthenticatedConnectionSignatureParams {
+    string invocationHostname = 1;
+    string destinationUrl = 2;
+    string requestBody = 3;
+}
+
+message AuthenticatedConnectionSignature {
+    repeated string SignatureMessages = 1;
+}
+
+message AuthenticatedConnectionVerification {
+    bool bodyValid = 1;
+    bool urlValid = 2;
+}
+
+service AdsCert {
+    rpc SignAuthenticatedConnection(AuthenticatedConnectionSignatureParams) returns (AuthenticatedConnectionSignature) {}
+    rpc VerifyAuthenticatedConnection(AuthenticatedConnectionSignatureParams) returns (AuthenticatedConnectionVerification){}
+}
