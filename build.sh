@@ -1,4 +1,8 @@
-# protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative ./proto/adscert.proto
-protoc --go_out=.  --go-grpc_out=. ./api/proto/adscert.proto
+# generate protobuf/grpc code
+protoc --go_out=. --go_opt=module=github.com/IABTechLab/adscert --go-grpc_out=. --go-grpc_opt=module=github.com/IABTechLab/adscert ./api/adscert.proto
 
-docker build -t adscert:latest .
+# build grpc/server app
+go build ./cmd/server
+
+# build docker container
+### docker build -t adscert:latest .

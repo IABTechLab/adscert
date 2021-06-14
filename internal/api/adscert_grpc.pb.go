@@ -133,5 +133,5 @@ var AdsCert_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "api/proto/adscert.proto",
+	Metadata: "api/adscert.proto",
 }

@@ -8,7 +8,7 @@ import (
 	"log"
 	"net"
 
-	"github.com/IABTechLab/adscert/cmd/internal/api"
+	"github.com/IABTechLab/adscert/internal/api"
 	"github.com/IABTechLab/adscert/pkg/adscert"
 	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
 	"github.com/benbjohnson/clock"
@@ -52,11 +52,17 @@ type adsCertServer struct {
 }
 
 func (s *adsCertServer) SignAuthenticatedConnection(ctx context.Context, req *api.AuthenticatedConnectionSignatureParams) (*api.AuthenticatedConnectionSignature, error) {
-	signer.SignAuthenticatedConnection(adscert.AuthenticatedConnectionSignatureParams{
+
+	signature, err := signer.SignAuthenticatedConnection(adscert.AuthenticatedConnectionSignatureParams{
 		DestinationURL: req.DestinationUrl,
 		RequestBody:    []byte(req.RequestBody),
 	})
-	return &api.AuthenticatedConnectionSignature{}, nil
+
+	response := &api.AuthenticatedConnectionSignature{
+		SignatureMessages: signature.SignatureMessages,
+	}
+
+	return response, err
 }
 
 func (s *adsCertServer) VerifyAuthenticatedConnection(ctx context.Context, req *api.AuthenticatedConnectionSignatureParams) (*api.AuthenticatedConnectionVerification, error) {

@@ -2,21 +2,21 @@ syntax = "proto3";
 
 package api;
 
-option go_package = "/cmd/internal/api";
+option go_package = "github.com/IABTechLab/adscert/internal/api";
 
 message AuthenticatedConnectionSignatureParams {
-    string invocationHostname = 1;
-    string destinationUrl = 2;
-    string requestBody = 3;
+    string invocation_hostname = 1;
+    string destination_url = 2;
+    string request_body = 3;
 }
 
 message AuthenticatedConnectionSignature {
-    repeated string SignatureMessages = 1;
+    repeated string signature_messages = 1;
 }
 
 message AuthenticatedConnectionVerification {
-    bool bodyValid = 1;
-    bool urlValid = 2;
+    bool body_valid = 1;
+    bool url_valid = 2;
 }
 
 service AdsCert {
