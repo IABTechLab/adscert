@@ -9,5 +9,6 @@ WORKDIR /app
 RUN apk --no-cache add ca-certificates
 COPY --from=builder /src/server .
 
+ENV ORIGIN ""
 EXPOSE 3000
 ENTRYPOINT [ "./server" ]

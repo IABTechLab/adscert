@@ -19,7 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AdsCertClient interface {
 	SignAuthenticatedConnection(ctx context.Context, in *AuthenticatedConnectionSignatureParams, opts ...grpc.CallOption) (*AuthenticatedConnectionSignature, error)
-	VerifyAuthenticatedConnection(ctx context.Context, in *AuthenticatedConnectionSignatureParams, opts ...grpc.CallOption) (*AuthenticatedConnectionVerification, error)
+	VerifyAuthenticatedConnection(ctx context.Context, in *AuthenticatedConnectionVerificationParams, opts ...grpc.CallOption) (*AuthenticatedConnectionVerification, error)
 }
 
 type adsCertClient struct {
@@ -39,7 +39,7 @@ func (c *adsCertClient) SignAuthenticatedConnection(ctx context.Context, in *Aut
 	return out, nil
 }
 
-func (c *adsCertClient) VerifyAuthenticatedConnection(ctx context.Context, in *AuthenticatedConnectionSignatureParams, opts ...grpc.CallOption) (*AuthenticatedConnectionVerification, error) {
+func (c *adsCertClient) VerifyAuthenticatedConnection(ctx context.Context, in *AuthenticatedConnectionVerificationParams, opts ...grpc.CallOption) (*AuthenticatedConnectionVerification, error) {
 	out := new(AuthenticatedConnectionVerification)
 	err := c.cc.Invoke(ctx, "/api.AdsCert/VerifyAuthenticatedConnection", in, out, opts...)
 	if err != nil {
@@ -53,7 +53,7 @@ func (c *adsCertClient) VerifyAuthenticatedConnection(ctx context.Context, in *A
 // for forward compatibility
 type AdsCertServer interface {
 	SignAuthenticatedConnection(context.Context, *AuthenticatedConnectionSignatureParams) (*AuthenticatedConnectionSignature, error)
-	VerifyAuthenticatedConnection(context.Context, *AuthenticatedConnectionSignatureParams) (*AuthenticatedConnectionVerification, error)
+	VerifyAuthenticatedConnection(context.Context, *AuthenticatedConnectionVerificationParams) (*AuthenticatedConnectionVerification, error)
 	mustEmbedUnimplementedAdsCertServer()
 }
 
@@ -64,7 +64,7 @@ type UnimplementedAdsCertServer struct {
 func (UnimplementedAdsCertServer) SignAuthenticatedConnection(context.Context, *AuthenticatedConnectionSignatureParams) (*AuthenticatedConnectionSignature, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SignAuthenticatedConnection not implemented")
 }
-func (UnimplementedAdsCertServer) VerifyAuthenticatedConnection(context.Context, *AuthenticatedConnectionSignatureParams) (*AuthenticatedConnectionVerification, error) {
+func (UnimplementedAdsCertServer) VerifyAuthenticatedConnection(context.Context, *AuthenticatedConnectionVerificationParams) (*AuthenticatedConnectionVerification, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VerifyAuthenticatedConnection not implemented")
 }
 func (UnimplementedAdsCertServer) mustEmbedUnimplementedAdsCertServer() {}
@@ -99,7 +99,7 @@ func _AdsCert_SignAuthenticatedConnection_Handler(srv interface{}, ctx context.C
 }
 
 func _AdsCert_VerifyAuthenticatedConnection_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AuthenticatedConnectionSignatureParams)
+	in := new(AuthenticatedConnectionVerificationParams)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func _AdsCert_VerifyAuthenticatedConnection_Handler(srv interface{}, ctx context
 		FullMethod: "/api.AdsCert/VerifyAuthenticatedConnection",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdsCertServer).VerifyAuthenticatedConnection(ctx, req.(*AuthenticatedConnectionSignatureParams))
+		return srv.(AdsCertServer).VerifyAuthenticatedConnection(ctx, req.(*AuthenticatedConnectionVerificationParams))
 	}
 	return interceptor(ctx, in, info, handler)
 }

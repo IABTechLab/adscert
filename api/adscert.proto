@@ -5,13 +5,18 @@ package api;
 option go_package = "github.com/IABTechLab/adscert/internal/api";
 
 message AuthenticatedConnectionSignatureParams {
-    string invocation_hostname = 1;
-    string destination_url = 2;
-    string request_body = 3;
+    string destination_url = 1;
+    bytes request_body = 2;
 }
 
 message AuthenticatedConnectionSignature {
-    repeated string signature_messages = 1;
+    repeated string signatures = 1;
+}
+
+message AuthenticatedConnectionVerificationParams {
+    string destination_url = 1;
+    bytes request_body = 2;
+    repeated string signatures = 3;
 }
 
 message AuthenticatedConnectionVerification {
@@ -21,5 +26,5 @@ message AuthenticatedConnectionVerification {
 
 service AdsCert {
     rpc SignAuthenticatedConnection(AuthenticatedConnectionSignatureParams) returns (AuthenticatedConnectionSignature) {}
-    rpc VerifyAuthenticatedConnection(AuthenticatedConnectionSignatureParams) returns (AuthenticatedConnectionVerification){}
+    rpc VerifyAuthenticatedConnection(AuthenticatedConnectionVerificationParams) returns (AuthenticatedConnectionVerification){}
 }
