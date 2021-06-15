@@ -36,42 +36,36 @@ func (l *StandardGolangLogger) Debugf(format string, args ...interface{}) {
 }
 
 func (l *StandardGolangLogger) Infof(format string, args ...interface{}) {
-	// Work around standard logger lack of verbosity levels
 	if l.VerbosityLevel <= INFO {
 		log.Printf(format, args...)
 	}
 }
 
 func (l *StandardGolangLogger) Info(format string) {
-	// Work around standard logger lack of verbosity levels
 	if l.VerbosityLevel <= INFO {
 		log.Print(format)
 	}
 }
 
 func (l *StandardGolangLogger) Warningf(format string, args ...interface{}) {
-	// Work around standard logger lack of verbosity levels
 	if l.VerbosityLevel <= WARNING {
 		log.Printf(format, args...)
 	}
 }
 
 func (l *StandardGolangLogger) Errorf(format string, args ...interface{}) {
-	// Work around standard logger lack of verbosity levels
 	if l.VerbosityLevel <= ERROR {
 		log.Printf(format, args...)
 	}
 }
 
 func (l *StandardGolangLogger) Fatalf(format string, args ...interface{}) {
-	// Work around standard logger lack of verbosity levels
 	if l.VerbosityLevel <= FATAL {
 		log.Printf(format, args...)
 	}
 }
 
 func (l *StandardGolangLogger) Panicf(format string, args ...interface{}) {
-	// Work around standard logger lack of verbosity levels
 	if l.VerbosityLevel <= PANIC {
 		log.Printf(format, args...)
 	}
