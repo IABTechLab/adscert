@@ -7,10 +7,10 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/IABTechLab/adscert/internal/logger"
 	"github.com/IABTechLab/adscert/pkg/adscert"
 	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
 	"github.com/benbjohnson/clock"
-	"github.com/golang/glog"
 )
 
 var (
@@ -22,7 +22,7 @@ var (
 func main() {
 	flag.Parse()
 
-	glog.Info("Starting demo server.")
+	logger.Infof("Starting demo server.")
 
 	privateKeysBase64 := adscertcrypto.GenerateFakePrivateKeysForTesting(*hostCallsign)
 

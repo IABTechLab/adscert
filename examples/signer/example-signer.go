@@ -13,11 +13,11 @@ import (
 	"os"
 	"time"
 
+	"github.com/IABTechLab/adscert/internal/logger"
 	"github.com/IABTechLab/adscert/internal/utils"
 	"github.com/IABTechLab/adscert/pkg/adscert"
 	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
 	"github.com/benbjohnson/clock"
-	"github.com/golang/glog"
 )
 
 var (
@@ -38,7 +38,7 @@ var (
 func main() {
 	flag.Parse()
 
-	glog.Info("Starting demo client.")
+	logger.Infof("Starting demo client.")
 
 	privateKeysBase64 := adscertcrypto.GenerateFakePrivateKeysForTesting(*originCallsign)
 
@@ -46,7 +46,7 @@ func main() {
 	if *signatureLogFile != "" {
 		file, err := os.OpenFile(*signatureLogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 		if err != nil {
-			glog.Fatal(err)
+			logger.Fatalf(err.Error())
 		}
 		defer file.Close()
 
@@ -86,7 +86,7 @@ func (c *DemoClient) StartRequestLoop() {
 	c.initiateRequest()
 	for range c.Ticker.C {
 		if err := c.initiateRequest(); err != nil {
-			glog.Warningf("Error sending request: %v", err)
+			logger.Warningf("Error sending request: %v", err)
 		}
 	}
 }
@@ -103,12 +103,12 @@ func (c *DemoClient) initiateRequest() error {
 			RequestBody:    c.Body,
 		})
 	if err != nil {
-		glog.Warningf("unable to sign message (continuing...): %v", err)
+		logger.Warningf("unable to sign message (continuing...): %v", err)
 	}
 
 	req.Header["X-Ads-Cert-Auth"] = signature.SignatureMessages
 
-	glog.Infof("Requesting URL %s %s with signature %s", req.Method, req.URL, signature)
+	logger.Infof("Requesting URL %s %s with signature %s", req.Method, req.URL, signature)
 
 	if c.SignatureFileLogger != nil {
 		_, invocationHostname, err := utils.ParseURLComponents(c.DestinationURL)
@@ -129,13 +129,13 @@ func (c *DemoClient) initiateRequest() error {
 
 		scanner := bufio.NewScanner(resp.Body)
 		for i := 0; scanner.Scan() && i < 5; i++ {
-			glog.Infof("Received reply: %s", scanner.Text())
+			logger.Infof("Received reply: %s", scanner.Text())
 		}
 		if err := scanner.Err(); err != nil {
 			return fmt.Errorf("error reading response: %v", err)
 		}
 	} else {
-		glog.Info("(Request not actually sent)")
+		logger.Infof("(Request not actually sent)")
 	}
 	return nil
 }
