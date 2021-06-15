@@ -8,10 +8,10 @@ import (
 	"os"
 	"strings"
 
+	"github.com/IABTechLab/adscert/internal/logger"
 	"github.com/IABTechLab/adscert/pkg/adscert"
 	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
 	"github.com/benbjohnson/clock"
-	"github.com/golang/glog"
 )
 
 var (
@@ -22,14 +22,16 @@ var (
 	signatureLogFile = flag.String("signature_log_file", "", "Verify all logged signatures and hashes in file")
 )
 
+var standardLogger = logger.NewLogger(nil)
+
 func main() {
 	flag.Parse()
 
-	glog.Info("Verifying log file.")
+	standardLogger.Infof("Verifying log file.")
 
 	file, err := os.Open(*signatureLogFile)
 	if err != nil {
-		glog.Fatalf("Failed to open file: %s", err)
+		standardLogger.Fatalf("Failed to open file: %s", err)
 	}
 	defer file.Close()
 
@@ -53,7 +55,7 @@ func main() {
 		signatureParams, err := parseLog(line)
 		if err != nil {
 			parseErrorCount++
-			glog.Errorf("Error parsing log: %s", err)
+			standardLogger.Errorf("Error parsing log: %s", err)
 			continue
 		}
 
@@ -62,7 +64,7 @@ func main() {
 		verification, err := signer.VerifyAuthenticatedConnection(*signatureParams)
 		if err != nil {
 			verifyErrorCount++
-			glog.Errorf("unable to verify message: %s", err)
+			standardLogger.Errorf("unable to verify message: %s", err)
 			continue
 		}
 
@@ -72,13 +74,13 @@ func main() {
 		if verification.URLValid {
 			validUrlCount++
 		}
-		glog.Infof("Valid Request Body: %t, Valid Request URL: %t", verification.BodyValid, verification.URLValid)
+		standardLogger.Infof("Valid Request Body: %t, Valid Request URL: %t", verification.BodyValid, verification.URLValid)
 	}
 
-	glog.Infof("\n--- Summary --- \nlogEntries: %d, parseErrors: %d, verificationErrors: %d, validRequests: %d, validUrls: %d", logCount, parseErrorCount, verifyErrorCount, validRequestCount, validUrlCount)
+	standardLogger.Infof("\n--- Summary --- \nlogEntries: %d, parseErrors: %d, verificationErrors: %d, validRequests: %d, validUrls: %d", logCount, parseErrorCount, verifyErrorCount, validRequestCount, validUrlCount)
 
 	if err := scanner.Err(); err != nil {
-		glog.Fatalf("Error reading line: %s ", err)
+		standardLogger.Fatalf("Error reading line: %s ", err)
 	}
 }
 

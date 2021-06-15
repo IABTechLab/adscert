@@ -8,8 +8,10 @@ import (
 	"time"
 
 	"github.com/IABTechLab/adscert/internal/formats"
-	"github.com/golang/glog"
+	"github.com/IABTechLab/adscert/internal/logger"
 )
+
+var standardLogger = logger.NewLogger(nil)
 
 type DNSResolver interface {
 	LookupTXT(ctx context.Context, name string) ([]string, error)
@@ -83,7 +85,7 @@ func NewCounterpartyManager(dnsResolver DNSResolver, base64PrivateKeys []string)
 	// TODO: properly read in private key.
 	myPrivateKeys, err := privateKeysToKeyMap(base64PrivateKeys)
 	if err != nil {
-		glog.Fatalf("Error parsing private keys: %v", err)
+		standardLogger.Fatalf("Error parsing private keys: %v", err)
 	}
 	cm.myPrivateKeys = myPrivateKeys
 
@@ -191,12 +193,12 @@ func (cm *counterpartyManager) startAutoUpdate() {
 		for {
 			select {
 			case <-ctx.Done():
-				glog.Info("shutting down auto-update")
+				standardLogger.Infof("shutting down auto-update")
 				return
 			case <-cm.ticker.C:
-				glog.Info("automatic wake-up")
+				standardLogger.Infof("automatic wake-up")
 			case <-cm.wakeUp:
-				glog.Info("manual wake-up from wake-up signal")
+				standardLogger.Infof("manual wake-up from wake-up signal")
 			}
 			cm.performUpdateSweep(ctx)
 		}
@@ -204,26 +206,26 @@ func (cm *counterpartyManager) startAutoUpdate() {
 }
 
 func (cm *counterpartyManager) performUpdateSweep(ctx context.Context) {
-	glog.Infof("Starting ads.cert update sweep")
+	standardLogger.Infof("Starting ads.cert update sweep")
 	for domain := range cm.counterparties.Load().(counterpartyMap) {
 		currentCounterpartyState := cm.lookup(domain)
 
 		// Make this timing configurable
 		if currentCounterpartyState.lastUpdateTime.Before(time.Now().Add(-300 * time.Second)) {
-			glog.Infof("Trying to do an update for domain %s", domain)
+			standardLogger.Infof("Trying to do an update for domain %s", domain)
 
 			start := time.Now()
 			baseSubdomain := "_adscert." + domain
 
 			baseSubdomainRecords, err := cm.dnsResolver.LookupTXT(ctx, baseSubdomain)
 			if err != nil {
-				glog.Warningf("Error looking up record for %s in %v: %v", baseSubdomainRecords, time.Now().Sub(start), err)
+				standardLogger.Warningf("Error looking up record for %s in %v: %v", baseSubdomainRecords, time.Now().Sub(start), err)
 			} else {
-				glog.Infof("Found text record for %s in %v: %v", baseSubdomain, time.Now().Sub(start), baseSubdomainRecords)
+				standardLogger.Infof("Found text record for %s in %v: %v", baseSubdomain, time.Now().Sub(start), baseSubdomainRecords)
 
 				adsCertPolicy, err := formats.DecodeAdsCertPolicyRecord(baseSubdomainRecords[0])
 				if err != nil {
-					glog.Warningf("Error parsing ads.cert policy record for %s: %v", baseSubdomain, err)
+					standardLogger.Warningf("Error parsing ads.cert policy record for %s: %v", baseSubdomain, err)
 				} else {
 					// TODO: Evaluate adding support for multiple signature domains.
 					currentCounterpartyState.signatureCounterpartyDomains = []string{adsCertPolicy.CanonicalCallsignDomain}
@@ -238,14 +240,14 @@ func (cm *counterpartyManager) performUpdateSweep(ctx context.Context) {
 			deliverySubdomainRecords, err := cm.dnsResolver.LookupTXT(ctx, deliverySubdomain)
 
 			if err != nil {
-				glog.Warningf("Error looking up record for %s in %v: %v", deliverySubdomain, time.Now().Sub(start), err)
+				standardLogger.Warningf("Error looking up record for %s in %v: %v", deliverySubdomain, time.Now().Sub(start), err)
 			} else {
-				glog.Infof("Found text record for %s in %v: %v", deliverySubdomain, time.Now().Sub(start), deliverySubdomainRecords)
+				standardLogger.Infof("Found text record for %s in %v: %v", deliverySubdomain, time.Now().Sub(start), deliverySubdomainRecords)
 
 				// Assume one and only one TXT record
 				adsCertKeys, err := formats.DecodeAdsCertKeysRecord(deliverySubdomainRecords[0])
 				if err != nil {
-					glog.Warningf("Error parsing ads.cert record for %s: %v", deliverySubdomain, err)
+					standardLogger.Warningf("Error parsing ads.cert record for %s: %v", deliverySubdomain, err)
 				} else if len(adsCertKeys.PublicKeys) > 0 {
 					currentCounterpartyState.allPublicKeys = asKeyMap(*adsCertKeys)
 					currentCounterpartyState.currentPublicKey = keyAlias(adsCertKeys.PublicKeys[0].KeyAlias)
@@ -268,7 +270,7 @@ func (cm *counterpartyManager) performUpdateSweep(ctx context.Context) {
 			currentCounterpartyState.lastUpdateTime = time.Now()
 			cm.update(domain, currentCounterpartyState)
 		} else {
-			glog.Infof("skipping update for domain %s which is already up to date.", domain)
+			standardLogger.Infof("skipping update for domain %s which is already up to date.", domain)
 		}
 	}
 }
@@ -281,11 +283,11 @@ func (cm *counterpartyManager) StopAutoUpdate() {
 func (cm *counterpartyManager) UpdateNow() {
 	select {
 	case cm.wakeUp <- struct{}{}:
-		glog.Info("Wrote to wake-up channel.")
+		standardLogger.Infof("Wrote to wake-up channel.")
 		// Channel publish succeeded.
 	default:
 		// Channel already has pending wake-up call.
-		glog.Info("Didn't write to wake-up channel since there's a request pending")
+		standardLogger.Infof("Didn't write to wake-up channel since there's a request pending")
 	}
 }
 

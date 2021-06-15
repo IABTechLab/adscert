@@ -7,9 +7,11 @@ import (
 	"fmt"
 
 	"github.com/IABTechLab/adscert/internal/adscertcounterparty"
-	"github.com/golang/glog"
+	"github.com/IABTechLab/adscert/internal/logger"
 	"golang.org/x/crypto/curve25519"
 )
+
+var standardLogger = logger.NewLogger(nil)
 
 func GenerateFakePrivateKeysForTesting(adscertCallsign string) []string {
 	_, primaryPrivateKey := GenerateFakeKeyPairFromDomainNameForTesting("_delivery._adscert." + adscertCallsign)
@@ -36,7 +38,7 @@ type keyGeneratingDNSResolver struct{}
 
 func (r *keyGeneratingDNSResolver) LookupTXT(ctx context.Context, name string) ([]string, error) {
 	adsCertRecord := GenerateFakeAdsCertRecordForTesting(name)
-	glog.Infof("Serving fake DNS record for %s: %s", name, adsCertRecord)
+	standardLogger.Infof("Serving fake DNS record for %s: %s", name, adsCertRecord)
 	return []string{adsCertRecord}, nil
 }
 

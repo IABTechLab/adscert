@@ -7,10 +7,10 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/IABTechLab/adscert/internal/logger"
 	"github.com/IABTechLab/adscert/pkg/adscert"
 	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
 	"github.com/benbjohnson/clock"
-	"github.com/golang/glog"
 )
 
 var (
@@ -19,10 +19,12 @@ var (
 		"When enabled, this code skips performing real DNS lookups and instead simulates DNS-based keys by generating a key pair based on the domain name.")
 )
 
+var standardLogger = logger.NewLogger(nil)
+
 func main() {
 	flag.Parse()
 
-	glog.Info("Starting demo server.")
+	standardLogger.Infof("Starting demo server.")
 
 	privateKeysBase64 := adscertcrypto.GenerateFakePrivateKeysForTesting(*hostCallsign)
 

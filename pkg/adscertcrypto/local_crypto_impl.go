@@ -7,7 +7,6 @@ import (
 
 	"github.com/IABTechLab/adscert/internal/adscertcounterparty"
 	"github.com/IABTechLab/adscert/internal/formats"
-	"github.com/golang/glog"
 )
 
 type AuthenticatedConnectionsSignatory interface {
@@ -112,20 +111,20 @@ func (s *localAuthenticatedConnectionsSignatory) VerifySigningPackage(request *A
 	// Validate invocation hostname matches request
 	if acs.GetAttributeInvoking() != request.RequestInfo.InvocationHostname {
 		// TODO: Unrelated signature error
-		glog.Infof("unrelated signature %s versus %s", acs.GetAttributeInvoking(), request.RequestInfo.InvocationHostname)
+		standardLogger.Infof("unrelated signature %s versus %s", acs.GetAttributeInvoking(), request.RequestInfo.InvocationHostname)
 		return response, fmt.Errorf("unrelated signature %s versus %s", acs.GetAttributeInvoking(), request.RequestInfo.InvocationHostname)
 	}
 
 	// Look up originator by callsign
 	signatureCounterparty, err := s.counterpartyManager.LookUpSignatureCounterpartyByCallsign(acs.GetAttributeFrom())
 	if err != nil {
-		glog.Info("counterparty lookup error")
+		standardLogger.Infof("counterparty lookup error")
 		return response, err
 	}
 
 	if !signatureCounterparty.HasSharedSecret() {
 		// TODO: shared secret missing error
-		glog.Info("no shared secret")
+		standardLogger.Infof("no shared secret")
 		return response, nil
 	}
 
