@@ -22,16 +22,14 @@ var (
 	signatureLogFile = flag.String("signature_log_file", "", "Verify all logged signatures and hashes in file")
 )
 
-var standardLogger = logger.NewLogger(nil)
-
 func main() {
 	flag.Parse()
 
-	standardLogger.Infof("Verifying log file.")
+	logger.Infof("Verifying log file.")
 
 	file, err := os.Open(*signatureLogFile)
 	if err != nil {
-		standardLogger.Fatalf("Failed to open file: %s", err)
+		logger.Fatalf("Failed to open file: %s", err)
 	}
 	defer file.Close()
 
@@ -55,7 +53,7 @@ func main() {
 		signatureParams, err := parseLog(line)
 		if err != nil {
 			parseErrorCount++
-			standardLogger.Errorf("Error parsing log: %s", err)
+			logger.Errorf("Error parsing log: %s", err)
 			continue
 		}
 
@@ -64,7 +62,7 @@ func main() {
 		verification, err := signer.VerifyAuthenticatedConnection(*signatureParams)
 		if err != nil {
 			verifyErrorCount++
-			standardLogger.Errorf("unable to verify message: %s", err)
+			logger.Errorf("unable to verify message: %s", err)
 			continue
 		}
 
@@ -74,13 +72,13 @@ func main() {
 		if verification.URLValid {
 			validUrlCount++
 		}
-		standardLogger.Infof("Valid Request Body: %t, Valid Request URL: %t", verification.BodyValid, verification.URLValid)
+		logger.Infof("Valid Request Body: %t, Valid Request URL: %t", verification.BodyValid, verification.URLValid)
 	}
 
-	standardLogger.Infof("\n--- Summary --- \nlogEntries: %d, parseErrors: %d, verificationErrors: %d, validRequests: %d, validUrls: %d", logCount, parseErrorCount, verifyErrorCount, validRequestCount, validUrlCount)
+	logger.Infof("\n--- Summary --- \nlogEntries: %d, parseErrors: %d, verificationErrors: %d, validRequests: %d, validUrls: %d", logCount, parseErrorCount, verifyErrorCount, validRequestCount, validUrlCount)
 
 	if err := scanner.Err(); err != nil {
-		standardLogger.Fatalf("Error reading line: %s ", err)
+		logger.Fatalf("Error reading line: %s ", err)
 	}
 }
 

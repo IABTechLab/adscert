@@ -11,8 +11,6 @@ import (
 	"golang.org/x/crypto/curve25519"
 )
 
-var standardLogger = logger.NewLogger(nil)
-
 func GenerateFakePrivateKeysForTesting(adscertCallsign string) []string {
 	_, primaryPrivateKey := GenerateFakeKeyPairFromDomainNameForTesting("_delivery._adscert." + adscertCallsign)
 	return []string{
@@ -38,7 +36,7 @@ type keyGeneratingDNSResolver struct{}
 
 func (r *keyGeneratingDNSResolver) LookupTXT(ctx context.Context, name string) ([]string, error) {
 	adsCertRecord := GenerateFakeAdsCertRecordForTesting(name)
-	standardLogger.Infof("Serving fake DNS record for %s: %s", name, adsCertRecord)
+	logger.Infof("Serving fake DNS record for %s: %s", name, adsCertRecord)
 	return []string{adsCertRecord}, nil
 }
 

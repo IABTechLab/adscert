@@ -19,12 +19,10 @@ var (
 		"When enabled, this code skips performing real DNS lookups and instead simulates DNS-based keys by generating a key pair based on the domain name.")
 )
 
-var standardLogger = logger.NewLogger(nil)
-
 func main() {
 	flag.Parse()
 
-	standardLogger.Infof("Starting demo server.")
+	logger.Infof("Starting demo server.")
 
 	privateKeysBase64 := adscertcrypto.GenerateFakePrivateKeysForTesting(*hostCallsign)
 

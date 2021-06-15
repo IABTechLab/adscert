@@ -1,14 +1,18 @@
 package logger
 
-import (
-	"log"
-)
+var globalLogger Logger
 
-// Logger interface for standard log library.
+// SetLoggerImpl lets you override the Logger implementation.  Calls are not thread-safe, so set this first thing.
+func SetLoggerImpl(newLogger Logger) {
+	globalLogger = newLogger
+}
+
 type Logger interface {
 	Debugf(format string, args ...interface{})
 
 	Infof(format string, args ...interface{})
+
+	Info(format string)
 
 	Warningf(format string, args ...interface{})
 
@@ -19,38 +23,30 @@ type Logger interface {
 	Panicf(format string, args ...interface{})
 }
 
-type standardLogger struct {
+func Debugf(format string, args ...interface{}) {
+	globalLogger.Debugf(format, args...)
 }
 
-// returns new looger instance. Default is standard log library.
-func NewLogger(logger Logger) Logger {
-	if logger != nil {
-		return logger
-	}
-	return &standardLogger{}
-
+func Infof(format string, args ...interface{}) {
+	globalLogger.Infof(format, args...)
 }
 
-func (l *standardLogger) Debugf(format string, args ...interface{}) {
-	log.Printf(format, args...)
+func Info(format string) {
+	globalLogger.Info(format)
 }
 
-func (l *standardLogger) Infof(format string, args ...interface{}) {
-	log.Printf(format, args...)
+func Warningf(format string, args ...interface{}) {
+	globalLogger.Warningf(format, args...)
 }
 
-func (l *standardLogger) Warningf(format string, args ...interface{}) {
-	log.Printf(format, args...)
+func Errorf(format string, args ...interface{}) {
+	globalLogger.Errorf(format, args...)
 }
 
-func (l *standardLogger) Errorf(format string, args ...interface{}) {
-	log.Printf(format, args...)
+func Fatalf(format string, args ...interface{}) {
+	globalLogger.Fatalf(format, args...)
 }
 
-func (l *standardLogger) Fatalf(format string, args ...interface{}) {
-	log.Printf(format, args...)
-}
-
-func (l *standardLogger) Panicf(format string, args ...interface{}) {
-	log.Printf(format, args...)
+func Panicf(format string, args ...interface{}) {
+	globalLogger.Panicf(format, args...)
 }

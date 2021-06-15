@@ -7,6 +7,7 @@ import (
 
 	"github.com/IABTechLab/adscert/internal/adscertcounterparty"
 	"github.com/IABTechLab/adscert/internal/formats"
+	"github.com/IABTechLab/adscert/internal/logger"
 )
 
 type AuthenticatedConnectionsSignatory interface {
@@ -111,20 +112,20 @@ func (s *localAuthenticatedConnectionsSignatory) VerifySigningPackage(request *A
 	// Validate invocation hostname matches request
 	if acs.GetAttributeInvoking() != request.RequestInfo.InvocationHostname {
 		// TODO: Unrelated signature error
-		standardLogger.Infof("unrelated signature %s versus %s", acs.GetAttributeInvoking(), request.RequestInfo.InvocationHostname)
+		logger.Infof("unrelated signature %s versus %s", acs.GetAttributeInvoking(), request.RequestInfo.InvocationHostname)
 		return response, fmt.Errorf("unrelated signature %s versus %s", acs.GetAttributeInvoking(), request.RequestInfo.InvocationHostname)
 	}
 
 	// Look up originator by callsign
 	signatureCounterparty, err := s.counterpartyManager.LookUpSignatureCounterpartyByCallsign(acs.GetAttributeFrom())
 	if err != nil {
-		standardLogger.Infof("counterparty lookup error")
+		logger.Infof("counterparty lookup error")
 		return response, err
 	}
 
 	if !signatureCounterparty.HasSharedSecret() {
 		// TODO: shared secret missing error
-		standardLogger.Infof("no shared secret")
+		logger.Infof("no shared secret")
 		return response, nil
 	}
 
