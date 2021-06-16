@@ -5,10 +5,10 @@ import (
 	crypto_rand "crypto/rand"
 	"flag"
 	"fmt"
-	"log"
 	"net"
 
 	"github.com/IABTechLab/adscert/internal/api"
+	"github.com/IABTechLab/adscert/internal/logger"
 	"github.com/IABTechLab/adscert/internal/utils"
 	"github.com/IABTechLab/adscert/pkg/adscert"
 	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
@@ -17,20 +17,22 @@ import (
 )
 
 var (
-	port   = flag.Int("port", 3000, "grpc server port")
-	origin = flag.String("origin", utils.GetEnvVar("ORIGIN"), "ads.cert hostname for the originating party")
-	signer adscert.AuthenticatedConnectionsSigner
+	port     = flag.Int("port", 3000, "grpc server port")
+	logLevel = flag.String("loglevel", utils.GetEnvVar("LOGLEVEL"), "minimum log verbosity")
+	origin   = flag.String("origin", utils.GetEnvVar("ORIGIN"), "ads.cert hostname for the originating party")
+	signer   adscert.AuthenticatedConnectionsSigner
 )
 
 func main() {
 
 	flag.Parse()
+	logger.SetLevel(logger.GetLevelFromString(*logLevel))
 
 	// TODO: using randomly generated test certs for now
 	privateKeysBase64 := adscertcrypto.GenerateFakePrivateKeysForTesting(*origin)
 
 	if *origin == "" {
-		log.Fatalf("Origin hostname is required")
+		logger.Fatalf("Origin hostname is required")
 	}
 
 	localSignatory := adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(*origin, privateKeysBase64, false)
@@ -38,18 +40,19 @@ func main() {
 
 	grpcServer := grpc.NewServer()
 	api.RegisterAdsCertServer(grpcServer, &adsCertServer{})
-	log.Printf("Starting AdsCert API server")
-	log.Printf("Origin: %v", *origin)
-	log.Printf("Port: %v", *port)
+	logger.Infof("Starting AdsCert API server")
+	logger.Infof("Origin: %v", *origin)
+	logger.Infof("Port: %v", *port)
+	logger.Infof("Log Level: %v", *logLevel)
 
 	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", *port))
 	if err != nil {
-		log.Fatalf("Failed to open TCP: %v", err)
+		logger.Fatalf("Failed to open TCP: %v", err)
 	}
 
 	err = grpcServer.Serve(lis)
 	if err != nil {
-		log.Fatalf("Failed to serve GRPC")
+		logger.Fatalf("Failed to serve GRPC")
 	}
 }
 
