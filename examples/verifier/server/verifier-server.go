@@ -33,7 +33,7 @@ func main() {
 			adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(*hostCallsign, privateKeysBase64, *useFakeKeyGeneratingDNS), crypto_rand.Reader, clock.New()),
 	}
 	http.HandleFunc("/request", demoServer.HandleRequest)
-	http.Handle("/johnny", promhttp.HandlerFor(metrics.GetAdscertMetricsRegistry(), promhttp.HandlerOpts{}))
+	http.Handle("/metrics", promhttp.HandlerFor(metrics.GetAdscertMetricsRegistry(), promhttp.HandlerOpts{}))
 	http.ListenAndServe(":8090", nil)
 }
 
