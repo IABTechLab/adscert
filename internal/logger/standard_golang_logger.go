@@ -2,6 +2,7 @@ package logger
 
 import (
 	"log"
+	"strings"
 )
 
 func init() {
@@ -23,6 +24,29 @@ const (
 )
 
 type Verbosity int
+
+func GetLevelFromString(s string) Verbosity {
+	switch strings.ToUpper(strings.TrimSpace(s)) {
+	case "DEBUG":
+		return Verbosity(DEBUG)
+	case "INFO":
+		return Verbosity(INFO)
+	case "WARNING":
+		return Verbosity(WARNING)
+	case "ERROR":
+		return Verbosity(ERROR)
+	case "FATAL":
+		return Verbosity(FATAL)
+	case "PANIC":
+		return Verbosity(PANIC)
+	default:
+		return INFO
+	}
+}
+
+func SetLevel(v Verbosity) {
+	globalLogger = &StandardGolangLogger{VerbosityLevel: v}
+}
 
 type StandardGolangLogger struct {
 	VerbosityLevel Verbosity
