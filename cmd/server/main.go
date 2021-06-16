@@ -55,8 +55,8 @@ func main() {
 	}
 	go runServer(lis, grpcServer)
 
-	log.Printf("Starting Metrics server")
-	log.Printf("Port: %v", *metricsPort)
+	logger.Info("Starting Metrics server")
+	logger.Infof("Port: %v", *metricsPort)
 	http.Handle("/metrics", promhttp.HandlerFor(metrics.GetAdscertMetricsRegistry(), promhttp.HandlerOpts{}))
 	http.ListenAndServe(fmt.Sprintf(":%d", *metricsPort), nil)
 }
