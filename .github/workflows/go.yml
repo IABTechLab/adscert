@@ -1,14 +1,16 @@
-name: Go
+name: CI
 
+# https://docs.github.com/en/actions/reference/events-that-trigger-workflows
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
-
-  build:
+  Build:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -18,8 +20,38 @@ jobs:
       with:
         go-version: 1.15
 
+    # Install all the dependencies
+    - name: Install dependencies
+      run: |
+        go version
+        go get -u golang.org/x/lint/golint
+
     - name: Build
       run: go build -v ./...
 
+    # Run vet & lint on the code
+    - name: Run vet & lint
+      run: |
+        go vet ./...
+        golint ./...
+
     - name: Test
       run: go test -v ./...
+
+  Release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }} # Only run if on main branch on push event
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Create release and push tag
+        # If triggered on your default branch (main), the bump version will be a release tag.
+        # If triggered on any other branch, a prerelease will be generated, depending on the bump,
+        # starting with *-<PRERELEASE_SUFFIX>.1, *-<PRERELEASE_SUFFIX>.2, ...
+        # If no #major, #minor or #patch tag is contained in the commit messages, it will bump whichever DEFAULT_BUMP is set to (which is minor by default).
+        # Disable this by setting DEFAULT_BUMP to none.
+        # more info about this action on github marketplace: https://github.com/marketplace/actions/github-tag-bump
+        uses: anothrNick/github-tag-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
