@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/benbjohnson/clock v1.1.0
 	github.com/google/go-cmp v0.5.5
+	github.com/prometheus/client_golang v1.11.0
 	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a
 	golang.org/x/net v0.0.0-20210610132358-84b48f89b13b
 	golang.org/x/sys v0.0.0-20210611083646-a4fc73990273 // indirect

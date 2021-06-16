@@ -8,6 +8,7 @@ import (
 	"github.com/IABTechLab/adscert/internal/adscertcounterparty"
 	"github.com/IABTechLab/adscert/internal/formats"
 	"github.com/IABTechLab/adscert/internal/logger"
+	"github.com/IABTechLab/adscert/internal/metrics"
 )
 
 type AuthenticatedConnectionsSignatory interface {
@@ -106,6 +107,7 @@ func (s *localAuthenticatedConnectionsSignatory) VerifySigningPackage(request *A
 
 	acs, err := formats.DecodeAuthenticatedConnectionSignature(request.SignatureMessage)
 	if err != nil {
+		metrics.RecordVerifyMetrics(metrics.VerifyErrorSignatureDecode)
 		return response, fmt.Errorf("signature decode failure: %v", err)
 	}
 
@@ -113,6 +115,7 @@ func (s *localAuthenticatedConnectionsSignatory) VerifySigningPackage(request *A
 	if acs.GetAttributeInvoking() != request.RequestInfo.InvocationHostname {
 		// TODO: Unrelated signature error
 		logger.Infof("unrelated signature %s versus %s", acs.GetAttributeInvoking(), request.RequestInfo.InvocationHostname)
+		metrics.RecordVerifyMetrics(metrics.VerifyErrorUnrelatedSignature)
 		return response, fmt.Errorf("unrelated signature %s versus %s", acs.GetAttributeInvoking(), request.RequestInfo.InvocationHostname)
 	}
 
@@ -120,12 +123,14 @@ func (s *localAuthenticatedConnectionsSignatory) VerifySigningPackage(request *A
 	signatureCounterparty, err := s.counterpartyManager.LookUpSignatureCounterpartyByCallsign(acs.GetAttributeFrom())
 	if err != nil {
 		logger.Infof("counterparty lookup error")
+		metrics.RecordVerifyMetrics(metrics.VerifyErrorCounterPartyLookUp)
 		return response, err
 	}
 
 	if !signatureCounterparty.HasSharedSecret() {
 		// TODO: shared secret missing error
 		logger.Infof("no shared secret")
+		metrics.RecordVerifyMetrics(metrics.VerifyErrorNoSharedSecret)
 		return response, nil
 	}
 

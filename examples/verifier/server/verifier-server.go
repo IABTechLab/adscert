@@ -8,9 +8,11 @@ import (
 	"net/http"
 
 	"github.com/IABTechLab/adscert/internal/logger"
+	"github.com/IABTechLab/adscert/internal/metrics"
 	"github.com/IABTechLab/adscert/pkg/adscert"
 	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
 	"github.com/benbjohnson/clock"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var (
@@ -31,6 +33,7 @@ func main() {
 			adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(*hostCallsign, privateKeysBase64, *useFakeKeyGeneratingDNS), crypto_rand.Reader, clock.New()),
 	}
 	http.HandleFunc("/request", demoServer.HandleRequest)
+	http.Handle("/johnny", promhttp.HandlerFor(metrics.GetAdscertMetricsRegistry(), promhttp.HandlerOpts{}))
 	http.ListenAndServe(":8090", nil)
 }
 

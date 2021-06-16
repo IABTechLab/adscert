@@ -6,21 +6,25 @@ import (
 	"flag"
 	"fmt"
 	"net"
+	"net/http"
 
 	"github.com/IABTechLab/adscert/internal/api"
 	"github.com/IABTechLab/adscert/internal/logger"
+	"github.com/IABTechLab/adscert/internal/metrics"
 	"github.com/IABTechLab/adscert/internal/utils"
 	"github.com/IABTechLab/adscert/pkg/adscert"
 	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
 	"github.com/benbjohnson/clock"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 )
 
 var (
-	port     = flag.Int("port", 3000, "grpc server port")
-	logLevel = flag.String("loglevel", utils.GetEnvVar("LOGLEVEL"), "minimum log verbosity")
-	origin   = flag.String("origin", utils.GetEnvVar("ORIGIN"), "ads.cert hostname for the originating party")
-	signer   adscert.AuthenticatedConnectionsSigner
+	serverPort  = flag.Int("server_port", 3000, "grpc server port")
+	metricsPort = flag.Int("metrics_port", 3001, "http metrics port")
+	logLevel    = flag.String("loglevel", utils.GetEnvVar("LOGLEVEL"), "minimum log verbosity")
+	origin      = flag.String("origin", utils.GetEnvVar("ORIGIN"), "ads.cert hostname for the originating party")
+	signer      adscert.AuthenticatedConnectionsSigner
 )
 
 func main() {
@@ -42,15 +46,23 @@ func main() {
 	api.RegisterAdsCertServer(grpcServer, &adsCertServer{})
 	logger.Infof("Starting AdsCert API server")
 	logger.Infof("Origin: %v", *origin)
-	logger.Infof("Port: %v", *port)
+	logger.Infof("Port: %v", *serverPort)
 	logger.Infof("Log Level: %v", *logLevel)
 
-	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", *port))
+	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", *serverPort))
 	if err != nil {
 		logger.Fatalf("Failed to open TCP: %v", err)
 	}
+	go runServer(lis, grpcServer)
 
-	err = grpcServer.Serve(lis)
+	log.Printf("Starting Metrics server")
+	log.Printf("Port: %v", *metricsPort)
+	http.Handle("/metrics", promhttp.HandlerFor(metrics.GetAdscertMetricsRegistry(), promhttp.HandlerOpts{}))
+	http.ListenAndServe(fmt.Sprintf(":%d", *metricsPort), nil)
+}
+
+func runServer(l net.Listener, s *grpc.Server) {
+	err := s.Serve(l)
 	if err != nil {
 		logger.Fatalf("Failed to serve GRPC")
 	}
