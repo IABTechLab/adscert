@@ -7,6 +7,7 @@ import (
 	"net/url"
 
 	"github.com/IABTechLab/adscert/internal/formats"
+	"github.com/IABTechLab/adscert/internal/metrics"
 	"github.com/IABTechLab/adscert/internal/utils"
 	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
 	"github.com/benbjohnson/clock"
@@ -20,6 +21,7 @@ type authenticatedConnectionsSigner struct {
 }
 
 func (c *authenticatedConnectionsSigner) SignAuthenticatedConnection(params AuthenticatedConnectionSignatureParams) (AuthenticatedConnectionSignature, error) {
+
 	var err error
 	response := AuthenticatedConnectionSignature{}
 	signatureRequest := adscertcrypto.AuthenticatedConnectionSigningPackage{}
@@ -27,16 +29,19 @@ func (c *authenticatedConnectionsSigner) SignAuthenticatedConnection(params Auth
 	signatureRequest.Timestamp = c.clock.Now().UTC().Format("060102T150405")
 
 	if signatureRequest.Nonce, err = c.generateNonce(); err != nil {
+		metrics.RecordSigningMetrics(metrics.SignErrorGenerateNonce)
 		return response, err
 	}
 
 	if err = assembleRequestInfo(&params, &signatureRequest.RequestInfo); err != nil {
+		metrics.RecordSigningMetrics(metrics.SignErrorParseUrl)
 		return response, fmt.Errorf("error parsing request URL: %v", err)
 	}
 
 	// Invoke the embossing service
 	embossReply, err := c.signatory.EmbossSigningPackage(&signatureRequest)
 	if err != nil {
+		metrics.RecordSigningMetrics(metrics.SignErrorEmboss)
 		return response, fmt.Errorf("error embossing signing package: %v", err)
 	}
 
@@ -49,6 +54,8 @@ func (c *authenticatedConnectionsSigner) SignAuthenticatedConnection(params Auth
 	// Provide structured metadata about the signing operation.
 	response.SignatureInfo = embossReply.SignatureInfo
 
+	metrics.RecordSigningMetrics(metrics.SignErrorNone)
+
 	return response, nil
 }
 func (c *authenticatedConnectionsSigner) VerifyAuthenticatedConnection(params AuthenticatedConnectionSignatureParams) (AuthenticatedConnectionVerification, error) {
@@ -57,6 +64,7 @@ func (c *authenticatedConnectionsSigner) VerifyAuthenticatedConnection(params Au
 	verificationRequest := adscertcrypto.AuthenticatedConnectionVerificationPackage{}
 
 	if err := assembleRequestInfo(&params, &verificationRequest.RequestInfo); err != nil {
+		metrics.RecordVerifyMetrics(metrics.VerifyErrorParseUrl)
 		return response, fmt.Errorf("error parsing request URL: %v", err)
 	}
 
@@ -70,8 +78,12 @@ func (c *authenticatedConnectionsSigner) VerifyAuthenticatedConnection(params Au
 		return response, fmt.Errorf("error verifying signing package: %v", err)
 	}
 
+	metrics.RecordVerifyMetrics(metrics.VerifyErrorNone)
+
 	response.BodyValid = verifyReply.BodyValid
+	metrics.RecordVerifyResultMetrics(metrics.VerifyResultTypeBody, verifyReply.BodyValid)
 	response.URLValid = verifyReply.URLValid
+	metrics.RecordVerifyResultMetrics(metrics.VerifyResultTypeUrl, verifyReply.URLValid)
 
 	return response, nil
 }
