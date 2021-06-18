@@ -4,12 +4,14 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"fmt"
+	"io"
 
 	"github.com/IABTechLab/adscert/internal/adscertcounterparty"
 	"github.com/IABTechLab/adscert/internal/api"
 	"github.com/IABTechLab/adscert/internal/formats"
 	"github.com/IABTechLab/adscert/internal/logger"
 	"github.com/IABTechLab/adscert/internal/metrics"
+	"github.com/benbjohnson/clock"
 )
 
 type AuthenticatedConnectionsSignatory interface {
@@ -35,6 +37,8 @@ func NewLocalAuthenticatedConnectionsSignatory(originCallsign string, privateKey
 
 type localAuthenticatedConnectionsSignatory struct {
 	originCallsign string
+	secureRandom   io.Reader
+	clock          clock.Clock
 
 	counterpartyManager adscertcounterparty.CounterpartyAPI
 }
@@ -45,8 +49,18 @@ func (s *localAuthenticatedConnectionsSignatory) SynchronizeForTesting(invocatio
 }
 
 func (s *localAuthenticatedConnectionsSignatory) EmbossSigningPackage(request *api.AuthenticatedConnectionSigningPackage) (*api.AuthenticatedConnectionSignatureResponse, error) {
+
 	// Note: this is basically going to be the same process for signing and verifying except the lookup method.
+	var err error
 	response := &api.AuthenticatedConnectionSignatureResponse{}
+
+	// generate timestamp
+	request.Timestamp = s.clock.Now().UTC().Format("060102T150405")
+
+	// generate nonce
+	if request.Nonce, err = s.generateNonce(); err != nil {
+		metrics.RecordSigningMetrics(metrics.SignErrorGenerateNonce)
+	}
 
 	// TODO: psl cleanup
 	invocationCounterparty, err := s.counterpartyManager.LookUpInvocationCounterpartyByHostname(request.RequestInfo.InvocationHostname)
@@ -155,4 +169,16 @@ func generateSignatures(counterparty adscertcounterparty.SignatureCounterparty, 
 	urlHMAC := h.Sum(nil)
 
 	return bodyHMAC, urlHMAC
+}
+
+func (s *localAuthenticatedConnectionsSignatory) generateNonce() (string, error) {
+	var nonce [32]byte
+	n, err := io.ReadFull(s.secureRandom, nonce[:])
+	if err != nil {
+		return "", fmt.Errorf("error generating random: %v", err)
+	}
+	if n != 32 {
+		return "", fmt.Errorf("unexpected number of random values: %d", n)
+	}
+	return formats.B64truncate(nonce[:], 12), nil
 }
