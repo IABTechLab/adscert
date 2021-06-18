@@ -14,14 +14,6 @@ import (
 	"github.com/benbjohnson/clock"
 )
 
-type AuthenticatedConnectionsSignatory interface {
-	EmbossSigningPackage(request *api.AuthenticatedConnectionSignatureRequest) (*api.AuthenticatedConnectionSignatureResponse, error)
-	VerifySigningPackage(request *api.AuthenticatedConnectionVerificationRequest) (*api.AuthenticatedConnectionVerificationResponse, error)
-
-	// TODO: Design a better way to do this testing hook.
-	SynchronizeForTesting(invocationTLDPlusOne string)
-}
-
 func NewLocalAuthenticatedConnectionsSignatory(originCallsign string, reader io.Reader, clock clock.Clock, privateKeyBase64Strings []string, useFakeKeyGeneratingDNS bool) AuthenticatedConnectionsSignatory {
 
 	var dnsResolver adscertcounterparty.DNSResolver
