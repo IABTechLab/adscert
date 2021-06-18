@@ -71,11 +71,11 @@ type adsCertServer struct {
 }
 
 func (s *adsCertServer) SignAuthenticatedConnection(ctx context.Context, req *api.AuthenticatedConnectionSignatureRequest) (*api.AuthenticatedConnectionSignatureResponse, error) {
-	response, err := signatoryApi.EmbossSigningPackage(req)
+	response, err := signatoryApi.SignAuthenticatedConnection(req)
 	return response, err
 }
 
 func (s *adsCertServer) VerifyAuthenticatedConnection(ctx context.Context, req *api.AuthenticatedConnectionVerificationRequest) (*api.AuthenticatedConnectionVerificationResponse, error) {
-	response, err := signatoryApi.VerifySigningPackage(req)
+	response, err := signatoryApi.VerifyAuthenticatedConnection(req)
 	return response, err
 }

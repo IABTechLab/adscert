@@ -44,7 +44,7 @@ func (s *localAuthenticatedConnectionsSignatory) SynchronizeForTesting(invocatio
 	s.counterpartyManager.SynchronizeForTesting()
 }
 
-func (s *localAuthenticatedConnectionsSignatory) EmbossSigningPackage(request *api.AuthenticatedConnectionSignatureRequest) (*api.AuthenticatedConnectionSignatureResponse, error) {
+func (s *localAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(request *api.AuthenticatedConnectionSignatureRequest) (*api.AuthenticatedConnectionSignatureResponse, error) {
 
 	// Note: this is basically going to be the same process for signing and verifying except the lookup method.
 	var err error
@@ -113,7 +113,7 @@ func (s *localAuthenticatedConnectionsSignatory) embossSingleMessage(request *ap
 	return signatureInfo, nil
 }
 
-func (s *localAuthenticatedConnectionsSignatory) VerifySigningPackage(request *api.AuthenticatedConnectionVerificationRequest) (*api.AuthenticatedConnectionVerificationResponse, error) {
+func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(request *api.AuthenticatedConnectionVerificationRequest) (*api.AuthenticatedConnectionVerificationResponse, error) {
 	response := &api.AuthenticatedConnectionVerificationResponse{}
 
 	// TODO: change this so that the verification request can pass multiple signature messages.
