@@ -6,14 +6,15 @@ import (
 	"fmt"
 
 	"github.com/IABTechLab/adscert/internal/adscertcounterparty"
+	"github.com/IABTechLab/adscert/internal/api"
 	"github.com/IABTechLab/adscert/internal/formats"
 	"github.com/IABTechLab/adscert/internal/logger"
 	"github.com/IABTechLab/adscert/internal/metrics"
 )
 
 type AuthenticatedConnectionsSignatory interface {
-	EmbossSigningPackage(request *AuthenticatedConnectionSigningPackage) (*AuthenticatedConnectionSignatureResponse, error)
-	VerifySigningPackage(request *AuthenticatedConnectionVerificationPackage) (*AuthenticatedConnectionVerificationResponse, error)
+	EmbossSigningPackage(request *api.AuthenticatedConnectionSigningPackage) (*api.AuthenticatedConnectionSignatureResponse, error)
+	VerifySigningPackage(request *api.AuthenticatedConnectionVerificationPackage) (*api.AuthenticatedConnectionVerificationResponse, error)
 
 	// TODO: Design a better way to do this testing hook.
 	SynchronizeForTesting(invocationTLDPlusOne string)
@@ -43,9 +44,9 @@ func (s *localAuthenticatedConnectionsSignatory) SynchronizeForTesting(invocatio
 	s.counterpartyManager.SynchronizeForTesting()
 }
 
-func (s *localAuthenticatedConnectionsSignatory) EmbossSigningPackage(request *AuthenticatedConnectionSigningPackage) (*AuthenticatedConnectionSignatureResponse, error) {
+func (s *localAuthenticatedConnectionsSignatory) EmbossSigningPackage(request *api.AuthenticatedConnectionSigningPackage) (*api.AuthenticatedConnectionSignatureResponse, error) {
 	// Note: this is basically going to be the same process for signing and verifying except the lookup method.
-	response := &AuthenticatedConnectionSignatureResponse{}
+	response := &api.AuthenticatedConnectionSignatureResponse{}
 
 	// TODO: psl cleanup
 	invocationCounterparty, err := s.counterpartyManager.LookUpInvocationCounterpartyByHostname(request.RequestInfo.InvocationHostname)
@@ -58,19 +59,19 @@ func (s *localAuthenticatedConnectionsSignatory) EmbossSigningPackage(request *A
 		if err != nil {
 			return nil, err
 		}
-		response.SignatureInfo = append(response.SignatureInfo, *signatureInfo)
+		response.SignatureInfo = append(response.SignatureInfo, signatureInfo)
 	}
 
 	return response, nil
 }
 
-func (s *localAuthenticatedConnectionsSignatory) embossSingleMessage(request *AuthenticatedConnectionSigningPackage, counterparty adscertcounterparty.SignatureCounterparty) (*SignatureInfo, error) {
+func (s *localAuthenticatedConnectionsSignatory) embossSingleMessage(request *api.AuthenticatedConnectionSigningPackage, counterparty adscertcounterparty.SignatureCounterparty) (*api.SignatureInfo, error) {
 	acs, err := formats.NewAuthenticatedConnectionSignature(counterparty.GetStatus().String(), s.originCallsign, request.RequestInfo.InvocationHostname)
 	if err != nil {
 		return nil, fmt.Errorf("error constructing authenticated connection signature format: %v", err)
 	}
 
-	signatureInfo := &SignatureInfo{
+	signatureInfo := &api.SignatureInfo{
 		FromDomain:     s.originCallsign,
 		InvokingDomain: request.RequestInfo.InvocationHostname,
 	}
@@ -97,13 +98,13 @@ func (s *localAuthenticatedConnectionsSignatory) embossSingleMessage(request *Au
 	signatureInfo.ToKey = sharedSecret.RemoteKeyID()
 
 	message := acs.EncodeMessage()
-	bodyHMAC, urlHMAC := generateSignatures(counterparty, []byte(message), request.RequestInfo.BodyHash[:], request.RequestInfo.URLHash[:])
+	bodyHMAC, urlHMAC := generateSignatures(counterparty, []byte(message), request.RequestInfo.BodyHash[:], request.RequestInfo.UrlHash[:])
 	signatureInfo.SignatureMessage = message + formats.EncodeSignatureSuffix(bodyHMAC, urlHMAC)
 	return signatureInfo, nil
 }
 
-func (s *localAuthenticatedConnectionsSignatory) VerifySigningPackage(request *AuthenticatedConnectionVerificationPackage) (*AuthenticatedConnectionVerificationResponse, error) {
-	response := &AuthenticatedConnectionVerificationResponse{}
+func (s *localAuthenticatedConnectionsSignatory) VerifySigningPackage(request *api.AuthenticatedConnectionVerificationPackage) (*api.AuthenticatedConnectionVerificationResponse, error) {
+	response := &api.AuthenticatedConnectionVerificationResponse{}
 
 	acs, err := formats.DecodeAuthenticatedConnectionSignature(request.SignatureMessage)
 	if err != nil {
@@ -134,8 +135,8 @@ func (s *localAuthenticatedConnectionsSignatory) VerifySigningPackage(request *A
 		return response, nil
 	}
 
-	bodyHMAC, urlHMAC := generateSignatures(signatureCounterparty, []byte(acs.EncodeMessage()), request.RequestInfo.BodyHash[:], request.RequestInfo.URLHash[:])
-	response.BodyValid, response.URLValid = acs.CompareSignatures(bodyHMAC, urlHMAC)
+	bodyHMAC, urlHMAC := generateSignatures(signatureCounterparty, []byte(acs.EncodeMessage()), request.RequestInfo.BodyHash[:], request.RequestInfo.UrlHash[:])
+	response.BodyValid, response.UrlValid = acs.CompareSignatures(bodyHMAC, urlHMAC)
 	return response, nil
 }
 

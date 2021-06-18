@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/IABTechLab/adscert/internal/api"
 	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
 	"github.com/benbjohnson/clock"
 )
@@ -31,10 +32,10 @@ func NewAuthenticatedConnectionsSigner(signatory adscertcrypto.AuthenticatedConn
 type AuthenticatedConnectionSignatureParams struct {
 	DestinationURL       string
 	InvocationHostname   string
-	HashedDestinationURL *[32]byte
+	HashedDestinationURL *[]byte
 
 	RequestBody       []byte
-	HashedRequestBody *[32]byte
+	HashedRequestBody *[]byte
 
 	// Curtis notes:
 	// For offline verification, we need to have this message have the option to pass in the
@@ -57,8 +58,8 @@ type AuthenticatedConnectionSignature struct {
 	// Exposes structured data about the outcomes of signing operations so that the integrator
 	// can use that information for monitoring and analytics (e.g. monitoring the distribution
 	// of signature outcome status codes.)
-	SignatureInfo []adscertcrypto.SignatureInfo
-	
+	SignatureInfo []*api.SignatureInfo
+
 	// Curtis notes:
 	// See AuthenticatedConnectionVerification below for notes about signature metadata.  We
 	// should make the signing and verification API consistent about how metadata gets surfaced.

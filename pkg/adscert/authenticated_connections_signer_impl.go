@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/url"
 
+	"github.com/IABTechLab/adscert/internal/api"
 	"github.com/IABTechLab/adscert/internal/formats"
 	"github.com/IABTechLab/adscert/internal/metrics"
 	"github.com/IABTechLab/adscert/internal/utils"
@@ -24,7 +25,7 @@ func (c *authenticatedConnectionsSigner) SignAuthenticatedConnection(params Auth
 
 	var err error
 	response := AuthenticatedConnectionSignature{}
-	signatureRequest := adscertcrypto.AuthenticatedConnectionSigningPackage{}
+	signatureRequest := &api.AuthenticatedConnectionSigningPackage{}
 
 	signatureRequest.Timestamp = c.clock.Now().UTC().Format("060102T150405")
 
@@ -33,13 +34,13 @@ func (c *authenticatedConnectionsSigner) SignAuthenticatedConnection(params Auth
 		return response, err
 	}
 
-	if err = assembleRequestInfo(&params, &signatureRequest.RequestInfo); err != nil {
+	if err = assembleRequestInfo(&params, signatureRequest.RequestInfo); err != nil {
 		metrics.RecordSigningMetrics(metrics.SignErrorParseUrl)
 		return response, fmt.Errorf("error parsing request URL: %v", err)
 	}
 
 	// Invoke the embossing service
-	embossReply, err := c.signatory.EmbossSigningPackage(&signatureRequest)
+	embossReply, err := c.signatory.EmbossSigningPackage(signatureRequest)
 	if err != nil {
 		metrics.RecordSigningMetrics(metrics.SignErrorEmboss)
 		return response, fmt.Errorf("error embossing signing package: %v", err)
@@ -58,12 +59,13 @@ func (c *authenticatedConnectionsSigner) SignAuthenticatedConnection(params Auth
 
 	return response, nil
 }
+
 func (c *authenticatedConnectionsSigner) VerifyAuthenticatedConnection(params AuthenticatedConnectionSignatureParams) (AuthenticatedConnectionVerification, error) {
 
 	response := AuthenticatedConnectionVerification{}
-	verificationRequest := adscertcrypto.AuthenticatedConnectionVerificationPackage{}
+	verificationRequest := api.AuthenticatedConnectionVerificationPackage{}
 
-	if err := assembleRequestInfo(&params, &verificationRequest.RequestInfo); err != nil {
+	if err := assembleRequestInfo(&params, verificationRequest.RequestInfo); err != nil {
 		metrics.RecordVerifyMetrics(metrics.VerifyErrorParseUrl)
 		return response, fmt.Errorf("error parsing request URL: %v", err)
 	}
@@ -82,13 +84,13 @@ func (c *authenticatedConnectionsSigner) VerifyAuthenticatedConnection(params Au
 
 	response.BodyValid = verifyReply.BodyValid
 	metrics.RecordVerifyResultMetrics(metrics.VerifyResultTypeBody, verifyReply.BodyValid)
-	response.URLValid = verifyReply.URLValid
-	metrics.RecordVerifyResultMetrics(metrics.VerifyResultTypeUrl, verifyReply.URLValid)
+	response.URLValid = verifyReply.UrlValid
+	metrics.RecordVerifyResultMetrics(metrics.VerifyResultTypeUrl, verifyReply.UrlValid)
 
 	return response, nil
 }
 
-func assembleRequestInfo(params *AuthenticatedConnectionSignatureParams, requestInfo *adscertcrypto.RequestInfo) error {
+func assembleRequestInfo(params *AuthenticatedConnectionSignatureParams, requestInfo *api.RequestInfo) error {
 	var parsedURL *url.URL
 
 	if params.InvocationHostname == "" {
@@ -106,10 +108,10 @@ func assembleRequestInfo(params *AuthenticatedConnectionSignatureParams, request
 	}
 
 	if params.HashedDestinationURL != nil {
-		requestInfo.URLHash = *params.HashedDestinationURL
+		requestInfo.UrlHash = *params.HashedDestinationURL
 	} else {
 		urlHash := sha256.Sum256([]byte(parsedURL.String()))
-		copy(requestInfo.URLHash[:], urlHash[:])
+		copy(requestInfo.UrlHash[:], urlHash[:])
 	}
 
 	if params.HashedRequestBody != nil {

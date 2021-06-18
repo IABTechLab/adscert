@@ -85,8 +85,8 @@ func main() {
 func parseLog(log string) (*adscert.AuthenticatedConnectionSignatureParams, error) {
 	parsedLog := strings.Split(log, ",")
 
-	var hashedRequestBody [32]byte
-	var hashedDestinationURL [32]byte
+	var hashedRequestBody []byte
+	var hashedDestinationURL []byte
 	InvocationHostname := parsedLog[0]
 	signaturesHeader := parsedLog[1]
 	hashedRequestBodyBytes, err := base64.StdEncoding.DecodeString(parsedLog[2])

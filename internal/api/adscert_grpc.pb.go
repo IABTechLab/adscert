@@ -14,6 +14,128 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
+// AdsCert2Client is the client API for AdsCert2 service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type AdsCert2Client interface {
+	EmbossSigningPackage(ctx context.Context, in *AuthenticatedConnectionSigningPackage, opts ...grpc.CallOption) (*AuthenticatedConnectionSignatureResponse, error)
+	VerifySigningPackage(ctx context.Context, in *AuthenticatedConnectionVerificationPackage, opts ...grpc.CallOption) (*AuthenticatedConnectionVerificationResponse, error)
+}
+
+type adsCert2Client struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewAdsCert2Client(cc grpc.ClientConnInterface) AdsCert2Client {
+	return &adsCert2Client{cc}
+}
+
+func (c *adsCert2Client) EmbossSigningPackage(ctx context.Context, in *AuthenticatedConnectionSigningPackage, opts ...grpc.CallOption) (*AuthenticatedConnectionSignatureResponse, error) {
+	out := new(AuthenticatedConnectionSignatureResponse)
+	err := c.cc.Invoke(ctx, "/api.AdsCert2/EmbossSigningPackage", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adsCert2Client) VerifySigningPackage(ctx context.Context, in *AuthenticatedConnectionVerificationPackage, opts ...grpc.CallOption) (*AuthenticatedConnectionVerificationResponse, error) {
+	out := new(AuthenticatedConnectionVerificationResponse)
+	err := c.cc.Invoke(ctx, "/api.AdsCert2/VerifySigningPackage", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// AdsCert2Server is the server API for AdsCert2 service.
+// All implementations must embed UnimplementedAdsCert2Server
+// for forward compatibility
+type AdsCert2Server interface {
+	EmbossSigningPackage(context.Context, *AuthenticatedConnectionSigningPackage) (*AuthenticatedConnectionSignatureResponse, error)
+	VerifySigningPackage(context.Context, *AuthenticatedConnectionVerificationPackage) (*AuthenticatedConnectionVerificationResponse, error)
+	mustEmbedUnimplementedAdsCert2Server()
+}
+
+// UnimplementedAdsCert2Server must be embedded to have forward compatible implementations.
+type UnimplementedAdsCert2Server struct {
+}
+
+func (UnimplementedAdsCert2Server) EmbossSigningPackage(context.Context, *AuthenticatedConnectionSigningPackage) (*AuthenticatedConnectionSignatureResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EmbossSigningPackage not implemented")
+}
+func (UnimplementedAdsCert2Server) VerifySigningPackage(context.Context, *AuthenticatedConnectionVerificationPackage) (*AuthenticatedConnectionVerificationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VerifySigningPackage not implemented")
+}
+func (UnimplementedAdsCert2Server) mustEmbedUnimplementedAdsCert2Server() {}
+
+// UnsafeAdsCert2Server may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to AdsCert2Server will
+// result in compilation errors.
+type UnsafeAdsCert2Server interface {
+	mustEmbedUnimplementedAdsCert2Server()
+}
+
+func RegisterAdsCert2Server(s grpc.ServiceRegistrar, srv AdsCert2Server) {
+	s.RegisterService(&AdsCert2_ServiceDesc, srv)
+}
+
+func _AdsCert2_EmbossSigningPackage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AuthenticatedConnectionSigningPackage)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdsCert2Server).EmbossSigningPackage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.AdsCert2/EmbossSigningPackage",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdsCert2Server).EmbossSigningPackage(ctx, req.(*AuthenticatedConnectionSigningPackage))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdsCert2_VerifySigningPackage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AuthenticatedConnectionVerificationPackage)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdsCert2Server).VerifySigningPackage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.AdsCert2/VerifySigningPackage",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdsCert2Server).VerifySigningPackage(ctx, req.(*AuthenticatedConnectionVerificationPackage))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// AdsCert2_ServiceDesc is the grpc.ServiceDesc for AdsCert2 service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var AdsCert2_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "api.AdsCert2",
+	HandlerType: (*AdsCert2Server)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "EmbossSigningPackage",
+			Handler:    _AdsCert2_EmbossSigningPackage_Handler,
+		},
+		{
+			MethodName: "VerifySigningPackage",
+			Handler:    _AdsCert2_VerifySigningPackage_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "api/adscert.proto",
+}
+
 // AdsCertClient is the client API for AdsCert service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
