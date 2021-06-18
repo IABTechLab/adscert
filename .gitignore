@@ -1,4 +1,6 @@
+.vscode/
 examples/signer/signer
 examples/verifier/verifier
 cmd/keygen/keygen
-.vscode/
+cmd/server/server
+**/*.exe
