@@ -1,4 +1,4 @@
-package adscertcrypto
+package signatory
 
 import (
 	"crypto/hmac"
