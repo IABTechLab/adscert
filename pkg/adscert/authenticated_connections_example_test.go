@@ -14,7 +14,7 @@ import (
 
 func prepareAuthentication(adsCertCallsign string, destinationVerifierUrl string) (adscertcrypto.AuthenticatedConnectionsSignatory, *rand.Rand) {
 	signatory := adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(
-		adsCertCallsign, adscertcrypto.GenerateFakePrivateKeysForTesting(adsCertCallsign), true)
+		adsCertCallsign, crypto_rand.Reader, clock.New(), adscertcrypto.GenerateFakePrivateKeysForTesting(adsCertCallsign), true)
 
 	// set seed to 0 to retrieve deterministic random reader.
 	randomReader := rand.New(rand.NewSource(0))
@@ -87,7 +87,7 @@ func ExampleAuthenticatedConnectionsSigner_VerifyAuthenticatedConnection() {
 
 	adsCertCallsign := "destination-verifier.com"
 	signatory := adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(
-		adsCertCallsign, adscertcrypto.GenerateFakePrivateKeysForTesting(adsCertCallsign), true)
+		adsCertCallsign, crypto_rand.Reader, clock.New(), adscertcrypto.GenerateFakePrivateKeysForTesting(adsCertCallsign), true)
 	signer := adscert.NewAuthenticatedConnectionsSigner(signatory, crypto_rand.Reader, mockClock)
 
 	signatory.SynchronizeForTesting("origin-signer.com")

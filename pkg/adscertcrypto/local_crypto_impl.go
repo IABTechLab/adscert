@@ -22,16 +22,20 @@ type AuthenticatedConnectionsSignatory interface {
 	SynchronizeForTesting(invocationTLDPlusOne string)
 }
 
-func NewLocalAuthenticatedConnectionsSignatory(originCallsign string, privateKeyBase64Strings []string, useFakeKeyGeneratingDNS bool) AuthenticatedConnectionsSignatory {
+func NewLocalAuthenticatedConnectionsSignatory(originCallsign string, reader io.Reader, clock clock.Clock, privateKeyBase64Strings []string, useFakeKeyGeneratingDNS bool) AuthenticatedConnectionsSignatory {
+
 	var dnsResolver adscertcounterparty.DNSResolver
 	if useFakeKeyGeneratingDNS {
 		dnsResolver = NewFakeKeyGeneratingDnsResolver()
 	} else {
 		dnsResolver = adscertcounterparty.NewRealDnsResolver()
 	}
+
 	return &localAuthenticatedConnectionsSignatory{
-		counterpartyManager: adscertcounterparty.NewCounterpartyManager(dnsResolver, privateKeyBase64Strings),
 		originCallsign:      originCallsign,
+		secureRandom:        reader,
+		clock:               clock,
+		counterpartyManager: adscertcounterparty.NewCounterpartyManager(dnsResolver, privateKeyBase64Strings),
 	}
 }
 
