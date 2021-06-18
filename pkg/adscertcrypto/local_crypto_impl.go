@@ -106,7 +106,11 @@ func (s *localAuthenticatedConnectionsSignatory) embossSingleMessage(request *ap
 func (s *localAuthenticatedConnectionsSignatory) VerifySigningPackage(request *api.AuthenticatedConnectionVerificationPackage) (*api.AuthenticatedConnectionVerificationResponse, error) {
 	response := &api.AuthenticatedConnectionVerificationResponse{}
 
-	acs, err := formats.DecodeAuthenticatedConnectionSignature(request.SignatureMessage)
+	// TODO: change this so that the verification request can pass multiple signature messages.
+	// Let the signatory pick through the multiple messages (if present) and figure out what
+	// to do with them.
+	signatureMessage := request.SignatureMessage[0]
+	acs, err := formats.DecodeAuthenticatedConnectionSignature(signatureMessage)
 	if err != nil {
 		metrics.RecordVerifyMetrics(metrics.VerifyErrorSignatureDecode)
 		return response, fmt.Errorf("signature decode failure: %v", err)

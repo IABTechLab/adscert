@@ -70,10 +70,7 @@ func (c *authenticatedConnectionsSigner) VerifyAuthenticatedConnection(params Au
 		return response, fmt.Errorf("error parsing request URL: %v", err)
 	}
 
-	// TODO: change this so that the verification request can pass multiple signature messages.
-	// Let the signatory pick through the multiple messages (if present) and figure out what
-	// to do with them.
-	verificationRequest.SignatureMessage = params.SignatureMessageToVerify[0]
+	verificationRequest.SignatureMessage = params.SignatureMessageToVerify
 
 	verifyReply, err := c.signatory.VerifySigningPackage(&verificationRequest)
 	if err != nil {
