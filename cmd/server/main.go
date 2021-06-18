@@ -12,7 +12,6 @@ import (
 	"github.com/IABTechLab/adscert/internal/logger"
 	"github.com/IABTechLab/adscert/internal/metrics"
 	"github.com/IABTechLab/adscert/internal/utils"
-	"github.com/IABTechLab/adscert/pkg/adscert"
 	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
 	"github.com/benbjohnson/clock"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -24,7 +23,7 @@ var (
 	metricsPort = flag.Int("metrics_port", 3001, "http metrics port")
 	logLevel    = flag.String("loglevel", utils.GetEnvVar("LOGLEVEL"), "minimum log verbosity")
 	origin      = flag.String("origin", utils.GetEnvVar("ORIGIN"), "ads.cert hostname for the originating party")
-	signer      adscert.AuthenticatedConnectionsSigner
+	signatory   adscertcrypto.AuthenticatedConnectionsSignatory
 )
 
 func main() {
@@ -39,8 +38,7 @@ func main() {
 		logger.Fatalf("Origin hostname is required")
 	}
 
-	localSignatory := adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(*origin, privateKeysBase64, false)
-	signer = adscert.NewAuthenticatedConnectionsSigner(localSignatory, crypto_rand.Reader, clock.New())
+	signatory = adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(*origin, crypto_rand.Reader, clock.New(), privateKeysBase64, false)
 
 	grpcServer := grpc.NewServer()
 	api.RegisterAdsCertServer(grpcServer, &adsCertServer{})
@@ -72,36 +70,12 @@ type adsCertServer struct {
 	api.UnimplementedAdsCertServer
 }
 
-func (s *adsCertServer) SignAuthenticatedConnection(ctx context.Context, req *api.AuthenticatedConnectionSignatureParams) (*api.AuthenticatedConnectionSignature, error) {
-
-	signature, err := signer.SignAuthenticatedConnection(adscert.AuthenticatedConnectionSignatureParams{
-		DestinationURL: req.DestinationUrl,
-		RequestBody:    req.RequestBody,
-	})
-
-	response := &api.AuthenticatedConnectionSignature{
-		Signatures: signature.SignatureMessages,
-	}
-
+func (s *adsCertServer) SignAuthenticatedConnection(ctx context.Context, req *api.AuthenticatedConnectionSignatureRequest) (*api.AuthenticatedConnectionSignatureResponse, error) {
+	response, err := signatory.EmbossSigningPackage(req)
 	return response, err
 }
 
-func (s *adsCertServer) VerifyAuthenticatedConnection(ctx context.Context, req *api.AuthenticatedConnectionVerificationParams) (*api.AuthenticatedConnectionVerification, error) {
-
-	verification, err := signer.VerifyAuthenticatedConnection(
-		adscert.AuthenticatedConnectionSignatureParams{
-			DestinationURL:           req.DestinationUrl,
-			RequestBody:              req.RequestBody,
-			SignatureMessageToVerify: req.Signatures,
-		})
-
-	response := &api.AuthenticatedConnectionVerification{
-		BodyValid: verification.BodyValid,
-		UrlValid:  verification.URLValid,
-	}
-
+func (s *adsCertServer) VerifyAuthenticatedConnection(ctx context.Context, req *api.AuthenticatedConnectionVerificationRequest) (*api.AuthenticatedConnectionVerificationResponse, error) {
+	response, err := signatory.VerifySigningPackage(req)
 	return response, err
 }
-
-// TODO: enforce interface
-var _ api.AdsCertServer = &adsCertServer{}
