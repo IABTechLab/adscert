@@ -18,8 +18,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AdsCertClient interface {
-	EmbossSigningPackage(ctx context.Context, in *AuthenticatedConnectionSigningPackage, opts ...grpc.CallOption) (*AuthenticatedConnectionSignatureResponse, error)
-	VerifySigningPackage(ctx context.Context, in *AuthenticatedConnectionVerificationPackage, opts ...grpc.CallOption) (*AuthenticatedConnectionVerificationResponse, error)
+	EmbossSigningPackage(ctx context.Context, in *AuthenticatedConnectionSignatureRequest, opts ...grpc.CallOption) (*AuthenticatedConnectionSignatureResponse, error)
+	VerifySigningPackage(ctx context.Context, in *AuthenticatedConnectionVerificationRequest, opts ...grpc.CallOption) (*AuthenticatedConnectionVerificationResponse, error)
 	SignAuthenticatedConnection(ctx context.Context, in *AuthenticatedConnectionSignatureParams, opts ...grpc.CallOption) (*AuthenticatedConnectionSignature, error)
 	VerifyAuthenticatedConnection(ctx context.Context, in *AuthenticatedConnectionVerificationParams, opts ...grpc.CallOption) (*AuthenticatedConnectionVerification, error)
 }
@@ -32,7 +32,7 @@ func NewAdsCertClient(cc grpc.ClientConnInterface) AdsCertClient {
 	return &adsCertClient{cc}
 }
 
-func (c *adsCertClient) EmbossSigningPackage(ctx context.Context, in *AuthenticatedConnectionSigningPackage, opts ...grpc.CallOption) (*AuthenticatedConnectionSignatureResponse, error) {
+func (c *adsCertClient) EmbossSigningPackage(ctx context.Context, in *AuthenticatedConnectionSignatureRequest, opts ...grpc.CallOption) (*AuthenticatedConnectionSignatureResponse, error) {
 	out := new(AuthenticatedConnectionSignatureResponse)
 	err := c.cc.Invoke(ctx, "/api.AdsCert/EmbossSigningPackage", in, out, opts...)
 	if err != nil {
@@ -41,7 +41,7 @@ func (c *adsCertClient) EmbossSigningPackage(ctx context.Context, in *Authentica
 	return out, nil
 }
 
-func (c *adsCertClient) VerifySigningPackage(ctx context.Context, in *AuthenticatedConnectionVerificationPackage, opts ...grpc.CallOption) (*AuthenticatedConnectionVerificationResponse, error) {
+func (c *adsCertClient) VerifySigningPackage(ctx context.Context, in *AuthenticatedConnectionVerificationRequest, opts ...grpc.CallOption) (*AuthenticatedConnectionVerificationResponse, error) {
 	out := new(AuthenticatedConnectionVerificationResponse)
 	err := c.cc.Invoke(ctx, "/api.AdsCert/VerifySigningPackage", in, out, opts...)
 	if err != nil {
@@ -72,8 +72,8 @@ func (c *adsCertClient) VerifyAuthenticatedConnection(ctx context.Context, in *A
 // All implementations must embed UnimplementedAdsCertServer
 // for forward compatibility
 type AdsCertServer interface {
-	EmbossSigningPackage(context.Context, *AuthenticatedConnectionSigningPackage) (*AuthenticatedConnectionSignatureResponse, error)
-	VerifySigningPackage(context.Context, *AuthenticatedConnectionVerificationPackage) (*AuthenticatedConnectionVerificationResponse, error)
+	EmbossSigningPackage(context.Context, *AuthenticatedConnectionSignatureRequest) (*AuthenticatedConnectionSignatureResponse, error)
+	VerifySigningPackage(context.Context, *AuthenticatedConnectionVerificationRequest) (*AuthenticatedConnectionVerificationResponse, error)
 	SignAuthenticatedConnection(context.Context, *AuthenticatedConnectionSignatureParams) (*AuthenticatedConnectionSignature, error)
 	VerifyAuthenticatedConnection(context.Context, *AuthenticatedConnectionVerificationParams) (*AuthenticatedConnectionVerification, error)
 	mustEmbedUnimplementedAdsCertServer()
@@ -83,10 +83,10 @@ type AdsCertServer interface {
 type UnimplementedAdsCertServer struct {
 }
 
-func (UnimplementedAdsCertServer) EmbossSigningPackage(context.Context, *AuthenticatedConnectionSigningPackage) (*AuthenticatedConnectionSignatureResponse, error) {
+func (UnimplementedAdsCertServer) EmbossSigningPackage(context.Context, *AuthenticatedConnectionSignatureRequest) (*AuthenticatedConnectionSignatureResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EmbossSigningPackage not implemented")
 }
-func (UnimplementedAdsCertServer) VerifySigningPackage(context.Context, *AuthenticatedConnectionVerificationPackage) (*AuthenticatedConnectionVerificationResponse, error) {
+func (UnimplementedAdsCertServer) VerifySigningPackage(context.Context, *AuthenticatedConnectionVerificationRequest) (*AuthenticatedConnectionVerificationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VerifySigningPackage not implemented")
 }
 func (UnimplementedAdsCertServer) SignAuthenticatedConnection(context.Context, *AuthenticatedConnectionSignatureParams) (*AuthenticatedConnectionSignature, error) {
@@ -109,7 +109,7 @@ func RegisterAdsCertServer(s grpc.ServiceRegistrar, srv AdsCertServer) {
 }
 
 func _AdsCert_EmbossSigningPackage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AuthenticatedConnectionSigningPackage)
+	in := new(AuthenticatedConnectionSignatureRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -121,13 +121,13 @@ func _AdsCert_EmbossSigningPackage_Handler(srv interface{}, ctx context.Context,
 		FullMethod: "/api.AdsCert/EmbossSigningPackage",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdsCertServer).EmbossSigningPackage(ctx, req.(*AuthenticatedConnectionSigningPackage))
+		return srv.(AdsCertServer).EmbossSigningPackage(ctx, req.(*AuthenticatedConnectionSignatureRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AdsCert_VerifySigningPackage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AuthenticatedConnectionVerificationPackage)
+	in := new(AuthenticatedConnectionVerificationRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -139,7 +139,7 @@ func _AdsCert_VerifySigningPackage_Handler(srv interface{}, ctx context.Context,
 		FullMethod: "/api.AdsCert/VerifySigningPackage",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdsCertServer).VerifySigningPackage(ctx, req.(*AuthenticatedConnectionVerificationPackage))
+		return srv.(AdsCertServer).VerifySigningPackage(ctx, req.(*AuthenticatedConnectionVerificationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

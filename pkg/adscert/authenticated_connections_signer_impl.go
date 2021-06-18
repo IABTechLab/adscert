@@ -25,7 +25,7 @@ func (c *authenticatedConnectionsSigner) SignAuthenticatedConnection(params Auth
 
 	var err error
 	response := AuthenticatedConnectionSignature{}
-	signatureRequest := &api.AuthenticatedConnectionSigningPackage{}
+	signatureRequest := &api.AuthenticatedConnectionSignatureRequest{}
 
 	signatureRequest.Timestamp = c.clock.Now().UTC().Format("060102T150405")
 
@@ -63,7 +63,7 @@ func (c *authenticatedConnectionsSigner) SignAuthenticatedConnection(params Auth
 func (c *authenticatedConnectionsSigner) VerifyAuthenticatedConnection(params AuthenticatedConnectionSignatureParams) (AuthenticatedConnectionVerification, error) {
 
 	response := AuthenticatedConnectionVerification{}
-	verificationRequest := api.AuthenticatedConnectionVerificationPackage{}
+	verificationRequest := api.AuthenticatedConnectionVerificationRequest{}
 
 	if err := assembleRequestInfo(&params, verificationRequest.RequestInfo); err != nil {
 		metrics.RecordVerifyMetrics(metrics.VerifyErrorParseUrl)

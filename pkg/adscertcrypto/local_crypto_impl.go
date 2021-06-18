@@ -15,8 +15,8 @@ import (
 )
 
 type AuthenticatedConnectionsSignatory interface {
-	EmbossSigningPackage(request *api.AuthenticatedConnectionSigningPackage) (*api.AuthenticatedConnectionSignatureResponse, error)
-	VerifySigningPackage(request *api.AuthenticatedConnectionVerificationPackage) (*api.AuthenticatedConnectionVerificationResponse, error)
+	EmbossSigningPackage(request *api.AuthenticatedConnectionSignatureRequest) (*api.AuthenticatedConnectionSignatureResponse, error)
+	VerifySigningPackage(request *api.AuthenticatedConnectionVerificationRequest) (*api.AuthenticatedConnectionVerificationResponse, error)
 
 	// TODO: Design a better way to do this testing hook.
 	SynchronizeForTesting(invocationTLDPlusOne string)
@@ -48,7 +48,7 @@ func (s *localAuthenticatedConnectionsSignatory) SynchronizeForTesting(invocatio
 	s.counterpartyManager.SynchronizeForTesting()
 }
 
-func (s *localAuthenticatedConnectionsSignatory) EmbossSigningPackage(request *api.AuthenticatedConnectionSigningPackage) (*api.AuthenticatedConnectionSignatureResponse, error) {
+func (s *localAuthenticatedConnectionsSignatory) EmbossSigningPackage(request *api.AuthenticatedConnectionSignatureRequest) (*api.AuthenticatedConnectionSignatureResponse, error) {
 
 	// Note: this is basically going to be the same process for signing and verifying except the lookup method.
 	var err error
@@ -79,7 +79,7 @@ func (s *localAuthenticatedConnectionsSignatory) EmbossSigningPackage(request *a
 	return response, nil
 }
 
-func (s *localAuthenticatedConnectionsSignatory) embossSingleMessage(request *api.AuthenticatedConnectionSigningPackage, counterparty adscertcounterparty.SignatureCounterparty) (*api.SignatureInfo, error) {
+func (s *localAuthenticatedConnectionsSignatory) embossSingleMessage(request *api.AuthenticatedConnectionSignatureRequest, counterparty adscertcounterparty.SignatureCounterparty) (*api.SignatureInfo, error) {
 	acs, err := formats.NewAuthenticatedConnectionSignature(counterparty.GetStatus().String(), s.originCallsign, request.RequestInfo.InvocationHostname)
 	if err != nil {
 		return nil, fmt.Errorf("error constructing authenticated connection signature format: %v", err)
@@ -117,7 +117,7 @@ func (s *localAuthenticatedConnectionsSignatory) embossSingleMessage(request *ap
 	return signatureInfo, nil
 }
 
-func (s *localAuthenticatedConnectionsSignatory) VerifySigningPackage(request *api.AuthenticatedConnectionVerificationPackage) (*api.AuthenticatedConnectionVerificationResponse, error) {
+func (s *localAuthenticatedConnectionsSignatory) VerifySigningPackage(request *api.AuthenticatedConnectionVerificationRequest) (*api.AuthenticatedConnectionVerificationResponse, error) {
 	response := &api.AuthenticatedConnectionVerificationResponse{}
 
 	// TODO: change this so that the verification request can pass multiple signature messages.
