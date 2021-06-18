@@ -55,11 +55,8 @@ message AuthenticatedConnectionVerificationResponse {
 }
 
 service AdsCert {
-    rpc EmbossSigningPackage(AuthenticatedConnectionSignatureRequest) returns (AuthenticatedConnectionSignatureResponse) {}
-    rpc VerifySigningPackage(AuthenticatedConnectionVerificationRequest) returns (AuthenticatedConnectionVerificationResponse) {}
-
-    rpc SignAuthenticatedConnection(AuthenticatedConnectionSignatureParams) returns (AuthenticatedConnectionSignature) {}
-    rpc VerifyAuthenticatedConnection(AuthenticatedConnectionVerificationParams) returns (AuthenticatedConnectionVerification){}
+    rpc SignAuthenticatedConnection(AuthenticatedConnectionSignatureRequest) returns (AuthenticatedConnectionSignatureResponse) {}
+    rpc VerifyAuthenticatedConnection(AuthenticatedConnectionVerificationRequest) returns (AuthenticatedConnectionVerificationResponse) {}
 }
 
 // TODO: old signer interface below
