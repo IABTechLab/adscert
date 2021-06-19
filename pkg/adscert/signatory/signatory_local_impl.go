@@ -51,11 +51,16 @@ func (s *localAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(req
 	response := &api.AuthenticatedConnectionSignatureResponse{}
 
 	// generate timestamp
-	request.Timestamp = s.clock.Now().UTC().Format("060102T150405")
+	if request.Timestamp == "" {
+		request.Timestamp = s.clock.Now().UTC().Format("060102T150405")
+	}
 
 	// generate nonce
-	if request.Nonce, err = s.generateNonce(); err != nil {
-		metrics.RecordSigningMetrics(metrics.SignErrorGenerateNonce)
+	if request.Nonce == "" {
+		request.Nonce, err = s.generateNonce()
+		if err != nil {
+			metrics.RecordSigningMetrics(metrics.SignErrorGenerateNonce)
+		}
 	}
 
 	// TODO: psl cleanup
