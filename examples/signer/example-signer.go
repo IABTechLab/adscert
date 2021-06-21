@@ -13,10 +13,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/IABTechLab/adscert/internal/api"
 	"github.com/IABTechLab/adscert/internal/logger"
 	"github.com/IABTechLab/adscert/internal/utils"
-	"github.com/IABTechLab/adscert/pkg/adscert"
-	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
+	"github.com/IABTechLab/adscert/pkg/adscert/signatory"
 	"github.com/benbjohnson/clock"
 )
 
@@ -40,7 +40,7 @@ func main() {
 
 	logger.Infof("Starting demo client.")
 
-	privateKeysBase64 := adscertcrypto.GenerateFakePrivateKeysForTesting(*originCallsign)
+	privateKeysBase64 := signatory.GenerateFakePrivateKeysForTesting(*originCallsign)
 
 	var signatureFileLogger *log.Logger
 	if *signatureLogFile != "" {
@@ -54,8 +54,7 @@ func main() {
 	}
 
 	demoClient := DemoClient{
-		Signer: adscert.NewAuthenticatedConnectionsSigner(
-			adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(*originCallsign, privateKeysBase64, *useFakeKeyGeneratingDNS), crypto_rand.Reader, clock.New()),
+		Signatory: signatory.NewLocalAuthenticatedConnectionsSignatory(*originCallsign, crypto_rand.Reader, clock.New(), privateKeysBase64, *useFakeKeyGeneratingDNS),
 
 		Method:         *method,
 		DestinationURL: *destinationURL,
@@ -70,7 +69,7 @@ func main() {
 }
 
 type DemoClient struct {
-	Signer adscert.AuthenticatedConnectionsSigner
+	Signatory signatory.AuthenticatedConnectionsSignatory
 
 	Method         string
 	DestinationURL string
@@ -92,23 +91,28 @@ func (c *DemoClient) StartRequestLoop() {
 }
 
 func (c *DemoClient) initiateRequest() error {
+
 	req, err := http.NewRequest(c.Method, c.DestinationURL, bytes.NewReader(c.Body))
 	if err != nil {
 		return fmt.Errorf("error building HTTP request: %v", err)
 	}
 
-	signature, err := c.Signer.SignAuthenticatedConnection(
-		adscert.AuthenticatedConnectionSignatureParams{
-			DestinationURL: c.DestinationURL,
-			RequestBody:    c.Body,
+	reqInfo := &api.RequestInfo{}
+	signatory.SetRequestInfo(reqInfo, *destinationURL, c.Body)
+
+	signatureResponse, err := c.Signatory.SignAuthenticatedConnection(
+		&api.AuthenticatedConnectionSignatureRequest{
+			RequestInfo: reqInfo,
+			Timestamp:   "",
+			Nonce:       "",
 		})
 	if err != nil {
 		logger.Warningf("unable to sign message (continuing...): %v", err)
 	}
 
-	req.Header["X-Ads-Cert-Auth"] = signature.SignatureMessages
+	req.Header["X-Ads-Cert-Auth"] = signatory.GetSignatures(signatureResponse)
 
-	logger.Infof("Requesting URL %s %s with signature %s", req.Method, req.URL, signature)
+	logger.Infof("Requesting URL %s %s with signature %s", req.Method, req.URL, signatureResponse)
 
 	if c.SignatureFileLogger != nil {
 		_, invocationHostname, err := utils.ParseURLComponents(c.DestinationURL)
@@ -118,7 +122,7 @@ func (c *DemoClient) initiateRequest() error {
 		urlHash := sha256.Sum256([]byte(c.DestinationURL))
 		bodyHash := sha256.Sum256([]byte(c.Body))
 
-		c.SignatureFileLogger.Printf("%s,%s,%s,%s", invocationHostname, signature.SignatureMessages[0], base64.StdEncoding.EncodeToString(bodyHash[:]), base64.StdEncoding.EncodeToString(urlHash[:]))
+		c.SignatureFileLogger.Printf("%s,%s,%s,%s", invocationHostname, signatureResponse.SignatureInfo[0], base64.StdEncoding.EncodeToString(bodyHash[:]), base64.StdEncoding.EncodeToString(urlHash[:]))
 	}
 
 	if c.ActuallySendRequest {

@@ -1,4 +1,4 @@
-package adscertcrypto_test
+package signatory_test
 
 import (
 	"crypto/hmac"
