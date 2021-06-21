@@ -8,9 +8,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/IABTechLab/adscert/internal/api"
 	"github.com/IABTechLab/adscert/internal/logger"
-	"github.com/IABTechLab/adscert/pkg/adscert"
-	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
+	"github.com/IABTechLab/adscert/pkg/adscert/signatory"
 	"github.com/benbjohnson/clock"
 )
 
@@ -33,16 +33,12 @@ func main() {
 	}
 	defer file.Close()
 
-	privateKeysBase64 := adscertcrypto.GenerateFakePrivateKeysForTesting(*hostCallsign)
+	privateKeysBase64 := signatory.GenerateFakePrivateKeysForTesting(*hostCallsign)
 
-	signatory := adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(*hostCallsign, privateKeysBase64, *useFakeKeyGeneratingDNS)
+	signatory := signatory.NewLocalAuthenticatedConnectionsSignatory(*hostCallsign, rand.Reader, clock.New(), privateKeysBase64, *useFakeKeyGeneratingDNS)
+
 	// Force an update to the counter-party manager for known origin callsign before processing log
-	signatory.SynchronizeForTesting(*originCallsign)
-	signer := adscert.NewAuthenticatedConnectionsSigner(
-		signatory,
-		rand.Reader,
-		clock.New(),
-	)
+	// signatory.SynchronizeForTesting(*originCallsign)
 
 	var logCount, parseErrorCount, verifyErrorCount, validRequestCount, validUrlCount int
 
@@ -50,7 +46,7 @@ func main() {
 	for scanner.Scan() {
 		logCount++
 		line := scanner.Text()
-		signatureParams, err := parseLog(line)
+		signatureRequest, err := parseLog(line)
 		if err != nil {
 			parseErrorCount++
 			logger.Errorf("Error parsing log: %s", err)
@@ -59,7 +55,7 @@ func main() {
 
 		// verification only returns an error if there are issues trying to validate the signatures
 		// as opposed to whether the signatures are actually valid or not.
-		verification, err := signer.VerifyAuthenticatedConnection(*signatureParams)
+		verification, err := signatory.VerifyAuthenticatedConnection(signatureRequest)
 		if err != nil {
 			verifyErrorCount++
 			logger.Errorf("unable to verify message: %s", err)
@@ -69,10 +65,10 @@ func main() {
 		if verification.BodyValid {
 			validRequestCount++
 		}
-		if verification.URLValid {
+		if verification.UrlValid {
 			validUrlCount++
 		}
-		logger.Infof("Valid Request Body: %t, Valid Request URL: %t", verification.BodyValid, verification.URLValid)
+		logger.Infof("Valid Request Body: %t, Valid Request URL: %t", verification.BodyValid, verification.UrlValid)
 	}
 
 	logger.Infof("\n--- Summary --- \nlogEntries: %d, parseErrors: %d, verificationErrors: %d, validRequests: %d, validUrls: %d", logCount, parseErrorCount, verifyErrorCount, validRequestCount, validUrlCount)
@@ -82,11 +78,9 @@ func main() {
 	}
 }
 
-func parseLog(log string) (*adscert.AuthenticatedConnectionSignatureParams, error) {
+func parseLog(log string) (*api.AuthenticatedConnectionVerificationRequest, error) {
 	parsedLog := strings.Split(log, ",")
 
-	var hashedRequestBody []byte
-	var hashedDestinationURL []byte
 	InvocationHostname := parsedLog[0]
 	signaturesHeader := parsedLog[1]
 	hashedRequestBodyBytes, err := base64.StdEncoding.DecodeString(parsedLog[2])
@@ -97,13 +91,16 @@ func parseLog(log string) (*adscert.AuthenticatedConnectionSignatureParams, erro
 	if err != nil {
 		return nil, err
 	}
-	copy(hashedRequestBody[:], hashedRequestBodyBytes[:32])
-	copy(hashedDestinationURL[:], hashedDestinationURLBytes[:32])
 
-	return &adscert.AuthenticatedConnectionSignatureParams{
-		InvocationHostname:       InvocationHostname,
-		HashedRequestBody:        &hashedRequestBody,
-		HashedDestinationURL:     &hashedDestinationURL,
-		SignatureMessageToVerify: []string{signaturesHeader},
+	reqInfo := &api.RequestInfo{
+		InvocationHostname: InvocationHostname,
+	}
+
+	copy(reqInfo.UrlHash[:], hashedDestinationURLBytes[:32])
+	copy(reqInfo.BodyHash[:], hashedRequestBodyBytes[:32])
+
+	return &api.AuthenticatedConnectionVerificationRequest{
+		RequestInfo:      reqInfo,
+		SignatureMessage: []string{signaturesHeader},
 	}, nil
 }

@@ -7,10 +7,10 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/IABTechLab/adscert/internal/api"
 	"github.com/IABTechLab/adscert/internal/logger"
 	"github.com/IABTechLab/adscert/internal/metrics"
-	"github.com/IABTechLab/adscert/pkg/adscert"
-	"github.com/IABTechLab/adscert/pkg/adscertcrypto"
+	"github.com/IABTechLab/adscert/pkg/adscert/signatory"
 	"github.com/benbjohnson/clock"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -26,11 +26,10 @@ func main() {
 
 	logger.Infof("Starting demo server.")
 
-	privateKeysBase64 := adscertcrypto.GenerateFakePrivateKeysForTesting(*hostCallsign)
+	privateKeysBase64 := signatory.GenerateFakePrivateKeysForTesting(*hostCallsign)
 
 	demoServer := &DemoServer{
-		Signer: adscert.NewAuthenticatedConnectionsSigner(
-			adscertcrypto.NewLocalAuthenticatedConnectionsSignatory(*hostCallsign, privateKeysBase64, *useFakeKeyGeneratingDNS), crypto_rand.Reader, clock.New()),
+		Signatory: signatory.NewLocalAuthenticatedConnectionsSignatory(*hostCallsign, crypto_rand.Reader, clock.New(), privateKeysBase64, *useFakeKeyGeneratingDNS),
 	}
 	http.HandleFunc("/request", demoServer.HandleRequest)
 	http.Handle("/metrics", promhttp.HandlerFor(metrics.GetAdscertMetricsRegistry(), promhttp.HandlerOpts{}))
@@ -38,11 +37,13 @@ func main() {
 }
 
 type DemoServer struct {
-	Signer adscert.AuthenticatedConnectionsSigner
+	Signatory signatory.AuthenticatedConnectionsSignatory
 }
 
 func (s *DemoServer) HandleRequest(w http.ResponseWriter, req *http.Request) {
 	signatureHeaders := req.Header["X-Ads-Cert-Auth"]
+
+	// TODO: include this in automatic url parsing to handle hostnames without scheme/protocol
 
 	// Make a copy of the URL struct so that we can reconstruct what the client sent.
 	// Obtaining the invoked hostname may be impacted by reverse proxy servers, load balancing
@@ -58,12 +59,14 @@ func (s *DemoServer) HandleRequest(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	verification, err := s.Signer.VerifyAuthenticatedConnection(
-		adscert.AuthenticatedConnectionSignatureParams{
-			DestinationURL:           reconstructedURL.String(),
-			RequestBody:              body,
-			SignatureMessageToVerify: signatureHeaders,
+	reqInfo := &api.RequestInfo{}
+	signatory.SetRequestInfo(reqInfo, reconstructedURL.String(), body)
+
+	verification, err := s.Signatory.VerifyAuthenticatedConnection(
+		&api.AuthenticatedConnectionVerificationRequest{
+			RequestInfo:      reqInfo,
+			SignatureMessage: signatureHeaders,
 		})
 
-	fmt.Fprintf(w, "You invoked %s with X-Ads-Cert-Auth headers %v and verification body:%v URL:%v\n", reconstructedURL.String(), req.Header["X-Ads-Cert-Auth"], verification.BodyValid, verification.URLValid)
+	fmt.Fprintf(w, "You invoked %s with X-Ads-Cert-Auth headers %v and verification body:%v URL:%v\n", reconstructedURL.String(), req.Header["X-Ads-Cert-Auth"], verification.BodyValid, verification.UrlValid)
 }
