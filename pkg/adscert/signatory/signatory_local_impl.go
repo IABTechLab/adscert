@@ -72,15 +72,19 @@ func (s *localAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(req
 	for _, counterparty := range invocationCounterparty.GetSignatureCounterparties() {
 		signatureInfo, err := s.embossSingleMessage(request, counterparty)
 		if err != nil {
+			metrics.RecordSigningMetrics(metrics.SignErrorEmboss)
 			return nil, err
 		}
 		response.SignatureInfo = append(response.SignatureInfo, signatureInfo)
 	}
 
+	metrics.RecordSigningMetrics(metrics.SignErrorNone)
+
 	return response, nil
 }
 
 func (s *localAuthenticatedConnectionsSignatory) embossSingleMessage(request *api.AuthenticatedConnectionSignatureRequest, counterparty adscertcounterparty.SignatureCounterparty) (*api.SignatureInfo, error) {
+
 	acs, err := formats.NewAuthenticatedConnectionSignature(counterparty.GetStatus().String(), s.originCallsign, request.RequestInfo.InvocationHostname)
 	if err != nil {
 		return nil, fmt.Errorf("error constructing authenticated connection signature format: %v", err)
@@ -115,6 +119,7 @@ func (s *localAuthenticatedConnectionsSignatory) embossSingleMessage(request *ap
 	message := acs.EncodeMessage()
 	bodyHMAC, urlHMAC := generateSignatures(counterparty, []byte(message), request.RequestInfo.BodyHash[:], request.RequestInfo.UrlHash[:])
 	signatureInfo.SignatureMessage = message + formats.EncodeSignatureSuffix(bodyHMAC, urlHMAC)
+
 	return signatureInfo, nil
 }
 
@@ -156,6 +161,11 @@ func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(r
 
 	bodyHMAC, urlHMAC := generateSignatures(signatureCounterparty, []byte(acs.EncodeMessage()), request.RequestInfo.BodyHash[:], request.RequestInfo.UrlHash[:])
 	response.BodyValid, response.UrlValid = acs.CompareSignatures(bodyHMAC, urlHMAC)
+
+	metrics.RecordVerifyMetrics(metrics.VerifyErrorNone)
+	metrics.RecordVerifyResultMetrics(metrics.VerifyResultTypeBody, response.BodyValid)
+	metrics.RecordVerifyResultMetrics(metrics.VerifyResultTypeUrl, response.UrlValid)
+
 	return response, nil
 }
 
