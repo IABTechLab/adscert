@@ -7,8 +7,10 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/IABTechLab/adscert/internal/adscerterrors"
 	"github.com/IABTechLab/adscert/internal/formats"
 	"github.com/IABTechLab/adscert/internal/logger"
+	"github.com/IABTechLab/adscert/pkg/adscert/metrics"
 )
 
 type DNSResolver interface {
@@ -220,11 +222,14 @@ func (cm *counterpartyManager) performUpdateSweep(ctx context.Context) {
 				logger.Warningf("Error looking up record for %s in %v: %v", baseSubdomainRecords, time.Now().Sub(start), err)
 			} else {
 				logger.Infof("Found text record for %s in %v: %v", baseSubdomain, time.Now().Sub(start), baseSubdomainRecords)
+				metrics.RecordDNSLookupTime(time.Since(start))
 
 				adsCertPolicy, err := formats.DecodeAdsCertPolicyRecord(baseSubdomainRecords[0])
 				if err != nil {
 					logger.Warningf("Error parsing ads.cert policy record for %s: %v", baseSubdomain, err)
+					metrics.RecordDNSLookup(adscerterrors.ErrDNSDecodePolicy)
 				} else {
+					metrics.RecordDNSLookup(nil)
 					// TODO: Evaluate adding support for multiple signature domains.
 					currentCounterpartyState.signatureCounterpartyDomains = []string{adsCertPolicy.CanonicalCallsignDomain}
 
@@ -241,12 +246,15 @@ func (cm *counterpartyManager) performUpdateSweep(ctx context.Context) {
 				logger.Warningf("Error looking up record for %s in %v: %v", deliverySubdomain, time.Now().Sub(start), err)
 			} else {
 				logger.Infof("Found text record for %s in %v: %v", deliverySubdomain, time.Now().Sub(start), deliverySubdomainRecords)
+				metrics.RecordDNSLookupTime(time.Since(start))
 
 				// Assume one and only one TXT record
 				adsCertKeys, err := formats.DecodeAdsCertKeysRecord(deliverySubdomainRecords[0])
 				if err != nil {
 					logger.Warningf("Error parsing ads.cert record for %s: %v", deliverySubdomain, err)
+					metrics.RecordDNSLookup(adscerterrors.ErrDNSDecodeKeys)
 				} else if len(adsCertKeys.PublicKeys) > 0 {
+					metrics.RecordDNSLookup(nil)
 					currentCounterpartyState.allPublicKeys = asKeyMap(*adsCertKeys)
 					currentCounterpartyState.currentPublicKey = keyAlias(adsCertKeys.PublicKeys[0].KeyAlias)
 

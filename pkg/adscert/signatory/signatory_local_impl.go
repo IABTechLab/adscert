@@ -5,12 +5,14 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/IABTechLab/adscert/internal/adscertcounterparty"
+	"github.com/IABTechLab/adscert/internal/adscerterrors"
 	"github.com/IABTechLab/adscert/internal/api"
 	"github.com/IABTechLab/adscert/internal/formats"
 	"github.com/IABTechLab/adscert/internal/logger"
-	"github.com/IABTechLab/adscert/internal/metrics"
+	"github.com/IABTechLab/adscert/pkg/adscert/metrics"
 	"github.com/benbjohnson/clock"
 )
 
@@ -48,6 +50,7 @@ func (s *localAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(req
 
 	// Note: this is basically going to be the same process for signing and verifying except the lookup method.
 	var err error
+	start := time.Now()
 	response := &api.AuthenticatedConnectionSignatureResponse{}
 
 	// generate timestamp
@@ -59,26 +62,28 @@ func (s *localAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(req
 	if request.Nonce == "" {
 		request.Nonce, err = s.generateNonce()
 		if err != nil {
-			metrics.RecordSigningMetrics(metrics.SignErrorGenerateNonce)
+			metrics.RecordSigning(adscerterrors.ErrSigningGenerateNonce)
 		}
 	}
 
 	// TODO: psl cleanup
 	invocationCounterparty, err := s.counterpartyManager.LookUpInvocationCounterpartyByHostname(request.RequestInfo.InvocationHostname)
 	if err != nil {
+		metrics.RecordSigning(adscerterrors.ErrSigningInvocationCounterpartyLookup)
 		return nil, err
 	}
 
 	for _, counterparty := range invocationCounterparty.GetSignatureCounterparties() {
 		signatureInfo, err := s.embossSingleMessage(request, counterparty)
 		if err != nil {
-			metrics.RecordSigningMetrics(metrics.SignErrorEmboss)
+			metrics.RecordSigning(adscerterrors.ErrSigningEmbossMessage)
 			return nil, err
 		}
 		response.SignatureInfo = append(response.SignatureInfo, signatureInfo)
 	}
 
-	metrics.RecordSigningMetrics(metrics.SignErrorNone)
+	metrics.RecordSigning(nil)
+	metrics.RecordSigningTime(time.Since(start))
 
 	return response, nil
 }
@@ -126,13 +131,14 @@ func (s *localAuthenticatedConnectionsSignatory) embossSingleMessage(request *ap
 func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(request *api.AuthenticatedConnectionVerificationRequest) (*api.AuthenticatedConnectionVerificationResponse, error) {
 	response := &api.AuthenticatedConnectionVerificationResponse{}
 
+	start := time.Now()
 	// TODO: change this so that the verification request can pass multiple signature messages.
 	// Let the signatory pick through the multiple messages (if present) and figure out what
 	// to do with them.
 	signatureMessage := request.SignatureMessage[0]
 	acs, err := formats.DecodeAuthenticatedConnectionSignature(signatureMessage)
 	if err != nil {
-		metrics.RecordVerifyMetrics(metrics.VerifyErrorSignatureDecode)
+		metrics.RecordVerify(adscerterrors.ErrVerifyDecodeSignature)
 		return response, fmt.Errorf("signature decode failure: %v", err)
 	}
 
@@ -140,31 +146,32 @@ func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(r
 	if acs.GetAttributeInvoking() != request.RequestInfo.InvocationHostname {
 		// TODO: Unrelated signature error
 		logger.Infof("unrelated signature %s versus %s", acs.GetAttributeInvoking(), request.RequestInfo.InvocationHostname)
-		metrics.RecordVerifyMetrics(metrics.VerifyErrorUnrelatedSignature)
-		return response, fmt.Errorf("unrelated signature %s versus %s", acs.GetAttributeInvoking(), request.RequestInfo.InvocationHostname)
+		metrics.RecordVerify(adscerterrors.ErrVerifySignatureRequestHostMismatch)
+		return response, fmt.Errorf("%w: %s versus %s", *adscerterrors.ErrVerifySignatureRequestHostMismatch, acs.GetAttributeInvoking(), request.RequestInfo.InvocationHostname)
 	}
 
 	// Look up originator by callsign
 	signatureCounterparty, err := s.counterpartyManager.LookUpSignatureCounterpartyByCallsign(acs.GetAttributeFrom())
 	if err != nil {
 		logger.Infof("counterparty lookup error")
-		metrics.RecordVerifyMetrics(metrics.VerifyErrorCounterPartyLookUp)
+		metrics.RecordVerify(adscerterrors.ErrVerifyCounterpartyLookup)
 		return response, err
 	}
 
 	if !signatureCounterparty.HasSharedSecret() {
 		// TODO: shared secret missing error
 		logger.Infof("no shared secret")
-		metrics.RecordVerifyMetrics(metrics.VerifyErrorNoSharedSecret)
-		return response, nil
+		metrics.RecordVerify(adscerterrors.ErrVerifyMissingSharedSecret)
+		return response, *adscerterrors.ErrVerifyMissingSharedSecret
 	}
 
 	bodyHMAC, urlHMAC := generateSignatures(signatureCounterparty, []byte(acs.EncodeMessage()), request.RequestInfo.BodyHash[:], request.RequestInfo.UrlHash[:])
 	response.BodyValid, response.UrlValid = acs.CompareSignatures(bodyHMAC, urlHMAC)
 
-	metrics.RecordVerifyMetrics(metrics.VerifyErrorNone)
-	metrics.RecordVerifyResultMetrics(metrics.VerifyResultTypeBody, response.BodyValid)
-	metrics.RecordVerifyResultMetrics(metrics.VerifyResultTypeUrl, response.UrlValid)
+	metrics.RecordVerify(nil)
+	metrics.RecordVerifyTime(time.Since(start))
+	metrics.RecordVerifyOutcome(metrics.VerifyOutcomeTypeBody, response.BodyValid)
+	metrics.RecordVerifyOutcome(metrics.VerifyOutcomeTypeUrl, response.UrlValid)
 
 	return response, nil
 }
