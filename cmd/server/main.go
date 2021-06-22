@@ -10,8 +10,8 @@ import (
 
 	"github.com/IABTechLab/adscert/internal/api"
 	"github.com/IABTechLab/adscert/internal/logger"
-	"github.com/IABTechLab/adscert/internal/metrics"
 	"github.com/IABTechLab/adscert/internal/utils"
+	"github.com/IABTechLab/adscert/pkg/adscert/metrics"
 	"github.com/IABTechLab/adscert/pkg/adscert/signatory"
 	"github.com/benbjohnson/clock"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
