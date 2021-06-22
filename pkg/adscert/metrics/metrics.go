@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/IABTechLab/adscert/internal/adscerterrors"
 	"github.com/prometheus/client_golang/prometheus"
@@ -111,8 +112,8 @@ func RecordDNSLookup(err adscerterrors.DNSLookupErrorCode) {
 	}).Inc()
 }
 
-func RecordDNSLookupTime(observeTimeMilliseconds int64) {
-	DNSLookupTimeHistogram.Observe(float64(observeTimeMilliseconds))
+func RecordDNSLookupTime(observeTime time.Duration) {
+	DNSLookupTimeHistogram.Observe(float64(observeTime.Milliseconds()))
 }
 
 func RecordSigning(err adscerterrors.SigningErrorCode) {
@@ -127,8 +128,8 @@ func RecordSigning(err adscerterrors.SigningErrorCode) {
 	}).Inc()
 }
 
-func RecordSigningTime(observeTimeMicroseconds int64) {
-	SignTimeHistogram.Observe(float64(observeTimeMicroseconds))
+func RecordSigningTime(observeTime time.Duration) {
+	SignTimeHistogram.Observe(float64(observeTime.Microseconds()))
 }
 
 func RecordVerify(err adscerterrors.VerifyErrorCode) {
@@ -150,6 +151,6 @@ func RecordVerifyOutcome(t verifyOutcomeType, valid bool) {
 	}).Inc()
 }
 
-func RecordVerifyTime(observeTimeMicroseconds int64) {
-	VerifyTimeHistogram.Observe(float64(observeTimeMicroseconds))
+func RecordVerifyTime(observeTime time.Duration) {
+	VerifyTimeHistogram.Observe(float64(observeTime.Microseconds()))
 }

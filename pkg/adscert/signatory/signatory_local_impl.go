@@ -83,7 +83,7 @@ func (s *localAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(req
 	}
 
 	metrics.RecordSigning(nil)
-	metrics.RecordSigningTime(time.Since(start).Milliseconds())
+	metrics.RecordSigningTime(time.Since(start))
 
 	return response, nil
 }
@@ -169,7 +169,7 @@ func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(r
 	response.BodyValid, response.UrlValid = acs.CompareSignatures(bodyHMAC, urlHMAC)
 
 	metrics.RecordVerify(nil)
-	metrics.RecordVerifyTime(time.Since(start).Microseconds())
+	metrics.RecordVerifyTime(time.Since(start))
 	metrics.RecordVerifyOutcome(metrics.VerifyOutcomeTypeBody, response.BodyValid)
 	metrics.RecordVerifyOutcome(metrics.VerifyOutcomeTypeUrl, response.UrlValid)
 
