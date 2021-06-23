@@ -14,122 +14,122 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// AdsCertClient is the client API for AdsCert service.
+// AdsCertSignatoryClient is the client API for AdsCertSignatory service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type AdsCertClient interface {
+type AdsCertSignatoryClient interface {
 	SignAuthenticatedConnection(ctx context.Context, in *AuthenticatedConnectionSignatureRequest, opts ...grpc.CallOption) (*AuthenticatedConnectionSignatureResponse, error)
 	VerifyAuthenticatedConnection(ctx context.Context, in *AuthenticatedConnectionVerificationRequest, opts ...grpc.CallOption) (*AuthenticatedConnectionVerificationResponse, error)
 }
 
-type adsCertClient struct {
+type adsCertSignatoryClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewAdsCertClient(cc grpc.ClientConnInterface) AdsCertClient {
-	return &adsCertClient{cc}
+func NewAdsCertSignatoryClient(cc grpc.ClientConnInterface) AdsCertSignatoryClient {
+	return &adsCertSignatoryClient{cc}
 }
 
-func (c *adsCertClient) SignAuthenticatedConnection(ctx context.Context, in *AuthenticatedConnectionSignatureRequest, opts ...grpc.CallOption) (*AuthenticatedConnectionSignatureResponse, error) {
+func (c *adsCertSignatoryClient) SignAuthenticatedConnection(ctx context.Context, in *AuthenticatedConnectionSignatureRequest, opts ...grpc.CallOption) (*AuthenticatedConnectionSignatureResponse, error) {
 	out := new(AuthenticatedConnectionSignatureResponse)
-	err := c.cc.Invoke(ctx, "/api.AdsCert/SignAuthenticatedConnection", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/api.AdsCertSignatory/SignAuthenticatedConnection", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *adsCertClient) VerifyAuthenticatedConnection(ctx context.Context, in *AuthenticatedConnectionVerificationRequest, opts ...grpc.CallOption) (*AuthenticatedConnectionVerificationResponse, error) {
+func (c *adsCertSignatoryClient) VerifyAuthenticatedConnection(ctx context.Context, in *AuthenticatedConnectionVerificationRequest, opts ...grpc.CallOption) (*AuthenticatedConnectionVerificationResponse, error) {
 	out := new(AuthenticatedConnectionVerificationResponse)
-	err := c.cc.Invoke(ctx, "/api.AdsCert/VerifyAuthenticatedConnection", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/api.AdsCertSignatory/VerifyAuthenticatedConnection", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// AdsCertServer is the server API for AdsCert service.
-// All implementations must embed UnimplementedAdsCertServer
+// AdsCertSignatoryServer is the server API for AdsCertSignatory service.
+// All implementations must embed UnimplementedAdsCertSignatoryServer
 // for forward compatibility
-type AdsCertServer interface {
+type AdsCertSignatoryServer interface {
 	SignAuthenticatedConnection(context.Context, *AuthenticatedConnectionSignatureRequest) (*AuthenticatedConnectionSignatureResponse, error)
 	VerifyAuthenticatedConnection(context.Context, *AuthenticatedConnectionVerificationRequest) (*AuthenticatedConnectionVerificationResponse, error)
-	mustEmbedUnimplementedAdsCertServer()
+	mustEmbedUnimplementedAdsCertSignatoryServer()
 }
 
-// UnimplementedAdsCertServer must be embedded to have forward compatible implementations.
-type UnimplementedAdsCertServer struct {
+// UnimplementedAdsCertSignatoryServer must be embedded to have forward compatible implementations.
+type UnimplementedAdsCertSignatoryServer struct {
 }
 
-func (UnimplementedAdsCertServer) SignAuthenticatedConnection(context.Context, *AuthenticatedConnectionSignatureRequest) (*AuthenticatedConnectionSignatureResponse, error) {
+func (UnimplementedAdsCertSignatoryServer) SignAuthenticatedConnection(context.Context, *AuthenticatedConnectionSignatureRequest) (*AuthenticatedConnectionSignatureResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SignAuthenticatedConnection not implemented")
 }
-func (UnimplementedAdsCertServer) VerifyAuthenticatedConnection(context.Context, *AuthenticatedConnectionVerificationRequest) (*AuthenticatedConnectionVerificationResponse, error) {
+func (UnimplementedAdsCertSignatoryServer) VerifyAuthenticatedConnection(context.Context, *AuthenticatedConnectionVerificationRequest) (*AuthenticatedConnectionVerificationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VerifyAuthenticatedConnection not implemented")
 }
-func (UnimplementedAdsCertServer) mustEmbedUnimplementedAdsCertServer() {}
+func (UnimplementedAdsCertSignatoryServer) mustEmbedUnimplementedAdsCertSignatoryServer() {}
 
-// UnsafeAdsCertServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to AdsCertServer will
+// UnsafeAdsCertSignatoryServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to AdsCertSignatoryServer will
 // result in compilation errors.
-type UnsafeAdsCertServer interface {
-	mustEmbedUnimplementedAdsCertServer()
+type UnsafeAdsCertSignatoryServer interface {
+	mustEmbedUnimplementedAdsCertSignatoryServer()
 }
 
-func RegisterAdsCertServer(s grpc.ServiceRegistrar, srv AdsCertServer) {
-	s.RegisterService(&AdsCert_ServiceDesc, srv)
+func RegisterAdsCertSignatoryServer(s grpc.ServiceRegistrar, srv AdsCertSignatoryServer) {
+	s.RegisterService(&AdsCertSignatory_ServiceDesc, srv)
 }
 
-func _AdsCert_SignAuthenticatedConnection_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _AdsCertSignatory_SignAuthenticatedConnection_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AuthenticatedConnectionSignatureRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AdsCertServer).SignAuthenticatedConnection(ctx, in)
+		return srv.(AdsCertSignatoryServer).SignAuthenticatedConnection(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/api.AdsCert/SignAuthenticatedConnection",
+		FullMethod: "/api.AdsCertSignatory/SignAuthenticatedConnection",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdsCertServer).SignAuthenticatedConnection(ctx, req.(*AuthenticatedConnectionSignatureRequest))
+		return srv.(AdsCertSignatoryServer).SignAuthenticatedConnection(ctx, req.(*AuthenticatedConnectionSignatureRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AdsCert_VerifyAuthenticatedConnection_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _AdsCertSignatory_VerifyAuthenticatedConnection_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AuthenticatedConnectionVerificationRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AdsCertServer).VerifyAuthenticatedConnection(ctx, in)
+		return srv.(AdsCertSignatoryServer).VerifyAuthenticatedConnection(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/api.AdsCert/VerifyAuthenticatedConnection",
+		FullMethod: "/api.AdsCertSignatory/VerifyAuthenticatedConnection",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdsCertServer).VerifyAuthenticatedConnection(ctx, req.(*AuthenticatedConnectionVerificationRequest))
+		return srv.(AdsCertSignatoryServer).VerifyAuthenticatedConnection(ctx, req.(*AuthenticatedConnectionVerificationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// AdsCert_ServiceDesc is the grpc.ServiceDesc for AdsCert service.
+// AdsCertSignatory_ServiceDesc is the grpc.ServiceDesc for AdsCertSignatory service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var AdsCert_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "api.AdsCert",
-	HandlerType: (*AdsCertServer)(nil),
+var AdsCertSignatory_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "api.AdsCertSignatory",
+	HandlerType: (*AdsCertSignatoryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "SignAuthenticatedConnection",
-			Handler:    _AdsCert_SignAuthenticatedConnection_Handler,
+			Handler:    _AdsCertSignatory_SignAuthenticatedConnection_Handler,
 		},
 		{
 			MethodName: "VerifyAuthenticatedConnection",
-			Handler:    _AdsCert_VerifyAuthenticatedConnection_Handler,
+			Handler:    _AdsCertSignatory_VerifyAuthenticatedConnection_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 
 	"github.com/IABTechLab/adscert/internal/api"
 	"github.com/IABTechLab/adscert/internal/logger"
@@ -36,12 +37,13 @@ func main() {
 
 	if *origin == "" {
 		logger.Fatalf("Origin hostname is required")
+		os.Exit(returnExitCode())
 	}
 
 	signatoryApi = signatory.NewLocalAuthenticatedConnectionsSignatory(*origin, crypto_rand.Reader, clock.New(), privateKeysBase64, false)
 
 	grpcServer := grpc.NewServer()
-	api.RegisterAdsCertServer(grpcServer, &adsCertServer{})
+	api.RegisterAdsCertSignatoryServer(grpcServer, &adsCertSignatoryServer{})
 	logger.Infof("Starting AdsCert API server")
 	logger.Infof("Origin: %v", *origin)
 	logger.Infof("Port: %v", *serverPort)
@@ -59,6 +61,10 @@ func main() {
 	http.ListenAndServe(fmt.Sprintf(":%d", *metricsPort), nil)
 }
 
+func returnExitCode() int {
+	return 1
+}
+
 func runServer(l net.Listener, s *grpc.Server) {
 	err := s.Serve(l)
 	if err != nil {
@@ -66,16 +72,16 @@ func runServer(l net.Listener, s *grpc.Server) {
 	}
 }
 
-type adsCertServer struct {
-	api.UnimplementedAdsCertServer
+type adsCertSignatoryServer struct {
+	api.UnimplementedAdsCertSignatoryServer
 }
 
-func (s *adsCertServer) SignAuthenticatedConnection(ctx context.Context, req *api.AuthenticatedConnectionSignatureRequest) (*api.AuthenticatedConnectionSignatureResponse, error) {
+func (s *adsCertSignatoryServer) SignAuthenticatedConnection(ctx context.Context, req *api.AuthenticatedConnectionSignatureRequest) (*api.AuthenticatedConnectionSignatureResponse, error) {
 	response, err := signatoryApi.SignAuthenticatedConnection(req)
 	return response, err
 }
 
-func (s *adsCertServer) VerifyAuthenticatedConnection(ctx context.Context, req *api.AuthenticatedConnectionVerificationRequest) (*api.AuthenticatedConnectionVerificationResponse, error) {
+func (s *adsCertSignatoryServer) VerifyAuthenticatedConnection(ctx context.Context, req *api.AuthenticatedConnectionVerificationRequest) (*api.AuthenticatedConnectionVerificationResponse, error) {
 	response, err := signatoryApi.VerifyAuthenticatedConnection(req)
 	return response, err
 }

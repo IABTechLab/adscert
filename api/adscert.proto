@@ -54,7 +54,7 @@ message AuthenticatedConnectionVerificationResponse {
     bool url_valid = 2;
 }
 
-service AdsCert {
+service AdsCertSignatory {
     rpc SignAuthenticatedConnection(AuthenticatedConnectionSignatureRequest) returns (AuthenticatedConnectionSignatureResponse) {}
     rpc VerifyAuthenticatedConnection(AuthenticatedConnectionVerificationRequest) returns (AuthenticatedConnectionVerificationResponse) {}
 }
