@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 
 	"github.com/IABTechLab/adscert/internal/api"
 	"github.com/IABTechLab/adscert/internal/logger"
@@ -36,6 +37,7 @@ func main() {
 
 	if *origin == "" {
 		logger.Fatalf("Origin hostname is required")
+		os.Exit(returnExitCode())
 	}
 
 	signatoryApi = signatory.NewLocalAuthenticatedConnectionsSignatory(*origin, crypto_rand.Reader, clock.New(), privateKeysBase64, false)
@@ -57,6 +59,10 @@ func main() {
 	logger.Infof("Port: %v", *metricsPort)
 	http.Handle("/metrics", promhttp.HandlerFor(metrics.GetAdscertMetricsRegistry(), promhttp.HandlerOpts{}))
 	http.ListenAndServe(fmt.Sprintf(":%d", *metricsPort), nil)
+}
+
+func returnExitCode() int {
+	return 1
 }
 
 func runServer(l net.Listener, s *grpc.Server) {
