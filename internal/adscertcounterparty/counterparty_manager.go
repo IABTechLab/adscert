@@ -219,9 +219,9 @@ func (cm *counterpartyManager) performUpdateSweep(ctx context.Context) {
 
 			baseSubdomainRecords, err := cm.dnsResolver.LookupTXT(ctx, baseSubdomain)
 			if err != nil {
-				logger.Warningf("Error looking up record for %s in %v: %v", baseSubdomainRecords, time.Now().Sub(start), err)
+				logger.Warningf("Error looking up record for %s in %v: %v", baseSubdomainRecords, time.Since(start), err)
 			} else {
-				logger.Infof("Found text record for %s in %v: %v", baseSubdomain, time.Now().Sub(start), baseSubdomainRecords)
+				logger.Infof("Found text record for %s in %v: %v", baseSubdomain, time.Since(start), baseSubdomainRecords)
 				metrics.RecordDNSLookupTime(time.Since(start))
 
 				adsCertPolicy, err := formats.DecodeAdsCertPolicyRecord(baseSubdomainRecords[0])
@@ -243,9 +243,9 @@ func (cm *counterpartyManager) performUpdateSweep(ctx context.Context) {
 			deliverySubdomainRecords, err := cm.dnsResolver.LookupTXT(ctx, deliverySubdomain)
 
 			if err != nil {
-				logger.Warningf("Error looking up record for %s in %v: %v", deliverySubdomain, time.Now().Sub(start), err)
+				logger.Warningf("Error looking up record for %s in %v: %v", deliverySubdomain, time.Since(start), err)
 			} else {
-				logger.Infof("Found text record for %s in %v: %v", deliverySubdomain, time.Now().Sub(start), deliverySubdomainRecords)
+				logger.Infof("Found text record for %s in %v: %v", deliverySubdomain, time.Since(start), deliverySubdomainRecords)
 				metrics.RecordDNSLookupTime(time.Since(start))
 
 				// Assume one and only one TXT record
