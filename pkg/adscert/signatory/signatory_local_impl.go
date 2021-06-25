@@ -41,26 +41,23 @@ func (s *localAuthenticatedConnectionsSignatory) SynchronizeForTesting(invocatio
 
 func (s *localAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(request *api.AuthenticatedConnectionSignatureRequest) (*api.AuthenticatedConnectionSignatureResponse, error) {
 
-	// Note: this is basically going to be the same process for signing and verifying except the lookup method.
 	var err error
-	start := time.Now()
+	startTime := time.Now()
 	response := &api.AuthenticatedConnectionSignatureResponse{}
 
-	// generate timestamp
+	// add nonce and timestamp if not already provided in the request
+	// this is the typical case unless the request
 	if request.Timestamp == "" {
 		request.Timestamp = s.clock.Now().UTC().Format("060102T150405")
 	}
-
-	// generate nonce
 	if request.Nonce == "" {
-		request.Nonce, err = s.generateNonce()
-		if err != nil {
+		if request.Nonce, err = s.generateNonce(); err != nil {
 			metrics.RecordSigning(adscerterrors.ErrSigningGenerateNonce)
 		}
 	}
 
 	// TODO: psl cleanup
-	invocationCounterparty, err := s.counterpartyManager.LookUpInvocationCounterpartyByHostname(request.RequestInfo.InvocationHostname)
+	invocationCounterparty, err := s.counterpartyManager.LookUpInvocationCounterpartyByHostname(request.RequestInfo.InvokingDomain)
 	if err != nil {
 		metrics.RecordSigning(adscerterrors.ErrSigningInvocationCounterpartyLookup)
 		return nil, err
@@ -76,21 +73,21 @@ func (s *localAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(req
 	}
 
 	metrics.RecordSigning(nil)
-	metrics.RecordSigningTime(time.Since(start))
+	metrics.RecordSigningTime(time.Since(startTime))
 
 	return response, nil
 }
 
 func (s *localAuthenticatedConnectionsSignatory) embossSingleMessage(request *api.AuthenticatedConnectionSignatureRequest, counterparty adscertcounterparty.SignatureCounterparty) (*api.SignatureInfo, error) {
 
-	acs, err := formats.NewAuthenticatedConnectionSignature(counterparty.GetStatus().String(), s.originCallsign, request.RequestInfo.InvocationHostname)
+	acs, err := formats.NewAuthenticatedConnectionSignature(counterparty.GetStatus().String(), s.originCallsign, request.RequestInfo.InvokingDomain)
 	if err != nil {
 		return nil, fmt.Errorf("error constructing authenticated connection signature format: %v", err)
 	}
 
 	signatureInfo := &api.SignatureInfo{
 		FromDomain:     s.originCallsign,
-		InvokingDomain: request.RequestInfo.InvocationHostname,
+		InvokingDomain: request.RequestInfo.InvokingDomain,
 	}
 
 	if !counterparty.HasSharedSecret() {
@@ -122,6 +119,8 @@ func (s *localAuthenticatedConnectionsSignatory) embossSingleMessage(request *ap
 }
 
 func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(request *api.AuthenticatedConnectionVerificationRequest) (*api.AuthenticatedConnectionVerificationResponse, error) {
+
+	startTime := time.Now()
 	response := &api.AuthenticatedConnectionVerificationResponse{}
 
 	start := time.Now()
@@ -136,11 +135,11 @@ func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(r
 	}
 
 	// Validate invocation hostname matches request
-	if acs.GetAttributeInvoking() != request.RequestInfo.InvocationHostname {
+	if acs.GetAttributeInvoking() != request.RequestInfo.InvokingDomain {
 		// TODO: Unrelated signature error
-		logger.Infof("unrelated signature %s versus %s", acs.GetAttributeInvoking(), request.RequestInfo.InvocationHostname)
+		logger.Infof("unrelated signature %s versus %s", acs.GetAttributeInvoking(), request.RequestInfo.InvokingDomain)
 		metrics.RecordVerify(adscerterrors.ErrVerifySignatureRequestHostMismatch)
-		return response, fmt.Errorf("%w: %s versus %s", *adscerterrors.ErrVerifySignatureRequestHostMismatch, acs.GetAttributeInvoking(), request.RequestInfo.InvocationHostname)
+		return response, fmt.Errorf("%w: %s versus %s", *adscerterrors.ErrVerifySignatureRequestHostMismatch, acs.GetAttributeInvoking(), request.RequestInfo.InvokingDomain)
 	}
 
 	// Look up originator by callsign
@@ -162,7 +161,7 @@ func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(r
 	response.BodyValid, response.UrlValid = acs.CompareSignatures(bodyHMAC, urlHMAC)
 
 	metrics.RecordVerify(nil)
-	metrics.RecordVerifyTime(time.Since(start))
+	metrics.RecordVerifyTime(time.Since(startTime))
 	metrics.RecordVerifyOutcome(metrics.VerifyOutcomeTypeBody, response.BodyValid)
 	metrics.RecordVerifyOutcome(metrics.VerifyOutcomeTypeUrl, response.UrlValid)
 

@@ -7,7 +7,7 @@ option go_package = "github.com/IABTechLab/adscert/internal/api";
 // RequestInfo conveys the basic parameters required for an authenticated
 // connections signing or verify operation.
 message RequestInfo {
-    string invocation_hostname = 1;
+    string invoking_domain = 1;
     bytes url_hash = 2;
     bytes body_hash = 3;
 }

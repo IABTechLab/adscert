@@ -15,7 +15,7 @@ func SetRequestInfo(requestInfo *api.RequestInfo, url string, body []byte) error
 		// TODO: switch to using a named error message indicating URL parse failure.
 		return fmt.Errorf("unable to parse destination URL: %v", err)
 	}
-	requestInfo.InvocationHostname = tldPlusOne
+	requestInfo.InvokingDomain = tldPlusOne
 
 	urlHash := sha256.Sum256([]byte(parsedURL.String()))
 	copy(requestInfo.UrlHash[:], urlHash[:])

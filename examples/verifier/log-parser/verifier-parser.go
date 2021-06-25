@@ -89,7 +89,7 @@ func main() {
 func parseLog(log string) (*api.AuthenticatedConnectionVerificationRequest, error) {
 	parsedLog := strings.Split(log, ",")
 
-	InvocationHostname := parsedLog[0]
+	invokingDomain := parsedLog[0]
 	signaturesHeader := parsedLog[1]
 	hashedRequestBodyBytes, err := base64.StdEncoding.DecodeString(parsedLog[2])
 	if err != nil {
@@ -101,7 +101,7 @@ func parseLog(log string) (*api.AuthenticatedConnectionVerificationRequest, erro
 	}
 
 	reqInfo := &api.RequestInfo{
-		InvocationHostname: InvocationHostname,
+		InvokingDomain: invokingDomain,
 	}
 
 	copy(reqInfo.UrlHash[:], hashedDestinationURLBytes[:32])
