@@ -12,6 +12,7 @@ import (
 	"github.com/IABTechLab/adscert/internal/api"
 	"github.com/IABTechLab/adscert/internal/logger"
 	"github.com/IABTechLab/adscert/internal/utils"
+	"github.com/IABTechLab/adscert/pkg/adscert/discovery"
 	"github.com/IABTechLab/adscert/pkg/adscert/metrics"
 	"github.com/IABTechLab/adscert/pkg/adscert/signatory"
 	"github.com/benbjohnson/clock"
@@ -40,7 +41,7 @@ func main() {
 		os.Exit(returnExitCode())
 	}
 
-	signatoryApi = signatory.NewLocalAuthenticatedConnectionsSignatory(*origin, crypto_rand.Reader, clock.New(), privateKeysBase64, false)
+	signatoryApi = signatory.NewLocalAuthenticatedConnectionsSignatory(*origin, crypto_rand.Reader, clock.New(), discovery.NewRealDnsResolver(), privateKeysBase64)
 
 	grpcServer := grpc.NewServer()
 	api.RegisterAdsCertSignatoryServer(grpcServer, &adsCertSignatoryServer{})

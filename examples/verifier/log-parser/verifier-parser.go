@@ -10,6 +10,7 @@ import (
 
 	"github.com/IABTechLab/adscert/internal/api"
 	"github.com/IABTechLab/adscert/internal/logger"
+	"github.com/IABTechLab/adscert/pkg/adscert/discovery"
 	"github.com/IABTechLab/adscert/pkg/adscert/signatory"
 	"github.com/benbjohnson/clock"
 )
@@ -35,7 +36,14 @@ func main() {
 
 	privateKeysBase64 := signatory.GenerateFakePrivateKeysForTesting(*hostCallsign)
 
-	signatory := signatory.NewLocalAuthenticatedConnectionsSignatory(*hostCallsign, rand.Reader, clock.New(), privateKeysBase64, *useFakeKeyGeneratingDNS)
+	var dnsResolver discovery.DNSResolver
+	if *useFakeKeyGeneratingDNS {
+		dnsResolver = discovery.NewFakeDnsResolver()
+	} else {
+		dnsResolver = discovery.NewRealDnsResolver()
+	}
+
+	signatory := signatory.NewLocalAuthenticatedConnectionsSignatory(*hostCallsign, rand.Reader, clock.New(), dnsResolver, privateKeysBase64)
 
 	// Force an update to the counter-party manager for known origin callsign before processing log
 	// signatory.SynchronizeForTesting(*originCallsign)

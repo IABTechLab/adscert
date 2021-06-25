@@ -16,6 +16,7 @@ import (
 	"github.com/IABTechLab/adscert/internal/api"
 	"github.com/IABTechLab/adscert/internal/logger"
 	"github.com/IABTechLab/adscert/internal/utils"
+	"github.com/IABTechLab/adscert/pkg/adscert/discovery"
 	"github.com/IABTechLab/adscert/pkg/adscert/signatory"
 	"github.com/benbjohnson/clock"
 )
@@ -42,6 +43,13 @@ func main() {
 
 	privateKeysBase64 := signatory.GenerateFakePrivateKeysForTesting(*originCallsign)
 
+	var dnsResolver discovery.DNSResolver
+	if *useFakeKeyGeneratingDNS {
+		dnsResolver = discovery.NewFakeDnsResolver()
+	} else {
+		dnsResolver = discovery.NewRealDnsResolver()
+	}
+
 	var signatureFileLogger *log.Logger
 	if *signatureLogFile != "" {
 		file, err := os.OpenFile(*signatureLogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
@@ -54,7 +62,7 @@ func main() {
 	}
 
 	demoClient := DemoClient{
-		Signatory: signatory.NewLocalAuthenticatedConnectionsSignatory(*originCallsign, crypto_rand.Reader, clock.New(), privateKeysBase64, *useFakeKeyGeneratingDNS),
+		Signatory: signatory.NewLocalAuthenticatedConnectionsSignatory(*originCallsign, crypto_rand.Reader, clock.New(), dnsResolver, privateKeysBase64),
 
 		Method:         *method,
 		DestinationURL: *destinationURL,

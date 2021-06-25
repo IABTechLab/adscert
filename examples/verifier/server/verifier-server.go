@@ -9,6 +9,7 @@ import (
 
 	"github.com/IABTechLab/adscert/internal/api"
 	"github.com/IABTechLab/adscert/internal/logger"
+	"github.com/IABTechLab/adscert/pkg/adscert/discovery"
 	"github.com/IABTechLab/adscert/pkg/adscert/metrics"
 	"github.com/IABTechLab/adscert/pkg/adscert/signatory"
 	"github.com/benbjohnson/clock"
@@ -28,8 +29,15 @@ func main() {
 
 	privateKeysBase64 := signatory.GenerateFakePrivateKeysForTesting(*hostCallsign)
 
+	var dnsResolver discovery.DNSResolver
+	if *useFakeKeyGeneratingDNS {
+		dnsResolver = discovery.NewFakeDnsResolver()
+	} else {
+		dnsResolver = discovery.NewRealDnsResolver()
+	}
+
 	demoServer := &DemoServer{
-		Signatory: signatory.NewLocalAuthenticatedConnectionsSignatory(*hostCallsign, crypto_rand.Reader, clock.New(), privateKeysBase64, *useFakeKeyGeneratingDNS),
+		Signatory: signatory.NewLocalAuthenticatedConnectionsSignatory(*hostCallsign, crypto_rand.Reader, clock.New(), dnsResolver, privateKeysBase64),
 	}
 
 	http.HandleFunc("/request", demoServer.HandleRequest)

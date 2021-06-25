@@ -17,15 +17,7 @@ import (
 	"github.com/benbjohnson/clock"
 )
 
-func NewLocalAuthenticatedConnectionsSignatory(originCallsign string, reader io.Reader, clock clock.Clock, privateKeyBase64Strings []string, useFakeKeyGeneratingDNS bool) AuthenticatedConnectionsSignatory {
-
-	var dnsResolver discovery.DNSResolver
-	if useFakeKeyGeneratingDNS {
-		dnsResolver = NewFakeKeyGeneratingDnsResolver()
-	} else {
-		dnsResolver = discovery.NewRealDnsResolver()
-	}
-
+func NewLocalAuthenticatedConnectionsSignatory(originCallsign string, reader io.Reader, clock clock.Clock, dnsResolver discovery.DNSResolver, privateKeyBase64Strings []string) AuthenticatedConnectionsSignatory {
 	return &localAuthenticatedConnectionsSignatory{
 		originCallsign:      originCallsign,
 		secureRandom:        reader,
