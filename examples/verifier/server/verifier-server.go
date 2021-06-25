@@ -17,9 +17,7 @@ import (
 )
 
 var (
-	hostCallsign            = flag.String("host_callsign", "", "ads.cert callsign for the originating party")
-	useFakeKeyGeneratingDNS = flag.Bool("use_fake_key_generating_dns_for_testing", false,
-		"When enabled, this code skips performing real DNS lookups and instead simulates DNS-based keys by generating a key pair based on the domain name.")
+	hostCallsign = flag.String("host_callsign", "", "ads.cert callsign for the originating party")
 )
 
 func main() {
@@ -29,15 +27,8 @@ func main() {
 
 	privateKeysBase64 := signatory.GenerateFakePrivateKeysForTesting(*hostCallsign)
 
-	var dnsResolver discovery.DNSResolver
-	if *useFakeKeyGeneratingDNS {
-		dnsResolver = discovery.NewFakeDnsResolver()
-	} else {
-		dnsResolver = discovery.NewRealDnsResolver()
-	}
-
 	demoServer := &DemoServer{
-		Signatory: signatory.NewLocalAuthenticatedConnectionsSignatory(*hostCallsign, crypto_rand.Reader, clock.New(), dnsResolver, privateKeysBase64),
+		Signatory: signatory.NewLocalAuthenticatedConnectionsSignatory(*hostCallsign, crypto_rand.Reader, clock.New(), discovery.NewRealDnsResolver(), privateKeysBase64),
 	}
 
 	http.HandleFunc("/request", demoServer.HandleRequest)

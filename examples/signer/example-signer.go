@@ -22,18 +22,13 @@ import (
 )
 
 var (
-	method         = flag.String("http_method", "GET", "HTTP method, 'GET' or 'POST'")
-	destinationURL = flag.String("url", "https://google.com/gen_204", "URL to invoke")
-	body           = flag.String("body", "", "POST request body")
-	sendRequests   = flag.Bool("send_requests", false, "Actually invoke the web server")
-	frequency      = flag.Duration("frequency", 10*time.Second, "Frequency to invoke the specified URL")
-
-	originCallsign = flag.String("origin_callsign", "", "ads.cert callsign for the originating party")
-
+	method           = flag.String("http_method", "GET", "HTTP method, 'GET' or 'POST'")
+	destinationURL   = flag.String("url", "https://google.com/gen_204", "URL to invoke")
+	body             = flag.String("body", "", "POST request body")
+	sendRequests     = flag.Bool("send_requests", false, "Actually invoke the web server")
+	frequency        = flag.Duration("frequency", 10*time.Second, "Frequency to invoke the specified URL")
+	originCallsign   = flag.String("origin_callsign", "", "ads.cert callsign for the originating party")
 	signatureLogFile = flag.String("signature_log_file", "", "write signature and hashes to file for offline verification")
-
-	useFakeKeyGeneratingDNS = flag.Bool("use_fake_key_generating_dns_for_testing", false,
-		"When enabled, this code skips performing real DNS lookups and instead simulates DNS-based keys by generating a key pair based on the domain name.")
 )
 
 func main() {
@@ -42,13 +37,6 @@ func main() {
 	logger.Infof("Starting demo client.")
 
 	privateKeysBase64 := signatory.GenerateFakePrivateKeysForTesting(*originCallsign)
-
-	var dnsResolver discovery.DNSResolver
-	if *useFakeKeyGeneratingDNS {
-		dnsResolver = discovery.NewFakeDnsResolver()
-	} else {
-		dnsResolver = discovery.NewRealDnsResolver()
-	}
 
 	var signatureFileLogger *log.Logger
 	if *signatureLogFile != "" {
@@ -62,7 +50,7 @@ func main() {
 	}
 
 	demoClient := DemoClient{
-		Signatory: signatory.NewLocalAuthenticatedConnectionsSignatory(*originCallsign, crypto_rand.Reader, clock.New(), dnsResolver, privateKeysBase64),
+		Signatory: signatory.NewLocalAuthenticatedConnectionsSignatory(*originCallsign, crypto_rand.Reader, clock.New(), discovery.NewRealDnsResolver(), privateKeysBase64),
 
 		Method:         *method,
 		DestinationURL: *destinationURL,

@@ -16,10 +16,8 @@ import (
 )
 
 var (
-	hostCallsign            = flag.String("host_callsign", "", "ads.cert callsign for the host party")
-	originCallsign          = flag.String("origin_callsign", "", "ads.cert callsign for the originating party")
-	useFakeKeyGeneratingDNS = flag.Bool("use_fake_key_generating_dns_for_testing", false,
-		"When enabled, this code skips performing real DNS lookups and instead simulates DNS-based keys by generating a key pair based on the domain name.")
+	hostCallsign     = flag.String("host_callsign", "", "ads.cert callsign for the host party")
+	originCallsign   = flag.String("origin_callsign", "", "ads.cert callsign for the originating party")
 	signatureLogFile = flag.String("signature_log_file", "", "Verify all logged signatures and hashes in file")
 )
 
@@ -36,14 +34,7 @@ func main() {
 
 	privateKeysBase64 := signatory.GenerateFakePrivateKeysForTesting(*hostCallsign)
 
-	var dnsResolver discovery.DNSResolver
-	if *useFakeKeyGeneratingDNS {
-		dnsResolver = discovery.NewFakeDnsResolver()
-	} else {
-		dnsResolver = discovery.NewRealDnsResolver()
-	}
-
-	signatory := signatory.NewLocalAuthenticatedConnectionsSignatory(*hostCallsign, rand.Reader, clock.New(), dnsResolver, privateKeysBase64)
+	signatory := signatory.NewLocalAuthenticatedConnectionsSignatory(*hostCallsign, rand.Reader, clock.New(), discovery.NewRealDnsResolver(), privateKeysBase64)
 
 	// Force an update to the counter-party manager for known origin callsign before processing log
 	// signatory.SynchronizeForTesting(*originCallsign)
