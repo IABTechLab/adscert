@@ -12,17 +12,18 @@ import (
 	"github.com/IABTechLab/adscert/internal/api"
 	"github.com/IABTechLab/adscert/internal/formats"
 	"github.com/IABTechLab/adscert/internal/logger"
+	"github.com/IABTechLab/adscert/pkg/adscert/discovery"
 	"github.com/IABTechLab/adscert/pkg/adscert/metrics"
 	"github.com/benbjohnson/clock"
 )
 
 func NewLocalAuthenticatedConnectionsSignatory(originCallsign string, reader io.Reader, clock clock.Clock, privateKeyBase64Strings []string, useFakeKeyGeneratingDNS bool) AuthenticatedConnectionsSignatory {
 
-	var dnsResolver adscertcounterparty.DNSResolver
+	var dnsResolver discovery.DNSResolver
 	if useFakeKeyGeneratingDNS {
 		dnsResolver = NewFakeKeyGeneratingDnsResolver()
 	} else {
-		dnsResolver = adscertcounterparty.NewRealDnsResolver()
+		dnsResolver = discovery.NewRealDnsResolver()
 	}
 
 	return &localAuthenticatedConnectionsSignatory{

@@ -2,7 +2,6 @@ package adscertcounterparty
 
 import (
 	"context"
-	"net"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -10,35 +9,9 @@ import (
 	"github.com/IABTechLab/adscert/internal/adscerterrors"
 	"github.com/IABTechLab/adscert/internal/formats"
 	"github.com/IABTechLab/adscert/internal/logger"
+	"github.com/IABTechLab/adscert/pkg/adscert/discovery"
 	"github.com/IABTechLab/adscert/pkg/adscert/metrics"
 )
-
-type DNSResolver interface {
-	LookupTXT(ctx context.Context, name string) ([]string, error)
-}
-
-func NewFakeDnsResolver() DNSResolver {
-	return &fakeDnsResolver{fakeRecords: []string{"fake DNS record"}}
-}
-
-type fakeDnsResolver struct {
-	fakeRecords []string
-	fakeError   error
-}
-
-func (r *fakeDnsResolver) LookupTXT(ctx context.Context, name string) ([]string, error) {
-	return r.fakeRecords, r.fakeError
-}
-
-func NewRealDnsResolver() DNSResolver {
-	return &realDnsResolver{}
-}
-
-type realDnsResolver struct{}
-
-func (r *realDnsResolver) LookupTXT(ctx context.Context, name string) ([]string, error) {
-	return net.LookupTXT(name)
-}
 
 type counterpartyMap map[string]*counterpartyInfo
 
@@ -64,10 +37,10 @@ type counterpartyManager struct {
 	myPrivateKeys     keyMap
 	currentPrivateKey keyAlias
 
-	dnsResolver DNSResolver
+	dnsResolver discovery.DNSResolver
 }
 
-func NewCounterpartyManager(dnsResolver DNSResolver, base64PrivateKeys []string) CounterpartyAPI {
+func NewCounterpartyManager(dnsResolver discovery.DNSResolver, base64PrivateKeys []string) CounterpartyAPI {
 	// Curtis notes:
 	//
 	// The current state of the counterparty manager isn't ideal since it doesn't have a good
