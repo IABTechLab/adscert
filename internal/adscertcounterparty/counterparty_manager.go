@@ -15,18 +15,6 @@ import (
 
 type counterpartyMap map[string]*counterpartyInfo
 
-type counterpartyInfo struct {
-	registerableDomain  string
-	currentPublicKey    keyAlias
-	currentSharedSecret keyTupleAlias
-	lastUpdateTime      time.Time
-
-	allPublicKeys    keyMap
-	allSharedSecrets keyTupleMap
-
-	signatureCounterpartyDomains []string
-}
-
 type counterpartyManager struct {
 	counterparties atomic.Value // contains counterpartyMap instance
 	mutex          sync.Mutex
@@ -84,53 +72,6 @@ func NewCounterpartyManager(dnsResolver discovery.DNSResolver, base64PrivateKeys
 	cm.counterparties.Store(counterpartyMap{})
 	cm.startAutoUpdate()
 	return cm
-}
-
-type invocationCounterparty struct {
-	counterpartyInfo          counterpartyInfo
-	signatureCounterpartyInfo []counterpartyInfo
-}
-
-func (c *invocationCounterparty) GetStatus() CounterpartyStatus {
-	return StatusUnspecified
-}
-
-func (c *invocationCounterparty) GetSignatureCounterparties() []SignatureCounterparty {
-	result := []SignatureCounterparty{}
-
-	for _, counterparty := range c.signatureCounterpartyInfo {
-		result = append(result, &signatureCounterparty{counterpartyInfo: counterparty})
-	}
-
-	return result
-}
-
-type signatureCounterparty struct {
-	counterpartyInfo counterpartyInfo
-}
-
-func (c *signatureCounterparty) GetAdsCertIdentityDomain() string {
-	return c.counterpartyInfo.registerableDomain
-}
-
-func (c *signatureCounterparty) GetStatus() CounterpartyStatus {
-	return StatusUnspecified
-}
-
-func (c *signatureCounterparty) HasSharedSecret() bool {
-	return c.counterpartyInfo.allSharedSecrets[c.counterpartyInfo.currentSharedSecret] != nil
-}
-
-func (c *signatureCounterparty) SharedSecret() SharedSecret {
-	if !c.HasSharedSecret() {
-		return nil
-	}
-	sharedSecret := c.counterpartyInfo.allSharedSecrets[c.counterpartyInfo.currentSharedSecret]
-	return SharedSecret(sharedSecret)
-}
-
-func (c *signatureCounterparty) KeyID() string {
-	return "a1b2c3"
 }
 
 func (cm *counterpartyManager) LookUpInvocationCounterpartyByHostname(invocationHostname string) (InvocationCounterparty, error) {

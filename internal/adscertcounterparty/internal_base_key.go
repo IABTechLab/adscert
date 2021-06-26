@@ -96,12 +96,6 @@ func GenerateKeyPair() (string, string, error) {
 	return formats.EncodeKeyBase64(publicBytes[:]), formats.EncodeKeyBase64(privateBytes[:]), nil
 }
 
-type keyReceiver interface {
-	receivingSlice() []byte
-	setKeyAlias(alias string)
-	getKeyAlias() string
-}
-
 func privateKeysToKeyMap(privateKeys []string) (keyMap, error) {
 	result := keyMap{}
 
