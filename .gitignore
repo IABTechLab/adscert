@@ -1,4 +1,5 @@
 .vscode/
+.idea/
 examples/signer/signer
 examples/verifier/verifier
 cmd/keygen/keygen
