@@ -1,7 +1,6 @@
 package adscertcounterparty
 
 import (
-	"crypto/rand"
 	"fmt"
 
 	"github.com/IABTechLab/adscert/internal/formats"
@@ -80,20 +79,6 @@ func calculateSharedSecret(myPrivate *x25519Key, theirPublic *x25519Key) (*x2551
 	copy(result.keyBytes[:], secret)
 
 	return result, err
-}
-
-func GenerateKeyPair() (string, string, error) {
-	privateBytes := &[32]byte{}
-	if n, err := rand.Read(privateBytes[:]); err != nil {
-		return "", "", err
-	} else if n != 32 {
-		return "", "", fmt.Errorf("wrong key size generated: %d != 32", n)
-	}
-
-	publicBytes := &[32]byte{}
-	curve25519.ScalarBaseMult(publicBytes, privateBytes)
-
-	return formats.EncodeKeyBase64(publicBytes[:]), formats.EncodeKeyBase64(privateBytes[:]), nil
 }
 
 func privateKeysToKeyMap(privateKeys []string) (keyMap, error) {
