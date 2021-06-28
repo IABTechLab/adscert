@@ -8,13 +8,6 @@ import (
 	"golang.org/x/crypto/curve25519"
 )
 
-// Curtis notes:
-// The key management code is currently a mess, as there are different formats used by different
-// low-level APIs, and I largely just used whatever was convenient at the time.  We should figure
-// out what is the right way to work with this data.  There are some security considerations for
-// this such as whether we have copies of key material scattered around in the application's memory.
-// I'm hoping to get security engineer feedback on this.
-
 // x25519Key provides a lightweight, typed wrapper around computed
 // shared secret material to permit pass-by-value.
 type x25519Key struct {

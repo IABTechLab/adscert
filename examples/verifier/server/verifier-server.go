@@ -41,9 +41,8 @@ type DemoServer struct {
 }
 
 func (s *DemoServer) HandleRequest(w http.ResponseWriter, req *http.Request) {
-	signatureHeaders := req.Header["X-Ads-Cert-Auth"]
 
-	// TODO: include this in automatic url parsing to handle hostnames without scheme/protocol
+	signatureHeaders := req.Header["X-Ads-Cert-Auth"]
 
 	// Make a copy of the URL struct so that we can reconstruct what the client sent.
 	// Obtaining the invoked hostname may be impacted by reverse proxy servers, load balancing

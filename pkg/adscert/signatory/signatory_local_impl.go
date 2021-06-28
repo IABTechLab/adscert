@@ -46,7 +46,7 @@ func (s *localAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(req
 	response := &api.AuthenticatedConnectionSignatureResponse{}
 
 	// add nonce and timestamp if not already provided in the request
-	// this is the typical case unless the request
+	// this is the typical case to keep the client's usage simple
 	if request.Timestamp == "" {
 		request.Timestamp = s.clock.Now().UTC().Format("060102T150405")
 	}
@@ -97,11 +97,8 @@ func (s *localAuthenticatedConnectionsSignatory) embossSingleMessage(request *ap
 
 	sharedSecret := counterparty.SharedSecret()
 
-	if err = acs.AddParametersForSignature(sharedSecret.LocalKeyID(),
-		counterparty.GetAdsCertIdentityDomain(),
-		sharedSecret.RemoteKeyID(),
-		request.Timestamp,
-		request.Nonce); err != nil {
+	err = acs.AddParametersForSignature(sharedSecret.LocalKeyID(), counterparty.GetAdsCertIdentityDomain(), sharedSecret.RemoteKeyID(), request.Timestamp, request.Nonce)
+	if err != nil {
 		// TODO: Figure out how we want to expose structured metadata for failed signing ops.
 		return nil, fmt.Errorf("error adding signature params: %v", err)
 	}
@@ -123,10 +120,6 @@ func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(r
 	startTime := time.Now()
 	response := &api.AuthenticatedConnectionVerificationResponse{}
 
-	start := time.Now()
-	// TODO: change this so that the verification request can pass multiple signature messages.
-	// Let the signatory pick through the multiple messages (if present) and figure out what
-	// to do with them.
 	signatureMessage := request.SignatureMessage[0]
 	acs, err := formats.DecodeAuthenticatedConnectionSignature(signatureMessage)
 	if err != nil {
@@ -136,7 +129,6 @@ func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(r
 
 	// Validate invocation hostname matches request
 	if acs.GetAttributeInvoking() != request.RequestInfo.InvokingDomain {
-		// TODO: Unrelated signature error
 		logger.Infof("unrelated signature %s versus %s", acs.GetAttributeInvoking(), request.RequestInfo.InvokingDomain)
 		metrics.RecordVerify(adscerterrors.ErrVerifySignatureRequestHostMismatch)
 		return response, fmt.Errorf("%w: %s versus %s", *adscerterrors.ErrVerifySignatureRequestHostMismatch, acs.GetAttributeInvoking(), request.RequestInfo.InvokingDomain)
@@ -151,7 +143,6 @@ func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(r
 	}
 
 	if !signatureCounterparty.HasSharedSecret() {
-		// TODO: shared secret missing error
 		logger.Infof("no shared secret")
 		metrics.RecordVerify(adscerterrors.ErrVerifyMissingSharedSecret)
 		return response, *adscerterrors.ErrVerifyMissingSharedSecret
