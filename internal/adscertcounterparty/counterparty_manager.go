@@ -31,7 +31,7 @@ type counterpartyManager struct {
 func NewCounterpartyManager(dnsResolver discovery.DNSResolver, base64PrivateKeys []string) CounterpartyAPI {
 
 	cm := &counterpartyManager{
-		ticker:      time.NewTicker(30 * time.Second), //TODO Make this configurable.
+		ticker:      time.NewTicker(30 * time.Second),
 		wakeUp:      make(chan struct{}, 1),
 		dnsResolver: dnsResolver,
 	}
@@ -56,9 +56,10 @@ func NewCounterpartyManager(dnsResolver discovery.DNSResolver, base64PrivateKeys
 	return cm
 }
 
-func (cm *counterpartyManager) LookUpInvocationCounterpartyByHostname(invocationHostname string) (InvocationCounterparty, error) {
+func (cm *counterpartyManager) LookUpInvocationCounterpartyByHostname(domain string) (InvocationCounterparty, error) {
+
 	// Look up invocation party
-	invocationCounterparty := &invocationCounterparty{counterpartyInfo: cm.lookup(invocationHostname)}
+	invocationCounterparty := &invocationCounterparty{counterpartyInfo: cm.lookup(domain)}
 
 	if len(invocationCounterparty.counterpartyInfo.signatureCounterpartyDomains) == 0 {
 		// We don't yet know who will be the signing counterparties for this
@@ -103,6 +104,7 @@ func (cm *counterpartyManager) startAutoUpdate() {
 
 func (cm *counterpartyManager) performUpdateSweep(ctx context.Context) {
 	logger.Info("Starting ads.cert update sweep")
+
 	for domain := range cm.counterparties.Load().(counterpartyMap) {
 		currentCounterpartyState := cm.lookup(domain)
 
@@ -152,23 +154,23 @@ func (cm *counterpartyManager) performUpdateSweep(ctx context.Context) {
 				} else if len(adsCertKeys.PublicKeys) > 0 {
 					metrics.RecordDNSLookup(nil)
 					currentCounterpartyState.allPublicKeys = asKeyMap(*adsCertKeys)
-					currentCounterpartyState.currentPublicKey = keyAlias(adsCertKeys.PublicKeys[0].KeyAlias)
+					currentCounterpartyState.currentPublicKeyId = keyAlias(adsCertKeys.PublicKeys[0].KeyAlias)
 
-					currentCounterpartyState.allSharedSecrets = keyTupleMap{}
-					currentCounterpartyState.currentSharedSecret = keyTupleAlias{}
+					currentCounterpartyState.allSharedSecrets = keyPairMap{}
+					currentCounterpartyState.currentSharedSecretId = keyPairAlias{}
 				}
 			}
 
 			for _, myKey := range cm.myPrivateKeys {
 				for _, theirKey := range currentCounterpartyState.allPublicKeys {
-					keyTupleAlias := newKeyTupleAlias(myKey.alias, theirKey.alias)
-					if currentCounterpartyState.allSharedSecrets[keyTupleAlias] == nil {
-						currentCounterpartyState.allSharedSecrets[keyTupleAlias], err = calculateSharedSecret(myKey, theirKey)
+					keyPairAlias := newKeyPairAlias(myKey.alias, theirKey.alias)
+					if currentCounterpartyState.allSharedSecrets[keyPairAlias] == nil {
+						currentCounterpartyState.allSharedSecrets[keyPairAlias], err = calculateSharedSecret(myKey, theirKey)
 					}
 				}
 			}
 
-			currentCounterpartyState.currentSharedSecret = newKeyTupleAlias(cm.currentPrivateKey, currentCounterpartyState.currentPublicKey)
+			currentCounterpartyState.currentSharedSecretId = newKeyPairAlias(cm.currentPrivateKey, currentCounterpartyState.currentPublicKeyId)
 			currentCounterpartyState.lastUpdateTime = time.Now()
 			cm.update(domain, currentCounterpartyState)
 		} else {
@@ -193,51 +195,51 @@ func (cm *counterpartyManager) UpdateNow() {
 	}
 }
 
-func (cm *counterpartyManager) lookup(registerableDomain string) counterpartyInfo {
-	counterparty := cm.counterparties.Load().(counterpartyMap)[registerableDomain]
+func (cm *counterpartyManager) lookup(domain string) counterpartyInfo {
+	counterparty := cm.counterparties.Load().(counterpartyMap)[domain]
 
 	if counterparty != nil {
 		return *counterparty
 	}
 
-	return cm.register(registerableDomain)
+	return cm.register(domain)
 }
 
-func (cm *counterpartyManager) register(registerableDomain string) counterpartyInfo {
+func (cm *counterpartyManager) register(domain string) counterpartyInfo {
 	cm.mutex.Lock()
 	defer cm.mutex.Unlock()
 
 	// We may encounter a race condition on registration, so check map again
 	// after we acquire a lock.
-	counterparty := cm.counterparties.Load().(counterpartyMap)[registerableDomain]
+	counterparty := cm.counterparties.Load().(counterpartyMap)[domain]
 	if counterparty != nil {
 		return *counterparty
 	}
 
-	counterparty = buildInitialCounterparty(registerableDomain)
-	cm.unsafeStore(registerableDomain, counterparty)
+	counterparty = buildInitialCounterparty(domain)
+	cm.unsafeStore(domain, counterparty)
 	cm.UpdateNow()
 	return *counterparty
 }
 
-func (cm *counterpartyManager) update(registerableDomain string, updatedCounterparty counterpartyInfo) {
+func (cm *counterpartyManager) update(domain string, updatedCounterparty counterpartyInfo) {
 	cm.mutex.Lock()
 	defer cm.mutex.Unlock()
-	cm.unsafeStore(registerableDomain, &updatedCounterparty)
+	cm.unsafeStore(domain, &updatedCounterparty)
 }
 
-func (cm *counterpartyManager) unsafeStore(registerableDomain string, newCounterparty *counterpartyInfo) {
+func (cm *counterpartyManager) unsafeStore(domain string, newCounterparty *counterpartyInfo) {
 	currentMap := cm.counterparties.Load().(counterpartyMap)
 	newMap := make(counterpartyMap)
 	for k, v := range currentMap {
 		newMap[k] = v
 	}
-	newMap[registerableDomain] = newCounterparty
+	newMap[domain] = newCounterparty
 	cm.counterparties.Store(newMap)
 }
 
-func buildInitialCounterparty(registerableDomain string) *counterpartyInfo {
+func buildInitialCounterparty(domain string) *counterpartyInfo {
 	return &counterpartyInfo{
-		registerableDomain: registerableDomain,
+		domain: domain,
 	}
 }

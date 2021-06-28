@@ -18,25 +18,19 @@ const (
 
 type CounterpartyAPI interface {
 	LookUpInvocationCounterpartyByHostname(invocationHostname string) (InvocationCounterparty, error)
-
 	LookUpSignatureCounterpartyByCallsign(adsCertCallsign string) (SignatureCounterparty, error)
-
 	SynchronizeForTesting()
 }
 
 type InvocationCounterparty interface {
 	GetStatus() CounterpartyStatus
-
 	GetSignatureCounterparties() []SignatureCounterparty
 }
 
 type SignatureCounterparty interface {
 	GetAdsCertIdentityDomain() string
-
 	HasSharedSecret() bool
-
 	SharedSecret() SharedSecret
-
 	GetStatus() CounterpartyStatus
 }
 

@@ -11,9 +11,9 @@ import (
 // x25519Key provides a lightweight, typed wrapper around computed
 // shared secret material to permit pass-by-value.
 type x25519Key struct {
-	keyBytes   [32]byte
-	alias      keyAlias
-	tupleAlias keyTupleAlias
+	keyBytes  [32]byte
+	alias     keyAlias
+	pairAlias keyPairAlias
 }
 
 func (x *x25519Key) Secret() *[32]byte {
@@ -21,27 +21,27 @@ func (x *x25519Key) Secret() *[32]byte {
 }
 
 func (x *x25519Key) LocalKeyID() string {
-	return string(x.tupleAlias.myKeyAlias)
+	return string(x.pairAlias.originKeyAlias)
 }
 
 func (x *x25519Key) RemoteKeyID() string {
-	return string(x.tupleAlias.theirKeyAlias)
+	return string(x.pairAlias.remoteKeyAlias)
 }
 
 type keyAlias string
 
-type keyTupleAlias struct {
-	myKeyAlias    keyAlias
-	theirKeyAlias keyAlias
+type keyPairAlias struct {
+	originKeyAlias keyAlias
+	remoteKeyAlias keyAlias
 }
 
-func newKeyTupleAlias(myKeyID keyAlias, theirKeyID keyAlias) keyTupleAlias {
-	return keyTupleAlias{myKeyAlias: myKeyID, theirKeyAlias: theirKeyID}
+func newKeyPairAlias(originKeyId keyAlias, remoteKeyId keyAlias) keyPairAlias {
+	return keyPairAlias{originKeyAlias: originKeyId, remoteKeyAlias: remoteKeyId}
 }
 
 type keyMap map[keyAlias]*x25519Key
 
-type keyTupleMap map[keyTupleAlias]*x25519Key
+type keyPairMap map[keyPairAlias]*x25519Key
 
 func asKeyMap(adsCertKeys formats.AdsCertKeys) keyMap {
 	result := keyMap{}
@@ -60,14 +60,16 @@ func asKeyMap(adsCertKeys formats.AdsCertKeys) keyMap {
 	return result
 }
 
-func calculateSharedSecret(myPrivate *x25519Key, theirPublic *x25519Key) (*x25519Key, error) {
-	secret, err := curve25519.X25519(myPrivate.keyBytes[:], theirPublic.keyBytes[:])
+// Calculate shared secret between two parties (using a origin party's private key and remote party's public key).
+// This key will be used to sign and verify connections between these parties.
+func calculateSharedSecret(originPrivateKey *x25519Key, remotePublicKey *x25519Key) (*x25519Key, error) {
+	secret, err := curve25519.X25519(originPrivateKey.keyBytes[:], remotePublicKey.keyBytes[:])
 	if err != nil {
 		return nil, err
 	}
 
 	result := &x25519Key{
-		tupleAlias: newKeyTupleAlias(myPrivate.alias, theirPublic.alias),
+		pairAlias: newKeyPairAlias(originPrivateKey.alias, remotePublicKey.alias),
 	}
 	copy(result.keyBytes[:], secret)
 

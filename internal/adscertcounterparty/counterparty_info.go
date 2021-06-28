@@ -5,13 +5,13 @@ import (
 )
 
 type counterpartyInfo struct {
-	registerableDomain  string
-	currentPublicKey    keyAlias
-	currentSharedSecret keyTupleAlias
-	lastUpdateTime      time.Time
+	domain                string
+	currentPublicKeyId    keyAlias
+	currentSharedSecretId keyPairAlias
+	lastUpdateTime        time.Time
 
 	allPublicKeys    keyMap
-	allSharedSecrets keyTupleMap
+	allSharedSecrets keyPairMap
 
 	signatureCounterpartyDomains []string
 }

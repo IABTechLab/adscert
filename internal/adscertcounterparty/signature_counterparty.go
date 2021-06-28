@@ -5,7 +5,7 @@ type signatureCounterparty struct {
 }
 
 func (c *signatureCounterparty) GetAdsCertIdentityDomain() string {
-	return c.counterpartyInfo.registerableDomain
+	return c.counterpartyInfo.domain
 }
 
 func (c *signatureCounterparty) GetStatus() CounterpartyStatus {
@@ -13,17 +13,13 @@ func (c *signatureCounterparty) GetStatus() CounterpartyStatus {
 }
 
 func (c *signatureCounterparty) HasSharedSecret() bool {
-	return c.counterpartyInfo.allSharedSecrets[c.counterpartyInfo.currentSharedSecret] != nil
+	return c.counterpartyInfo.allSharedSecrets[c.counterpartyInfo.currentSharedSecretId] != nil
 }
 
 func (c *signatureCounterparty) SharedSecret() SharedSecret {
 	if !c.HasSharedSecret() {
 		return nil
 	}
-	sharedSecret := c.counterpartyInfo.allSharedSecrets[c.counterpartyInfo.currentSharedSecret]
+	sharedSecret := c.counterpartyInfo.allSharedSecrets[c.counterpartyInfo.currentSharedSecretId]
 	return SharedSecret(sharedSecret)
-}
-
-func (c *signatureCounterparty) KeyID() string {
-	return "a1b2c3"
 }
