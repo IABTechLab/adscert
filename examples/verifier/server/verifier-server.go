@@ -27,8 +27,16 @@ func main() {
 
 	privateKeysBase64 := signatory.GenerateFakePrivateKeysForTesting(*hostCallsign)
 
+	signatoryApi := signatory.NewLocalAuthenticatedConnectionsSignatory(
+		*hostCallsign,
+		crypto_rand.Reader,
+		clock.New(),
+		discovery.NewDefaultDnsResolver(),
+		discovery.NewDefaultKeyStore(),
+		privateKeysBase64)
+
 	demoServer := &DemoServer{
-		Signatory: signatory.NewLocalAuthenticatedConnectionsSignatory(*hostCallsign, crypto_rand.Reader, clock.New(), discovery.NewRealDnsResolver(), privateKeysBase64),
+		Signatory: signatoryApi,
 	}
 
 	http.HandleFunc("/request", demoServer.HandleRequest)

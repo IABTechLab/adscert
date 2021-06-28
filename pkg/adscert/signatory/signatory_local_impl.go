@@ -7,7 +7,6 @@ import (
 	"io"
 	"time"
 
-	"github.com/IABTechLab/adscert/internal/adscertcounterparty"
 	"github.com/IABTechLab/adscert/internal/adscerterrors"
 	"github.com/IABTechLab/adscert/internal/api"
 	"github.com/IABTechLab/adscert/internal/formats"
@@ -17,12 +16,12 @@ import (
 	"github.com/benbjohnson/clock"
 )
 
-func NewLocalAuthenticatedConnectionsSignatory(originCallsign string, reader io.Reader, clock clock.Clock, dnsResolver discovery.DNSResolver, privateKeyBase64Strings []string) AuthenticatedConnectionsSignatory {
+func NewLocalAuthenticatedConnectionsSignatory(originCallsign string, reader io.Reader, clock clock.Clock, dnsResolver discovery.DNSResolver, keyStore discovery.KeyStore, privateKeyBase64Strings []string) AuthenticatedConnectionsSignatory {
 	return &localAuthenticatedConnectionsSignatory{
 		originCallsign:      originCallsign,
 		secureRandom:        reader,
 		clock:               clock,
-		counterpartyManager: adscertcounterparty.NewCounterpartyManager(dnsResolver, privateKeyBase64Strings),
+		counterpartyManager: discovery.NewCounterpartyManager(dnsResolver, keyStore, privateKeyBase64Strings),
 	}
 }
 
@@ -31,12 +30,7 @@ type localAuthenticatedConnectionsSignatory struct {
 	secureRandom   io.Reader
 	clock          clock.Clock
 
-	counterpartyManager adscertcounterparty.CounterpartyAPI
-}
-
-func (s *localAuthenticatedConnectionsSignatory) SynchronizeForTesting(invocationTLDPlusOne string) {
-	s.counterpartyManager.LookUpInvocationCounterpartyByHostname(invocationTLDPlusOne)
-	s.counterpartyManager.SynchronizeForTesting()
+	counterpartyManager discovery.CounterpartyAPI
 }
 
 func (s *localAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(request *api.AuthenticatedConnectionSignatureRequest) (*api.AuthenticatedConnectionSignatureResponse, error) {
@@ -56,15 +50,14 @@ func (s *localAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(req
 		}
 	}
 
-	// TODO: psl cleanup
-	invocationCounterparty, err := s.counterpartyManager.LookUpInvocationCounterpartyByHostname(request.RequestInfo.InvokingDomain)
+	domainInfos, err := s.counterpartyManager.LookupIdentitiesForDomain(request.RequestInfo.InvokingDomain)
 	if err != nil {
 		metrics.RecordSigning(adscerterrors.ErrSigningInvocationCounterpartyLookup)
 		return nil, err
 	}
 
-	for _, counterparty := range invocationCounterparty.GetSignatureCounterparties() {
-		signatureInfo, err := s.embossSingleMessage(request, counterparty)
+	for _, domainInfo := range domainInfos {
+		signatureInfo, err := s.embossSingleMessage(request, domainInfo)
 		if err != nil {
 			metrics.RecordSigning(adscerterrors.ErrSigningEmbossMessage)
 			return nil, err
@@ -78,9 +71,9 @@ func (s *localAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(req
 	return response, nil
 }
 
-func (s *localAuthenticatedConnectionsSignatory) embossSingleMessage(request *api.AuthenticatedConnectionSignatureRequest, counterparty adscertcounterparty.SignatureCounterparty) (*api.SignatureInfo, error) {
+func (s *localAuthenticatedConnectionsSignatory) embossSingleMessage(request *api.AuthenticatedConnectionSignatureRequest, domainInfo discovery.DomainInfo) (*api.SignatureInfo, error) {
 
-	acs, err := formats.NewAuthenticatedConnectionSignature(counterparty.GetStatus().String(), s.originCallsign, request.RequestInfo.InvokingDomain)
+	acs, err := formats.NewAuthenticatedConnectionSignature(domainInfo.GetStatus().String(), s.originCallsign, request.RequestInfo.InvokingDomain)
 	if err != nil {
 		return nil, fmt.Errorf("error constructing authenticated connection signature format: %v", err)
 	}
@@ -90,14 +83,14 @@ func (s *localAuthenticatedConnectionsSignatory) embossSingleMessage(request *ap
 		InvokingDomain: request.RequestInfo.InvokingDomain,
 	}
 
-	if !counterparty.HasSharedSecret() {
+	if !domainInfo.HasSharedSecret() {
 		signatureInfo.SignatureMessage = acs.EncodeMessage()
 		return signatureInfo, nil
 	}
 
-	sharedSecret := counterparty.SharedSecret()
+	sharedSecret := domainInfo.SharedSecret()
 
-	err = acs.AddParametersForSignature(sharedSecret.LocalKeyID(), counterparty.GetAdsCertIdentityDomain(), sharedSecret.RemoteKeyID(), request.Timestamp, request.Nonce)
+	err = acs.AddParametersForSignature(sharedSecret.LocalKeyID(), domainInfo.GetAdsCertIdentityDomain(), sharedSecret.RemoteKeyID(), request.Timestamp, request.Nonce)
 	if err != nil {
 		// TODO: Figure out how we want to expose structured metadata for failed signing ops.
 		return nil, fmt.Errorf("error adding signature params: %v", err)
@@ -105,11 +98,11 @@ func (s *localAuthenticatedConnectionsSignatory) embossSingleMessage(request *ap
 
 	// TODO: SignatureInfo needs to include the signature operation status.
 	signatureInfo.FromKey = sharedSecret.LocalKeyID()
-	signatureInfo.ToDomain = counterparty.GetAdsCertIdentityDomain()
+	signatureInfo.ToDomain = domainInfo.GetAdsCertIdentityDomain()
 	signatureInfo.ToKey = sharedSecret.RemoteKeyID()
 
 	message := acs.EncodeMessage()
-	bodyHMAC, urlHMAC := generateSignatures(counterparty, []byte(message), request.RequestInfo.BodyHash[:], request.RequestInfo.UrlHash[:])
+	bodyHMAC, urlHMAC := generateSignatures(domainInfo, []byte(message), request.RequestInfo.BodyHash[:], request.RequestInfo.UrlHash[:])
 	signatureInfo.SignatureMessage = message + formats.EncodeSignatureSuffix(bodyHMAC, urlHMAC)
 
 	return signatureInfo, nil
@@ -134,21 +127,21 @@ func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(r
 		return response, fmt.Errorf("%w: %s versus %s", *adscerterrors.ErrVerifySignatureRequestHostMismatch, acs.GetAttributeInvoking(), request.RequestInfo.InvokingDomain)
 	}
 
-	// Look up originator by callsign
-	signatureCounterparty, err := s.counterpartyManager.LookUpSignatureCounterpartyByCallsign(acs.GetAttributeFrom())
+	domainInfos, err := s.counterpartyManager.LookupIdentitiesForDomain(acs.GetAttributeFrom())
 	if err != nil {
 		logger.Infof("counterparty lookup error")
 		metrics.RecordVerify(adscerterrors.ErrVerifyCounterpartyLookup)
 		return response, err
 	}
 
-	if !signatureCounterparty.HasSharedSecret() {
+	domainInfo := domainInfos[0]
+	if !domainInfo.HasSharedSecret() {
 		logger.Infof("no shared secret")
 		metrics.RecordVerify(adscerterrors.ErrVerifyMissingSharedSecret)
 		return response, *adscerterrors.ErrVerifyMissingSharedSecret
 	}
 
-	bodyHMAC, urlHMAC := generateSignatures(signatureCounterparty, []byte(acs.EncodeMessage()), request.RequestInfo.BodyHash[:], request.RequestInfo.UrlHash[:])
+	bodyHMAC, urlHMAC := generateSignatures(domainInfo, []byte(acs.EncodeMessage()), request.RequestInfo.BodyHash[:], request.RequestInfo.UrlHash[:])
 	response.BodyValid, response.UrlValid = acs.CompareSignatures(bodyHMAC, urlHMAC)
 
 	metrics.RecordVerify(nil)
@@ -159,8 +152,8 @@ func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(r
 	return response, nil
 }
 
-func generateSignatures(counterparty adscertcounterparty.SignatureCounterparty, message []byte, bodyHash []byte, urlHash []byte) ([]byte, []byte) {
-	h := hmac.New(sha256.New, counterparty.SharedSecret().Secret()[:])
+func generateSignatures(domainInfo discovery.DomainInfo, message []byte, bodyHash []byte, urlHash []byte) ([]byte, []byte) {
+	h := hmac.New(sha256.New, domainInfo.SharedSecret().Secret()[:])
 
 	h.Write([]byte(message))
 	h.Write(bodyHash)

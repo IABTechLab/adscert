@@ -2,7 +2,7 @@ package main
 
 import (
 	"bufio"
-	"crypto/rand"
+	crypto_rand "crypto/rand"
 	"encoding/base64"
 	"flag"
 	"os"
@@ -34,10 +34,13 @@ func main() {
 
 	privateKeysBase64 := signatory.GenerateFakePrivateKeysForTesting(*hostCallsign)
 
-	signatory := signatory.NewLocalAuthenticatedConnectionsSignatory(*hostCallsign, rand.Reader, clock.New(), discovery.NewRealDnsResolver(), privateKeysBase64)
-
-	// Force an update to the counter-party manager for known origin callsign before processing log
-	// signatory.SynchronizeForTesting(*originCallsign)
+	signatoryApi := signatory.NewLocalAuthenticatedConnectionsSignatory(
+		*hostCallsign,
+		crypto_rand.Reader,
+		clock.New(),
+		discovery.NewDefaultDnsResolver(),
+		discovery.NewDefaultKeyStore(),
+		privateKeysBase64)
 
 	var logCount, parseErrorCount, verifyErrorCount, validRequestCount, validUrlCount int
 
@@ -54,7 +57,7 @@ func main() {
 
 		// verification only returns an error if there are issues trying to validate the signatures
 		// as opposed to whether the signatures are actually valid or not.
-		verification, err := signatory.VerifyAuthenticatedConnection(signatureRequest)
+		verification, err := signatoryApi.VerifyAuthenticatedConnection(signatureRequest)
 		if err != nil {
 			verifyErrorCount++
 			logger.Errorf("unable to verify message: %s", err)

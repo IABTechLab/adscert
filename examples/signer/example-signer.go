@@ -47,8 +47,16 @@ func main() {
 		signatureFileLogger = log.New(file, "" /*=prefix*/, 0 /*=flag=*/)
 	}
 
+	signatoryApi := signatory.NewLocalAuthenticatedConnectionsSignatory(
+		*originCallsign,
+		crypto_rand.Reader,
+		clock.New(),
+		discovery.NewDefaultDnsResolver(),
+		discovery.NewDefaultKeyStore(),
+		privateKeysBase64)
+
 	demoClient := DemoClient{
-		Signatory: signatory.NewLocalAuthenticatedConnectionsSignatory(*originCallsign, crypto_rand.Reader, clock.New(), discovery.NewRealDnsResolver(), privateKeysBase64),
+		Signatory: signatoryApi,
 
 		Method:         *method,
 		DestinationURL: *destinationURL,

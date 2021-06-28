@@ -41,7 +41,13 @@ func main() {
 		os.Exit(returnExitCode())
 	}
 
-	signatoryApi = signatory.NewLocalAuthenticatedConnectionsSignatory(*origin, crypto_rand.Reader, clock.New(), discovery.NewRealDnsResolver(), privateKeysBase64)
+	signatoryApi = signatory.NewLocalAuthenticatedConnectionsSignatory(
+		*origin,
+		crypto_rand.Reader,
+		clock.New(),
+		discovery.NewDefaultDnsResolver(),
+		discovery.NewDefaultKeyStore(),
+		privateKeysBase64)
 
 	grpcServer := grpc.NewServer()
 	api.RegisterAdsCertSignatoryServer(grpcServer, &adsCertSignatoryServer{})
