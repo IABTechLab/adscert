@@ -1,4 +1,4 @@
-package adscertcounterparty
+package discovery
 
 import "fmt"
 
@@ -17,21 +17,7 @@ const (
 )
 
 type CounterpartyAPI interface {
-	LookUpInvocationCounterpartyByHostname(invocationHostname string) (InvocationCounterparty, error)
-	LookUpSignatureCounterpartyByCallsign(adsCertCallsign string) (SignatureCounterparty, error)
-	SynchronizeForTesting()
-}
-
-type InvocationCounterparty interface {
-	GetStatus() CounterpartyStatus
-	GetSignatureCounterparties() []SignatureCounterparty
-}
-
-type SignatureCounterparty interface {
-	GetAdsCertIdentityDomain() string
-	HasSharedSecret() bool
-	SharedSecret() SharedSecret
-	GetStatus() CounterpartyStatus
+	LookupIdentitiesForDomain(domain string) ([]DomainInfo, error)
 }
 
 type SharedSecret interface {

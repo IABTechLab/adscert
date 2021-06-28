@@ -1,4 +1,4 @@
-package adscertcounterparty
+package discovery
 
 import (
 	"fmt"
