@@ -7,14 +7,14 @@ import (
 	"sync/atomic"
 )
 
-func NewDefaultKeyStore() KeyStore {
-	store := &DefaultKeyStore{}
+func NewDefaultDomainStore() DomainStore {
+	store := &defaultDomainStore{}
 	// initialize atomic value store
 	store.domainMap.Store(domainMap{})
 	return store
 }
 
-type DefaultKeyStore struct {
+type defaultDomainStore struct {
 	domainMap atomic.Value // contains type <domainMap>
 	mutex     sync.Mutex
 }
@@ -22,7 +22,7 @@ type DefaultKeyStore struct {
 type domainMap map[string]*DomainInfo
 
 // GetAllDomains returns a list of all stored domain names
-func (ks *DefaultKeyStore) GetAllDomains(ctx context.Context) ([]string, error) {
+func (ks *defaultDomainStore) GetAllDomains(ctx context.Context) ([]string, error) {
 	var domains = make([]string, 0)
 	for k := range ks.domainMap.Load().(domainMap) {
 		domains = append(domains, k)
@@ -31,7 +31,7 @@ func (ks *DefaultKeyStore) GetAllDomains(ctx context.Context) ([]string, error) 
 }
 
 // LookupDomainInfo retrives the invoking or identity details for a domain name
-func (ks *DefaultKeyStore) LookupDomainInfo(ctx context.Context, domain string) (DomainInfo, error) {
+func (ks *defaultDomainStore) LookupDomainInfo(ctx context.Context, domain string) (DomainInfo, error) {
 	if domainInfo, ok := ks.domainMap.Load().(domainMap)[domain]; ok {
 		return *domainInfo, nil
 	}
@@ -39,7 +39,7 @@ func (ks *DefaultKeyStore) LookupDomainInfo(ctx context.Context, domain string) 
 }
 
 // StoreDomainInfo stores the invoking or identity details for a domain
-func (ks *DefaultKeyStore) StoreDomainInfo(ctx context.Context, domainInfo DomainInfo) error {
+func (ks *defaultDomainStore) StoreDomainInfo(ctx context.Context, domainInfo DomainInfo) error {
 	ks.mutex.Lock()
 	defer ks.mutex.Unlock()
 

@@ -14,6 +14,12 @@ type DomainInfo struct {
 	lastUpdateTime        time.Time
 }
 
+type SharedSecret interface {
+	LocalKeyID() string
+	RemoteKeyID() string
+	Secret() *[32]byte
+}
+
 func (c *DomainInfo) GetAdsCertIdentityDomain() string {
 	return c.Domain
 }

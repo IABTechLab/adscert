@@ -32,7 +32,7 @@ func main() {
 		crypto_rand.Reader,
 		clock.New(),
 		discovery.NewDefaultDnsResolver(),
-		discovery.NewDefaultKeyStore(),
+		discovery.NewDefaultDomainStore(),
 		privateKeysBase64)
 
 	demoServer := &DemoServer{

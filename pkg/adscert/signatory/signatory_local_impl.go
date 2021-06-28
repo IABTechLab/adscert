@@ -16,12 +16,12 @@ import (
 	"github.com/benbjohnson/clock"
 )
 
-func NewLocalAuthenticatedConnectionsSignatory(originCallsign string, reader io.Reader, clock clock.Clock, dnsResolver discovery.DNSResolver, keyStore discovery.KeyStore, privateKeyBase64Strings []string) AuthenticatedConnectionsSignatory {
+func NewLocalAuthenticatedConnectionsSignatory(originCallsign string, reader io.Reader, clock clock.Clock, dnsResolver discovery.DNSResolver, domainStore discovery.DomainStore, privateKeyBase64Strings []string) AuthenticatedConnectionsSignatory {
 	return &localAuthenticatedConnectionsSignatory{
 		originCallsign:      originCallsign,
 		secureRandom:        reader,
 		clock:               clock,
-		counterpartyManager: discovery.NewCounterpartyManager(dnsResolver, keyStore, privateKeyBase64Strings),
+		counterpartyManager: discovery.NewDefaultDomainIndexer(dnsResolver, domainStore, privateKeyBase64Strings),
 	}
 }
 
@@ -30,7 +30,7 @@ type localAuthenticatedConnectionsSignatory struct {
 	secureRandom   io.Reader
 	clock          clock.Clock
 
-	counterpartyManager discovery.CounterpartyAPI
+	counterpartyManager discovery.DomainIndexer
 }
 
 func (s *localAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(request *api.AuthenticatedConnectionSignatureRequest) (*api.AuthenticatedConnectionSignatureResponse, error) {

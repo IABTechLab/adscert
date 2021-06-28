@@ -2,6 +2,10 @@ package discovery
 
 import "fmt"
 
+type DomainIndexer interface {
+	LookupIdentitiesForDomain(domain string) ([]DomainInfo, error)
+}
+
 type CounterpartyStatus int
 
 const (
@@ -15,16 +19,6 @@ const (
 	StatusErrorOnKeyValidation
 	StatusErrorOnSharedSecretCalculation
 )
-
-type CounterpartyAPI interface {
-	LookupIdentitiesForDomain(domain string) ([]DomainInfo, error)
-}
-
-type SharedSecret interface {
-	LocalKeyID() string
-	RemoteKeyID() string
-	Secret() *[32]byte
-}
 
 func (cs CounterpartyStatus) String() string {
 	// TODO: This was just a proof-of-concept for signature statuses. The design doc has a more

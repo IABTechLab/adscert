@@ -100,7 +100,7 @@ func GetAdscertMetricsRegistry() *prometheus.Registry {
 	return adscertMetricsRegistry
 }
 
-func RecordDNSLookup(err adscerterrors.DNSLookupErrorCode) {
+func RecordDNSLookup(err adscerterrors.DiscoveryErrorCode) {
 	var DNSLookupErr string
 
 	if err != nil {
