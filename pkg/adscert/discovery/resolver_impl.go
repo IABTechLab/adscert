@@ -5,12 +5,12 @@ import (
 	"net"
 )
 
-func NewRealDnsResolver() DNSResolver {
-	return &realDnsResolver{}
+func NewDefaultDnsResolver() DNSResolver {
+	return &defaultDnsResolver{}
 }
 
-type realDnsResolver struct{}
+type defaultDnsResolver struct{}
 
-func (r *realDnsResolver) LookupTXT(ctx context.Context, name string) ([]string, error) {
+func (r *defaultDnsResolver) LookupTXT(ctx context.Context, name string) ([]string, error) {
 	return net.LookupTXT(name)
 }
