@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
@@ -43,9 +44,13 @@ type AuthenticatedConnectionSignature struct {
 	toKey            string
 	timestamp        string
 	nonce            string
-	status           string
+	status           AuthenticatedConnectionProtocolStatus
 	signatureForBody string
 	signatureForURL  string
+}
+
+func (s *AuthenticatedConnectionSignature) GetAttributeArray() []string {
+	return []string{s.from, s.fromKey, s.invoking, s.to, s.toKey, s.timestamp, s.nonce, StatusToString(s.status)}
 }
 
 func (s *AuthenticatedConnectionSignature) GetAttributeInvoking() string {
@@ -65,7 +70,7 @@ func (s *AuthenticatedConnectionSignature) EncodeMessage() string {
 	conditionallyAdd(&values, attributeToKey, s.toKey)
 	conditionallyAdd(&values, attributeTimestamp, s.timestamp)
 	conditionallyAdd(&values, attributeNonce, s.nonce)
-	conditionallyAdd(&values, attributeStatus, s.status)
+	conditionallyAdd(&values, attributeStatus, StatusToString(s.status))
 	return values.Encode()
 }
 
@@ -96,6 +101,10 @@ func (s *AuthenticatedConnectionSignature) AddParametersForSignature(
 	return nil
 }
 
+func (s *AuthenticatedConnectionSignature) SetStatus(status AuthenticatedConnectionProtocolStatus) {
+	s.status = status
+}
+
 func (s *AuthenticatedConnectionSignature) CompareSignatures(signatureForBody []byte, signatureForURL []byte) (bool, bool) {
 	bodyMatch := hmac.Equal([]byte(B64truncate(signatureForBody, hmacLength)), []byte(s.signatureForBody))
 	urlMatch := hmac.Equal([]byte(B64truncate(signatureForURL, hmacLength)), []byte(s.signatureForURL))
@@ -110,8 +119,9 @@ func EncodeSignatureSuffix(
 	return "; " + values.Encode()
 }
 
-func NewAuthenticatedConnectionSignature(status string, from string, invoking string) (*AuthenticatedConnectionSignature, error) {
-	if status == "" {
+func NewAuthenticatedConnectionSignature(status AuthenticatedConnectionProtocolStatus, from string, invoking string) (*AuthenticatedConnectionSignature, error) {
+
+	if status == StatusUnspecified {
 		return nil, ErrParamMissingStatus
 	}
 	if from == "" {
@@ -122,10 +132,9 @@ func NewAuthenticatedConnectionSignature(status string, from string, invoking st
 	}
 
 	s := &AuthenticatedConnectionSignature{}
-
-	s.status = status
 	s.from = from
 	s.invoking = invoking
+	s.status = status
 
 	return s, nil
 }
@@ -158,9 +167,18 @@ func DecodeAuthenticatedConnectionSignature(encodedMessage string) (*Authenticat
 	s.toKey = getFirstMapElement(values[attributeToKey])
 	s.timestamp = getFirstMapElement(values[attributeTimestamp])
 	s.nonce = getFirstMapElement(values[attributeNonce])
-	s.status = getFirstMapElement(values[attributeStatus])
+	s.status = StringToStatus(getFirstMapElement(values[attributeStatus]))
 
 	s.signatureForBody = getFirstMapElement(parsedSigs[attributeSignatureForBody])
 	s.signatureForURL = getFirstMapElement(parsedSigs[attributeSignatureForURL])
 	return s, nil
+}
+
+func StringToStatus(s string) AuthenticatedConnectionProtocolStatus {
+	i, _ := strconv.Atoi(s)
+	return AuthenticatedConnectionProtocolStatus(i)
+}
+
+func StatusToString(status AuthenticatedConnectionProtocolStatus) string {
+	return fmt.Sprintf("%d", status)
 }

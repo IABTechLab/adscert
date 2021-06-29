@@ -6,8 +6,8 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/IABTechLab/adscert/internal/adscertcounterparty"
 	"github.com/IABTechLab/adscert/internal/logger"
+	"github.com/IABTechLab/adscert/pkg/adscert/discovery"
 	"golang.org/x/crypto/curve25519"
 )
 
@@ -40,6 +40,6 @@ func (r *keyGeneratingDNSResolver) LookupTXT(ctx context.Context, name string) (
 	return []string{adsCertRecord}, nil
 }
 
-func NewFakeKeyGeneratingDnsResolver() adscertcounterparty.DNSResolver {
+func NewFakeKeyGeneratingDnsResolver() discovery.DNSResolver {
 	return &keyGeneratingDNSResolver{}
 }

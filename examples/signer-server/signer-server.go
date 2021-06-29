@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	crypto_rand "crypto/rand"
-	"crypto/sha256"
 	"encoding/base64"
 	"flag"
 	"fmt"
@@ -15,24 +14,19 @@ import (
 
 	"github.com/IABTechLab/adscert/internal/api"
 	"github.com/IABTechLab/adscert/internal/logger"
-	"github.com/IABTechLab/adscert/internal/utils"
+	"github.com/IABTechLab/adscert/pkg/adscert/discovery"
 	"github.com/IABTechLab/adscert/pkg/adscert/signatory"
 	"github.com/benbjohnson/clock"
 )
 
 var (
-	method         = flag.String("http_method", "GET", "HTTP method, 'GET' or 'POST'")
-	destinationURL = flag.String("url", "https://google.com/gen_204", "URL to invoke")
-	body           = flag.String("body", "", "POST request body")
-	sendRequests   = flag.Bool("send_requests", false, "Actually invoke the web server")
-	frequency      = flag.Duration("frequency", 10*time.Second, "Frequency to invoke the specified URL")
-
-	originCallsign = flag.String("origin_callsign", "", "ads.cert callsign for the originating party")
-
+	method           = flag.String("http_method", "GET", "HTTP method, 'GET' or 'POST'")
+	destinationURL   = flag.String("url", "https://google.com/gen_204", "URL to invoke")
+	body             = flag.String("body", "", "POST request body")
+	sendRequests     = flag.Bool("send_requests", false, "Actually invoke the web server")
+	frequency        = flag.Duration("frequency", 10*time.Second, "Frequency to invoke the specified URL")
+	originCallsign   = flag.String("origin_callsign", "", "ads.cert callsign for the originating party")
 	signatureLogFile = flag.String("signature_log_file", "", "write signature and hashes to file for offline verification")
-
-	useFakeKeyGeneratingDNS = flag.Bool("use_fake_key_generating_dns_for_testing", false,
-		"When enabled, this code skips performing real DNS lookups and instead simulates DNS-based keys by generating a key pair based on the domain name.")
 )
 
 func main() {
@@ -53,8 +47,16 @@ func main() {
 		signatureFileLogger = log.New(file, "" /*=prefix*/, 0 /*=flag=*/)
 	}
 
+	signatoryApi := signatory.NewLocalAuthenticatedConnectionsSignatory(
+		*originCallsign,
+		crypto_rand.Reader,
+		clock.New(),
+		discovery.NewDefaultDnsResolver(),
+		discovery.NewDefaultDomainStore(),
+		privateKeysBase64)
+
 	demoClient := DemoClient{
-		Signatory: signatory.NewLocalAuthenticatedConnectionsSignatory(*originCallsign, crypto_rand.Reader, clock.New(), privateKeysBase64, *useFakeKeyGeneratingDNS),
+		Signatory: signatoryApi,
 
 		Method:         *method,
 		DestinationURL: *destinationURL,
@@ -98,7 +100,10 @@ func (c *DemoClient) initiateRequest() error {
 	}
 
 	reqInfo := &api.RequestInfo{}
-	signatory.SetRequestInfo(reqInfo, *destinationURL, c.Body)
+	err = signatory.SetRequestInfo(reqInfo, c.DestinationURL, c.Body)
+	if err != nil {
+		return fmt.Errorf("error parsing request info: %v", err)
+	}
 
 	signatureResponse, err := c.Signatory.SignAuthenticatedConnection(
 		&api.AuthenticatedConnectionSignatureRequest{
@@ -115,14 +120,11 @@ func (c *DemoClient) initiateRequest() error {
 	logger.Infof("Requesting URL %s %s with signature %s", req.Method, req.URL, signatureResponse)
 
 	if c.SignatureFileLogger != nil {
-		_, invocationHostname, err := utils.ParseURLComponents(c.DestinationURL)
-		if err != nil {
-			return fmt.Errorf("error parsing destination url: %s", err)
-		}
-		urlHash := sha256.Sum256([]byte(c.DestinationURL))
-		bodyHash := sha256.Sum256([]byte(c.Body))
-
-		c.SignatureFileLogger.Printf("%s,%s,%s,%s", invocationHostname, signatureResponse.SignatureInfo[0], base64.StdEncoding.EncodeToString(bodyHash[:]), base64.StdEncoding.EncodeToString(urlHash[:]))
+		c.SignatureFileLogger.Printf("%s,%s,%s,%s",
+			reqInfo.BodyHash,
+			signatureResponse.SignatureInfo[0],
+			base64.StdEncoding.EncodeToString(reqInfo.BodyHash),
+			base64.StdEncoding.EncodeToString(reqInfo.UrlHash))
 	}
 
 	if c.ActuallySendRequest {

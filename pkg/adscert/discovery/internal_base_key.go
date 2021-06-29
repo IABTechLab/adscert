@@ -1,7 +1,6 @@
-package adscertcounterparty
+package discovery
 
 import (
-	"crypto/rand"
 	"fmt"
 
 	"github.com/IABTechLab/adscert/internal/formats"
@@ -9,19 +8,12 @@ import (
 	"golang.org/x/crypto/curve25519"
 )
 
-// Curtis notes:
-// The key management code is currently a mess, as there are different formats used by different
-// low-level APIs, and I largely just used whatever was convenient at the time.  We should figure
-// out what is the right way to work with this data.  There are some security considerations for
-// this such as whether we have copies of key material scattered around in the application's memory.
-// I'm hoping to get security engineer feedback on this.
-
 // x25519Key provides a lightweight, typed wrapper around computed
 // shared secret material to permit pass-by-value.
 type x25519Key struct {
-	keyBytes   [32]byte
-	alias      keyAlias
-	tupleAlias keyTupleAlias
+	keyBytes  [32]byte
+	alias     keyAlias
+	pairAlias keyPairAlias
 }
 
 func (x *x25519Key) Secret() *[32]byte {
@@ -29,27 +21,27 @@ func (x *x25519Key) Secret() *[32]byte {
 }
 
 func (x *x25519Key) LocalKeyID() string {
-	return string(x.tupleAlias.myKeyAlias)
+	return string(x.pairAlias.originKeyAlias)
 }
 
 func (x *x25519Key) RemoteKeyID() string {
-	return string(x.tupleAlias.theirKeyAlias)
+	return string(x.pairAlias.remoteKeyAlias)
 }
 
 type keyAlias string
 
-type keyTupleAlias struct {
-	myKeyAlias    keyAlias
-	theirKeyAlias keyAlias
+type keyPairAlias struct {
+	originKeyAlias keyAlias
+	remoteKeyAlias keyAlias
 }
 
-func newKeyTupleAlias(myKeyID keyAlias, theirKeyID keyAlias) keyTupleAlias {
-	return keyTupleAlias{myKeyAlias: myKeyID, theirKeyAlias: theirKeyID}
+func newKeyPairAlias(originKeyId keyAlias, remoteKeyId keyAlias) keyPairAlias {
+	return keyPairAlias{originKeyAlias: originKeyId, remoteKeyAlias: remoteKeyId}
 }
 
 type keyMap map[keyAlias]*x25519Key
 
-type keyTupleMap map[keyTupleAlias]*x25519Key
+type keyPairMap map[keyPairAlias]*x25519Key
 
 func asKeyMap(adsCertKeys formats.AdsCertKeys) keyMap {
 	result := keyMap{}
@@ -68,38 +60,20 @@ func asKeyMap(adsCertKeys formats.AdsCertKeys) keyMap {
 	return result
 }
 
-func calculateSharedSecret(myPrivate *x25519Key, theirPublic *x25519Key) (*x25519Key, error) {
-	secret, err := curve25519.X25519(myPrivate.keyBytes[:], theirPublic.keyBytes[:])
+// Calculate shared secret between two parties (using a origin party's private key and remote party's public key).
+// This key will be used to sign and verify connections between these parties.
+func calculateSharedSecret(originPrivateKey *x25519Key, remotePublicKey *x25519Key) (*x25519Key, error) {
+	secret, err := curve25519.X25519(originPrivateKey.keyBytes[:], remotePublicKey.keyBytes[:])
 	if err != nil {
 		return nil, err
 	}
 
 	result := &x25519Key{
-		tupleAlias: newKeyTupleAlias(myPrivate.alias, theirPublic.alias),
+		pairAlias: newKeyPairAlias(originPrivateKey.alias, remotePublicKey.alias),
 	}
 	copy(result.keyBytes[:], secret)
 
 	return result, err
-}
-
-func GenerateKeyPair() (string, string, error) {
-	privateBytes := &[32]byte{}
-	if n, err := rand.Read(privateBytes[:]); err != nil {
-		return "", "", err
-	} else if n != 32 {
-		return "", "", fmt.Errorf("wrong key size generated: %d != 32", n)
-	}
-
-	publicBytes := &[32]byte{}
-	curve25519.ScalarBaseMult(publicBytes, privateBytes)
-
-	return formats.EncodeKeyBase64(publicBytes[:]), formats.EncodeKeyBase64(privateBytes[:]), nil
-}
-
-type keyReceiver interface {
-	receivingSlice() []byte
-	setKeyAlias(alias string)
-	getKeyAlias() string
 }
 
 func privateKeysToKeyMap(privateKeys []string) (keyMap, error) {

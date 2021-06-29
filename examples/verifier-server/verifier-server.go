@@ -9,6 +9,7 @@ import (
 
 	"github.com/IABTechLab/adscert/internal/api"
 	"github.com/IABTechLab/adscert/internal/logger"
+	"github.com/IABTechLab/adscert/pkg/adscert/discovery"
 	"github.com/IABTechLab/adscert/pkg/adscert/metrics"
 	"github.com/IABTechLab/adscert/pkg/adscert/signatory"
 	"github.com/benbjohnson/clock"
@@ -16,9 +17,7 @@ import (
 )
 
 var (
-	hostCallsign            = flag.String("host_callsign", "", "ads.cert callsign for the originating party")
-	useFakeKeyGeneratingDNS = flag.Bool("use_fake_key_generating_dns_for_testing", false,
-		"When enabled, this code skips performing real DNS lookups and instead simulates DNS-based keys by generating a key pair based on the domain name.")
+	hostCallsign = flag.String("host_callsign", "", "ads.cert callsign for the originating party")
 )
 
 func main() {
@@ -28,8 +27,16 @@ func main() {
 
 	privateKeysBase64 := signatory.GenerateFakePrivateKeysForTesting(*hostCallsign)
 
+	signatoryApi := signatory.NewLocalAuthenticatedConnectionsSignatory(
+		*hostCallsign,
+		crypto_rand.Reader,
+		clock.New(),
+		discovery.NewDefaultDnsResolver(),
+		discovery.NewDefaultDomainStore(),
+		privateKeysBase64)
+
 	demoServer := &DemoServer{
-		Signatory: signatory.NewLocalAuthenticatedConnectionsSignatory(*hostCallsign, crypto_rand.Reader, clock.New(), privateKeysBase64, *useFakeKeyGeneratingDNS),
+		Signatory: signatoryApi,
 	}
 
 	http.HandleFunc("/request", demoServer.HandleRequest)
@@ -42,9 +49,8 @@ type DemoServer struct {
 }
 
 func (s *DemoServer) HandleRequest(w http.ResponseWriter, req *http.Request) {
-	signatureHeaders := req.Header["X-Ads-Cert-Auth"]
 
-	// TODO: include this in automatic url parsing to handle hostnames without scheme/protocol
+	signatureHeaders := req.Header["X-Ads-Cert-Auth"]
 
 	// Make a copy of the URL struct so that we can reconstruct what the client sent.
 	// Obtaining the invoked hostname may be impacted by reverse proxy servers, load balancing

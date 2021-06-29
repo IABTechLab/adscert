@@ -2,7 +2,7 @@ package main
 
 import (
 	"bufio"
-	"crypto/rand"
+	crypto_rand "crypto/rand"
 	"encoding/base64"
 	"flag"
 	"os"
@@ -10,15 +10,14 @@ import (
 
 	"github.com/IABTechLab/adscert/internal/api"
 	"github.com/IABTechLab/adscert/internal/logger"
+	"github.com/IABTechLab/adscert/pkg/adscert/discovery"
 	"github.com/IABTechLab/adscert/pkg/adscert/signatory"
 	"github.com/benbjohnson/clock"
 )
 
 var (
-	hostCallsign            = flag.String("host_callsign", "", "ads.cert callsign for the host party")
-	originCallsign          = flag.String("origin_callsign", "", "ads.cert callsign for the originating party")
-	useFakeKeyGeneratingDNS = flag.Bool("use_fake_key_generating_dns_for_testing", false,
-		"When enabled, this code skips performing real DNS lookups and instead simulates DNS-based keys by generating a key pair based on the domain name.")
+	hostCallsign     = flag.String("host_callsign", "", "ads.cert callsign for the host party")
+	originCallsign   = flag.String("origin_callsign", "", "ads.cert callsign for the originating party")
 	signatureLogFile = flag.String("signature_log_file", "", "Verify all logged signatures and hashes in file")
 )
 
@@ -35,10 +34,13 @@ func main() {
 
 	privateKeysBase64 := signatory.GenerateFakePrivateKeysForTesting(*hostCallsign)
 
-	signatory := signatory.NewLocalAuthenticatedConnectionsSignatory(*hostCallsign, rand.Reader, clock.New(), privateKeysBase64, *useFakeKeyGeneratingDNS)
-
-	// Force an update to the counter-party manager for known origin callsign before processing log
-	// signatory.SynchronizeForTesting(*originCallsign)
+	signatoryApi := signatory.NewLocalAuthenticatedConnectionsSignatory(
+		*hostCallsign,
+		crypto_rand.Reader,
+		clock.New(),
+		discovery.NewDefaultDnsResolver(),
+		discovery.NewDefaultDomainStore(),
+		privateKeysBase64)
 
 	var logCount, parseErrorCount, verifyErrorCount, validRequestCount, validUrlCount int
 
@@ -55,7 +57,7 @@ func main() {
 
 		// verification only returns an error if there are issues trying to validate the signatures
 		// as opposed to whether the signatures are actually valid or not.
-		verification, err := signatory.VerifyAuthenticatedConnection(signatureRequest)
+		verification, err := signatoryApi.VerifyAuthenticatedConnection(signatureRequest)
 		if err != nil {
 			verifyErrorCount++
 			logger.Errorf("unable to verify message: %s", err)
@@ -81,7 +83,7 @@ func main() {
 func parseLog(log string) (*api.AuthenticatedConnectionVerificationRequest, error) {
 	parsedLog := strings.Split(log, ",")
 
-	InvocationHostname := parsedLog[0]
+	invokingDomain := parsedLog[0]
 	signaturesHeader := parsedLog[1]
 	hashedRequestBodyBytes, err := base64.StdEncoding.DecodeString(parsedLog[2])
 	if err != nil {
@@ -93,7 +95,7 @@ func parseLog(log string) (*api.AuthenticatedConnectionVerificationRequest, erro
 	}
 
 	reqInfo := &api.RequestInfo{
-		InvocationHostname: InvocationHostname,
+		InvokingDomain: invokingDomain,
 	}
 
 	copy(reqInfo.UrlHash[:], hashedDestinationURLBytes[:32])

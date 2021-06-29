@@ -17,7 +17,7 @@ func TestNewAuthenticatedConnectionSignature(t *testing.T) {
 		desc string
 
 		// Basic parameters
-		status   string
+		status   int
 		from     string
 		invoking string
 
@@ -36,7 +36,7 @@ func TestNewAuthenticatedConnectionSignature(t *testing.T) {
 	}{
 		{
 			desc:     "check normal inputs",
-			status:   "OK",
+			status:   1,
 			from:     "from.com",
 			invoking: "invoking.com",
 
@@ -46,14 +46,14 @@ func TestNewAuthenticatedConnectionSignature(t *testing.T) {
 			timestamp: "210430T132456",
 			nonce:     "numberusedonce",
 
-			wantUnsignedBaseMessage:     "from=from.com&invoking=invoking.com&status=OK",
-			wantUnsignedExtendedMessage: "from=from.com&from_key=fromkey&invoking=invoking.com&nonce=numberusedonce&status=OK&timestamp=210430T132456&to=to.com&to_key=tokey",
+			wantUnsignedBaseMessage:     "from=from.com&invoking=invoking.com&status=1",
+			wantUnsignedExtendedMessage: "from=from.com&from_key=fromkey&invoking=invoking.com&nonce=numberusedonce&status=1&timestamp=210430T132456&to=to.com&to_key=tokey",
 		},
 
 		// Check errors
 		{
 			desc:     "check ErrParamMissingStatus",
-			status:   "",
+			status:   0,
 			from:     "from.com",
 			invoking: "invoking.com",
 
@@ -62,7 +62,7 @@ func TestNewAuthenticatedConnectionSignature(t *testing.T) {
 		},
 		{
 			desc:     "check ErrParamMissingFrom",
-			status:   "OK",
+			status:   1,
 			from:     "",
 			invoking: "invoking.com",
 
@@ -71,7 +71,7 @@ func TestNewAuthenticatedConnectionSignature(t *testing.T) {
 		},
 		{
 			desc:     "check ErrParamMissingInvoking",
-			status:   "OK",
+			status:   1,
 			from:     "from.com",
 			invoking: "",
 
@@ -81,7 +81,7 @@ func TestNewAuthenticatedConnectionSignature(t *testing.T) {
 
 		{
 			desc:     "check ErrParamMissingFromKey",
-			status:   "OK",
+			status:   1,
 			from:     "from.com",
 			invoking: "invoking.com",
 
@@ -91,13 +91,13 @@ func TestNewAuthenticatedConnectionSignature(t *testing.T) {
 			timestamp: "210430T132456",
 			nonce:     "numberusedonce",
 
-			wantUnsignedBaseMessage:      "from=from.com&invoking=invoking.com&status=OK",
-			wantUnsignedExtendedMessage:  "from=from.com&invoking=invoking.com&status=OK",
+			wantUnsignedBaseMessage:      "from=from.com&invoking=invoking.com&status=1",
+			wantUnsignedExtendedMessage:  "from=from.com&invoking=invoking.com&status=1",
 			wantAddParamsForSignatureErr: formats.ErrParamMissingFromKey,
 		},
 		{
 			desc:     "check ErrParamMissingTo",
-			status:   "OK",
+			status:   1,
 			from:     "from.com",
 			invoking: "invoking.com",
 
@@ -107,13 +107,13 @@ func TestNewAuthenticatedConnectionSignature(t *testing.T) {
 			timestamp: "210430T132456",
 			nonce:     "numberusedonce",
 
-			wantUnsignedBaseMessage:      "from=from.com&invoking=invoking.com&status=OK",
-			wantUnsignedExtendedMessage:  "from=from.com&invoking=invoking.com&status=OK",
+			wantUnsignedBaseMessage:      "from=from.com&invoking=invoking.com&status=1",
+			wantUnsignedExtendedMessage:  "from=from.com&invoking=invoking.com&status=1",
 			wantAddParamsForSignatureErr: formats.ErrParamMissingTo,
 		},
 		{
 			desc:     "check ErrParamMissingToKey",
-			status:   "OK",
+			status:   1,
 			from:     "from.com",
 			invoking: "invoking.com",
 
@@ -123,13 +123,13 @@ func TestNewAuthenticatedConnectionSignature(t *testing.T) {
 			timestamp: "210430T132456",
 			nonce:     "numberusedonce",
 
-			wantUnsignedBaseMessage:      "from=from.com&invoking=invoking.com&status=OK",
-			wantUnsignedExtendedMessage:  "from=from.com&invoking=invoking.com&status=OK",
+			wantUnsignedBaseMessage:      "from=from.com&invoking=invoking.com&status=1",
+			wantUnsignedExtendedMessage:  "from=from.com&invoking=invoking.com&status=1",
 			wantAddParamsForSignatureErr: formats.ErrParamMissingToKey,
 		},
 		{
 			desc:     "check ErrParamMissingTimestamp",
-			status:   "OK",
+			status:   1,
 			from:     "from.com",
 			invoking: "invoking.com",
 
@@ -139,13 +139,13 @@ func TestNewAuthenticatedConnectionSignature(t *testing.T) {
 			timestamp: "",
 			nonce:     "numberusedonce",
 
-			wantUnsignedBaseMessage:      "from=from.com&invoking=invoking.com&status=OK",
-			wantUnsignedExtendedMessage:  "from=from.com&invoking=invoking.com&status=OK",
+			wantUnsignedBaseMessage:      "from=from.com&invoking=invoking.com&status=1",
+			wantUnsignedExtendedMessage:  "from=from.com&invoking=invoking.com&status=1",
 			wantAddParamsForSignatureErr: formats.ErrParamMissingTimestamp,
 		},
 		{
 			desc:     "check ErrParamMissingNonce",
-			status:   "OK",
+			status:   1,
 			from:     "from.com",
 			invoking: "invoking.com",
 
@@ -155,14 +155,14 @@ func TestNewAuthenticatedConnectionSignature(t *testing.T) {
 			timestamp: "210430T132456",
 			nonce:     "",
 
-			wantUnsignedBaseMessage:      "from=from.com&invoking=invoking.com&status=OK",
-			wantUnsignedExtendedMessage:  "from=from.com&invoking=invoking.com&status=OK",
+			wantUnsignedBaseMessage:      "from=from.com&invoking=invoking.com&status=1",
+			wantUnsignedExtendedMessage:  "from=from.com&invoking=invoking.com&status=1",
 			wantAddParamsForSignatureErr: formats.ErrParamMissingNonce,
 		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			acs, gotErr := formats.NewAuthenticatedConnectionSignature(tC.status, tC.from, tC.invoking)
+			acs, gotErr := formats.NewAuthenticatedConnectionSignature(formats.AuthenticatedConnectionProtocolStatus(tC.status), tC.from, tC.invoking)
 			if !errors.Is(gotErr, tC.wantNewACSErr) {
 				t.Errorf("NewAuthenticatedConnectionSignature() %s error check: got %v, want %v", tC.desc, gotErr, tC.wantNewACSErr)
 			}

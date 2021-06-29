@@ -6,12 +6,13 @@ import (
 	"github.com/IABTechLab/adscert/internal/errorcode"
 )
 
-type DNSLookupErrorCode *errorcode.Error
+type DiscoveryErrorCode *errorcode.Error
 
 var (
-	ErrDNSLookup       DNSLookupErrorCode = errorcode.New("dns_lookup", errors.New("failed to lookup DNS"))
-	ErrDNSDecodePolicy DNSLookupErrorCode = errorcode.New("dns_decode_policy", errors.New("failed to decode dns record policy"))
-	ErrDNSDecodeKeys   DNSLookupErrorCode = errorcode.New("dns_decode_key", errors.New("failed to decode dns record keys"))
+	ErrDNSLookup             DiscoveryErrorCode = errorcode.New("dns_lookup", errors.New("failed to lookup DNS"))
+	ErrDNSDecodePolicy       DiscoveryErrorCode = errorcode.New("dns_decode_policy", errors.New("failed to decode dns record policy"))
+	ErrDNSDecodeKeys         DiscoveryErrorCode = errorcode.New("dns_decode_key", errors.New("failed to decode dns record keys"))
+	ErrDiscoverySharedSecret DiscoveryErrorCode = errorcode.New("discovery_create_shared_secret", errors.New("failed to create shared secret"))
 )
 
 type SigningErrorCode *errorcode.Error
