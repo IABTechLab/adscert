@@ -3,6 +3,7 @@ package signatory
 import (
 	"crypto/hmac"
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"io"
 	"time"
@@ -39,6 +40,11 @@ func (s *localAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(req
 	startTime := time.Now()
 	response := &api.AuthenticatedConnectionSignatureResponse{}
 
+	if request.RequestInfo == nil || request.RequestInfo.InvokingDomain == "" || len(request.RequestInfo.UrlHash) == 0 {
+		response.SignatureStatus = api.SignatureStatus_SIGNATURE_STATUS_MISSING_REQUIRED_PARAMETER
+		return response, errors.New("required parameters are missing")
+	}
+
 	// add nonce and timestamp if not already provided in the request
 	// this is the typical case to keep the client's usage simple
 	if request.Timestamp == "" {
@@ -53,21 +59,23 @@ func (s *localAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(req
 	domainInfos, err := s.counterpartyManager.LookupIdentitiesForDomain(request.RequestInfo.InvokingDomain)
 	if err != nil {
 		metrics.RecordSigning(adscerterrors.ErrSigningInvocationCounterpartyLookup)
-		return nil, err
+		response.SignatureStatus = api.SignatureStatus_SIGNATURE_STATUS_SIGNATORY_INTERNAL_ERROR
+		return response, err
 	}
 
 	for _, domainInfo := range domainInfos {
 		signatureInfo, err := s.embossSingleMessage(request, domainInfo)
 		if err != nil {
 			metrics.RecordSigning(adscerterrors.ErrSigningEmbossMessage)
-			return nil, err
+			response.SignatureStatus = api.SignatureStatus_SIGNATURE_STATUS_SIGNATORY_INTERNAL_ERROR
+			return response, err
 		}
 		response.SignatureInfo = append(response.SignatureInfo, signatureInfo)
 	}
 
 	metrics.RecordSigning(nil)
 	metrics.RecordSigningTime(time.Since(startTime))
-
+	response.SignatureStatus = api.SignatureStatus_SIGNATURE_STATUS_OK
 	return response, nil
 }
 
@@ -100,6 +108,7 @@ func (s *localAuthenticatedConnectionsSignatory) embossSingleMessage(request *ap
 	signatureInfo.FromKey = sharedSecret.LocalKeyID()
 	signatureInfo.ToDomain = domainInfo.GetAdsCertIdentityDomain()
 	signatureInfo.ToKey = sharedSecret.RemoteKeyID()
+	signatureInfo.SigningStatus = acs.GetStatus()
 
 	message := acs.EncodeMessage()
 	bodyHMAC, urlHMAC := generateSignatures(domainInfo, []byte(message), request.RequestInfo.BodyHash[:], request.RequestInfo.UrlHash[:])
@@ -131,6 +140,7 @@ func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(r
 	if err != nil {
 		logger.Infof("counterparty lookup error")
 		metrics.RecordVerify(adscerterrors.ErrVerifyCounterpartyLookup)
+		response.VerificationStatus = api.VerificationStatus_VERIFICATION_STATUS_SIGNATORY_INTERNAL_ERROR
 		return response, err
 	}
 
@@ -148,7 +158,7 @@ func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(r
 	metrics.RecordVerifyTime(time.Since(startTime))
 	metrics.RecordVerifyOutcome(metrics.VerifyOutcomeTypeBody, response.BodyValid)
 	metrics.RecordVerifyOutcome(metrics.VerifyOutcomeTypeUrl, response.UrlValid)
-
+	response.VerificationStatus = api.VerificationStatus_VERIFICATION_STATUS_OK
 	return response, nil
 }
 
