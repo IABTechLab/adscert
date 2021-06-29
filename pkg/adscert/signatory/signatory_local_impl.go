@@ -123,6 +123,7 @@ func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(r
 	acs, err := formats.DecodeAuthenticatedConnectionSignature(signatureMessage)
 	if err != nil {
 		metrics.RecordVerify(adscerterrors.ErrVerifyDecodeSignature)
+		response.VerificationStatus = api.VerificationStatus_VERIFICATION_STATUS_MISSING_REQUIRED_PARAMETER
 		return response, fmt.Errorf("signature decode failure: %v", err)
 	}
 
