@@ -2,6 +2,8 @@ package discovery
 
 import (
 	"time"
+
+	"github.com/IABTechLab/adscert/internal/formats"
 )
 
 type DomainInfo struct {
@@ -11,7 +13,9 @@ type DomainInfo struct {
 	currentSharedSecretId keyPairAlias
 	allPublicKeys         keyMap
 	allSharedSecrets      keyPairMap
-	lastUpdateTime        time.Time
+
+	protocolStatus formats.AuthenticatedConnectionProtocolStatus
+	lastUpdateTime time.Time
 }
 
 type SharedSecret interface {
@@ -24,18 +28,11 @@ func (c *DomainInfo) GetAdsCertIdentityDomain() string {
 	return c.Domain
 }
 
-func (c *DomainInfo) GetStatus() CounterpartyStatus {
-	return StatusUnspecified
+func (c *DomainInfo) GetStatus() formats.AuthenticatedConnectionProtocolStatus {
+	return c.protocolStatus
 }
 
-func (c *DomainInfo) HasSharedSecret() bool {
-	return c.allSharedSecrets[c.currentSharedSecretId] != nil
-}
-
-func (c *DomainInfo) SharedSecret() SharedSecret {
-	if !c.HasSharedSecret() {
-		return nil
-	}
-	sharedSecret := c.allSharedSecrets[c.currentSharedSecretId]
-	return SharedSecret(sharedSecret)
+func (c *DomainInfo) GetSharedSecret() (SharedSecret, bool) {
+	sharedSecret, ok := c.allSharedSecrets[c.currentSharedSecretId]
+	return sharedSecret, ok
 }

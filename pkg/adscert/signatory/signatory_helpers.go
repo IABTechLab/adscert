@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"github.com/IABTechLab/adscert/internal/api"
+	"github.com/IABTechLab/adscert/internal/formats"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -13,7 +14,6 @@ func SetRequestInfo(requestInfo *api.RequestInfo, url string, body []byte) error
 
 	_, tldPlusOne, err := parseURLComponents(url)
 	if err != nil {
-		// TODO: switch to using a named error message indicating URL parse failure.
 		return fmt.Errorf("unable to parse domain from URL: %v", err)
 	}
 	requestInfo.InvokingDomain = tldPlusOne
@@ -47,4 +47,16 @@ func parseURLComponents(destinationURL string) (*url.URL, string, error) {
 		return nil, "", err
 	}
 	return parsedDestURL, tldPlusOne, nil
+}
+
+// set from the diagnostic array printed by formats.AuthenticatedConnectionSignature
+// this avoids having to manuallly set every property when returning a repsonse
+func setSignatureInfoFromAuthenticatedConnection(sigInfo *api.SignatureInfo, acs *formats.AuthenticatedConnectionSignature) {
+	diag := acs.GetAttributeArray()
+	sigInfo.FromDomain = diag[0]
+	sigInfo.FromKey = diag[1]
+	sigInfo.InvokingDomain = diag[2]
+	sigInfo.ToDomain = diag[3]
+	sigInfo.ToKey = diag[4]
+	sigInfo.SigningStatus = diag[7]
 }

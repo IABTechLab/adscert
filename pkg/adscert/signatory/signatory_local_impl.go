@@ -81,40 +81,37 @@ func (s *localAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(req
 
 func (s *localAuthenticatedConnectionsSignatory) embossSingleMessage(request *api.AuthenticatedConnectionSignatureRequest, domainInfo discovery.DomainInfo) (*api.SignatureInfo, error) {
 
-	acs, err := formats.NewAuthenticatedConnectionSignature(domainInfo.GetStatus().String(), s.originCallsign, request.RequestInfo.InvokingDomain)
+	sigInfo := &api.SignatureInfo{}
+	acs, err := formats.NewAuthenticatedConnectionSignature(domainInfo.GetStatus(), s.originCallsign, request.RequestInfo.InvokingDomain)
 	if err != nil {
-		return nil, fmt.Errorf("error constructing authenticated connection signature format: %v", err)
+		acs.SetStatus(formats.StatusErrorOnSignature)
+		setSignatureInfoFromAuthenticatedConnection(sigInfo, acs)
+		return sigInfo, fmt.Errorf("error constructing authenticated connection signature format: %v", err)
 	}
 
-	signatureInfo := &api.SignatureInfo{
-		FromDomain:     s.originCallsign,
-		InvokingDomain: request.RequestInfo.InvokingDomain,
+	sharedSecret, hasSecret := domainInfo.GetSharedSecret()
+	if hasSecret {
+		err = acs.AddParametersForSignature(sharedSecret.LocalKeyID(), domainInfo.GetAdsCertIdentityDomain(), sharedSecret.RemoteKeyID(), request.Timestamp, request.Nonce)
+		if err != nil {
+			acs.SetStatus(formats.StatusErrorOnSignature)
+			setSignatureInfoFromAuthenticatedConnection(sigInfo, acs)
+			return sigInfo, fmt.Errorf("error adding signature params: %v", err)
+		}
+
+	} else {
+		acs.SetStatus(formats.StatusErrorOnSignature)
+		setSignatureInfoFromAuthenticatedConnection(sigInfo, acs)
+		sigInfo.SignatureMessage = acs.EncodeMessage()
+		return sigInfo, nil
 	}
 
-	if !domainInfo.HasSharedSecret() {
-		signatureInfo.SignatureMessage = acs.EncodeMessage()
-		return signatureInfo, nil
-	}
-
-	sharedSecret := domainInfo.SharedSecret()
-
-	err = acs.AddParametersForSignature(sharedSecret.LocalKeyID(), domainInfo.GetAdsCertIdentityDomain(), sharedSecret.RemoteKeyID(), request.Timestamp, request.Nonce)
-	if err != nil {
-		// TODO: Figure out how we want to expose structured metadata for failed signing ops.
-		return nil, fmt.Errorf("error adding signature params: %v", err)
-	}
-
-	// TODO: SignatureInfo needs to include the signature operation status.
-	signatureInfo.FromKey = sharedSecret.LocalKeyID()
-	signatureInfo.ToDomain = domainInfo.GetAdsCertIdentityDomain()
-	signatureInfo.ToKey = sharedSecret.RemoteKeyID()
-	signatureInfo.SigningStatus = acs.GetStatus()
-
+	acs.SetStatus(formats.StatusOK)
+	setSignatureInfoFromAuthenticatedConnection(sigInfo, acs)
 	message := acs.EncodeMessage()
 	bodyHMAC, urlHMAC := generateSignatures(domainInfo, []byte(message), request.RequestInfo.BodyHash[:], request.RequestInfo.UrlHash[:])
-	signatureInfo.SignatureMessage = message + formats.EncodeSignatureSuffix(bodyHMAC, urlHMAC)
+	sigInfo.SignatureMessage = message + formats.EncodeSignatureSuffix(bodyHMAC, urlHMAC)
 
-	return signatureInfo, nil
+	return sigInfo, nil
 }
 
 func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(request *api.AuthenticatedConnectionVerificationRequest) (*api.AuthenticatedConnectionVerificationResponse, error) {
@@ -133,6 +130,7 @@ func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(r
 	if acs.GetAttributeInvoking() != request.RequestInfo.InvokingDomain {
 		logger.Infof("unrelated signature %s versus %s", acs.GetAttributeInvoking(), request.RequestInfo.InvokingDomain)
 		metrics.RecordVerify(adscerterrors.ErrVerifySignatureRequestHostMismatch)
+		response.VerificationStatus = api.VerificationStatus_VERIFICATION_STATUS_SIGNATORY_INTERNAL_ERROR
 		return response, fmt.Errorf("%w: %s versus %s", *adscerterrors.ErrVerifySignatureRequestHostMismatch, acs.GetAttributeInvoking(), request.RequestInfo.InvokingDomain)
 	}
 
@@ -145,9 +143,11 @@ func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(r
 	}
 
 	domainInfo := domainInfos[0]
-	if !domainInfo.HasSharedSecret() {
+	_, hasSecret := domainInfo.GetSharedSecret()
+	if !hasSecret {
 		logger.Infof("no shared secret")
 		metrics.RecordVerify(adscerterrors.ErrVerifyMissingSharedSecret)
+		response.VerificationStatus = api.VerificationStatus_VERIFICATION_STATUS_SIGNATORY_INTERNAL_ERROR
 		return response, *adscerterrors.ErrVerifyMissingSharedSecret
 	}
 
@@ -163,7 +163,9 @@ func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(r
 }
 
 func generateSignatures(domainInfo discovery.DomainInfo, message []byte, bodyHash []byte, urlHash []byte) ([]byte, []byte) {
-	h := hmac.New(sha256.New, domainInfo.SharedSecret().Secret()[:])
+
+	sharedSecret, _ := domainInfo.GetSharedSecret()
+	h := hmac.New(sha256.New, sharedSecret.Secret()[:])
 
 	h.Write([]byte(message))
 	h.Write(bodyHash)

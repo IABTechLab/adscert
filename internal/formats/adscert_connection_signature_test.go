@@ -17,7 +17,7 @@ func TestNewAuthenticatedConnectionSignature(t *testing.T) {
 		desc string
 
 		// Basic parameters
-		status   string
+		status   int
 		from     string
 		invoking string
 
@@ -36,7 +36,7 @@ func TestNewAuthenticatedConnectionSignature(t *testing.T) {
 	}{
 		{
 			desc:     "check normal inputs",
-			status:   "OK",
+			status:   1,
 			from:     "from.com",
 			invoking: "invoking.com",
 
@@ -53,7 +53,7 @@ func TestNewAuthenticatedConnectionSignature(t *testing.T) {
 		// Check errors
 		{
 			desc:     "check ErrParamMissingStatus",
-			status:   "",
+			status:   0,
 			from:     "from.com",
 			invoking: "invoking.com",
 
@@ -62,7 +62,7 @@ func TestNewAuthenticatedConnectionSignature(t *testing.T) {
 		},
 		{
 			desc:     "check ErrParamMissingFrom",
-			status:   "OK",
+			status:   1,
 			from:     "",
 			invoking: "invoking.com",
 
@@ -71,7 +71,7 @@ func TestNewAuthenticatedConnectionSignature(t *testing.T) {
 		},
 		{
 			desc:     "check ErrParamMissingInvoking",
-			status:   "OK",
+			status:   1,
 			from:     "from.com",
 			invoking: "",
 
@@ -81,7 +81,7 @@ func TestNewAuthenticatedConnectionSignature(t *testing.T) {
 
 		{
 			desc:     "check ErrParamMissingFromKey",
-			status:   "OK",
+			status:   1,
 			from:     "from.com",
 			invoking: "invoking.com",
 
@@ -97,7 +97,7 @@ func TestNewAuthenticatedConnectionSignature(t *testing.T) {
 		},
 		{
 			desc:     "check ErrParamMissingTo",
-			status:   "OK",
+			status:   1,
 			from:     "from.com",
 			invoking: "invoking.com",
 
@@ -113,7 +113,7 @@ func TestNewAuthenticatedConnectionSignature(t *testing.T) {
 		},
 		{
 			desc:     "check ErrParamMissingToKey",
-			status:   "OK",
+			status:   1,
 			from:     "from.com",
 			invoking: "invoking.com",
 
@@ -129,7 +129,7 @@ func TestNewAuthenticatedConnectionSignature(t *testing.T) {
 		},
 		{
 			desc:     "check ErrParamMissingTimestamp",
-			status:   "OK",
+			status:   1,
 			from:     "from.com",
 			invoking: "invoking.com",
 
@@ -145,7 +145,7 @@ func TestNewAuthenticatedConnectionSignature(t *testing.T) {
 		},
 		{
 			desc:     "check ErrParamMissingNonce",
-			status:   "OK",
+			status:   1,
 			from:     "from.com",
 			invoking: "invoking.com",
 
@@ -162,7 +162,7 @@ func TestNewAuthenticatedConnectionSignature(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			acs, gotErr := formats.NewAuthenticatedConnectionSignature(tC.status, tC.from, tC.invoking)
+			acs, gotErr := formats.NewAuthenticatedConnectionSignature(formats.AuthenticatedConnectionProtocolStatus(tC.status), tC.from, tC.invoking)
 			if !errors.Is(gotErr, tC.wantNewACSErr) {
 				t.Errorf("NewAuthenticatedConnectionSignature() %s error check: got %v, want %v", tC.desc, gotErr, tC.wantNewACSErr)
 			}
