@@ -70,7 +70,7 @@ func (s *AuthenticatedConnectionSignature) EncodeMessage() string {
 	conditionallyAdd(&values, attributeToKey, s.toKey)
 	conditionallyAdd(&values, attributeTimestamp, s.timestamp)
 	conditionallyAdd(&values, attributeNonce, s.nonce)
-	conditionallyAdd(&values, attributeStatus, string(int32(s.status)))
+	conditionallyAdd(&values, attributeStatus, StatusToString(s.status))
 	return values.Encode()
 }
 
@@ -121,6 +121,9 @@ func EncodeSignatureSuffix(
 
 func NewAuthenticatedConnectionSignature(status AuthenticatedConnectionProtocolStatus, from string, invoking string) (*AuthenticatedConnectionSignature, error) {
 
+	if status == StatusUnspecified {
+		return nil, ErrParamMissingStatus
+	}
 	if from == "" {
 		return nil, ErrParamMissingFrom
 	}
