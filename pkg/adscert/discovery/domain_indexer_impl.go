@@ -160,7 +160,14 @@ func (di *defaultDomainIndexer) checkDomainForPolicyRecords(ctx context.Context,
 		}
 	}
 
+	// merge identity domains list to avoid infinitely appending to the list
+	// loop through and ensure that all identity domains are also stored for processing and lookup
 	currentDomainInfo.IdentityDomains = utils.MergeUniques(currentDomainInfo.IdentityDomains)
+	for _, domain := range currentDomainInfo.IdentityDomains {
+		if _, ok, _ := di.domainStore.LookupDomainInfo(ctx, domain); !ok {
+			di.domainStore.StoreDomainInfo(ctx, DomainInfo{Domain: domain})
+		}
+	}
 
 	currentDomainInfo.lastUpdateTime = time.Now()
 }
