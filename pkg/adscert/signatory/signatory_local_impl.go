@@ -59,7 +59,7 @@ func (s *localAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(req
 	domainInfos, err := s.counterpartyManager.LookupIdentitiesForDomain(request.RequestInfo.InvokingDomain)
 	if err != nil {
 		metrics.RecordSigning(adscerterrors.ErrSigningInvocationCounterpartyLookup)
-		response.SignatureStatus = api.SignatureStatus_SIGNATURE_STATUS_SIGNATORY_INTERNAL_ERROR
+		response.SignatureStatus = api.SignatureStatus_SIGNATURE_STATUS_NO_COUNTERPARTY_INFO
 		return response, err
 	}
 
