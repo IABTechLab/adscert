@@ -19,10 +19,10 @@ func SetRequestInfo(requestInfo *api.RequestInfo, url string, body []byte) error
 	requestInfo.InvokingDomain = tldPlusOne
 
 	urlHash := sha256.Sum256([]byte(url))
-	copy(requestInfo.UrlHash[:], urlHash[:])
+	requestInfo.UrlHash = urlHash[:]
 
 	bodyHash := sha256.Sum256(body)
-	copy(requestInfo.BodyHash[:], bodyHash[:])
+	requestInfo.BodyHash = bodyHash[:]
 
 	return err
 }
