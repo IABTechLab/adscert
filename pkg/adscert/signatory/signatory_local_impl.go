@@ -63,6 +63,12 @@ func (s *localAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(req
 		return response, err
 	}
 
+	if len(domainInfos) == 0 {
+		metrics.RecordSigning(adscerterrors.ErrSigningInvocationCounterpartyLookup)
+		response.SignatureStatus = api.SignatureStatus_SIGNATURE_STATUS_NO_COUNTERPARTY_INFO
+		return response, nil
+	}
+
 	for _, domainInfo := range domainInfos {
 		signatureInfo, err := s.embossSingleMessage(request, domainInfo)
 		if err != nil {
