@@ -142,7 +142,7 @@ func (di *defaultDomainIndexer) checkDomainForPolicyRecords(ctx context.Context,
 	baseSubdomainRecords, err := di.dnsResolver.LookupTXT(ctx, baseSubdomain)
 
 	if err != nil {
-		logger.Warningf("Error looking up record for %s in %v: %v", baseSubdomainRecords, time.Since(startTime), err)
+		logger.Warningf("Error looking up record for %s in %v: %v", baseSubdomain, time.Since(startTime), err)
 		return
 
 	} else {
