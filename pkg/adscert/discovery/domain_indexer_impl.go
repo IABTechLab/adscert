@@ -152,10 +152,12 @@ func (di *defaultDomainIndexer) checkDomainForPolicyRecords(ctx context.Context,
 		adsCertPolicy, err := formats.DecodeAdsCertPolicyRecord(baseSubdomainRecords[0])
 		if err != nil {
 			logger.Warningf("Error parsing ads.cert policy record for %s: %v", baseSubdomain, err)
+			currentDomainInfo.protocolStatus = formats.StatusErrorOnDNS
 			metrics.RecordDNSLookup(adscerterrors.ErrDNSDecodePolicy)
 
 		} else {
 			currentDomainInfo.IdentityDomains = append(currentDomainInfo.IdentityDomains, adsCertPolicy.CanonicalCallsignDomain)
+			currentDomainInfo.protocolStatus = formats.StatusOK
 			metrics.RecordDNSLookup(nil)
 		}
 	}
@@ -191,6 +193,7 @@ func (di *defaultDomainIndexer) checkDomainForKeyRecords(ctx context.Context, cu
 		adsCertKeys, err := formats.DecodeAdsCertKeysRecord(deliverySubdomainRecords[0])
 		if err != nil {
 			logger.Warningf("Error parsing ads.cert record for %s: %v", deliverySubdomain, err)
+			currentDomainInfo.protocolStatus = formats.StatusErrorOnDNS
 			metrics.RecordDNSLookup(adscerterrors.ErrDNSDecodeKeys)
 
 		} else if len(adsCertKeys.PublicKeys) > 0 {
@@ -198,6 +201,7 @@ func (di *defaultDomainIndexer) checkDomainForKeyRecords(ctx context.Context, cu
 			currentDomainInfo.currentPublicKeyId = keyAlias(adsCertKeys.PublicKeys[0].KeyAlias)
 			currentDomainInfo.allSharedSecrets = keyPairMap{}
 			currentDomainInfo.currentSharedSecretId = keyPairAlias{}
+			currentDomainInfo.protocolStatus = formats.StatusOK
 			metrics.RecordDNSLookup(nil)
 		}
 	}
@@ -210,6 +214,7 @@ func (di *defaultDomainIndexer) checkDomainForKeyRecords(ctx context.Context, cu
 				currentDomainInfo.allSharedSecrets[keyPairAlias], err = calculateSharedSecret(myKey, theirKey)
 				if err != nil {
 					logger.Warningf("error calculating shared secret for record %s: %v", currentDomainInfo.Domain, err)
+					currentDomainInfo.protocolStatus = formats.StatusErrorOnSharedSecretCalculation
 				}
 			}
 		}
