@@ -3,7 +3,7 @@ package formats
 type AuthenticatedConnectionProtocolStatus int
 
 const (
-	StatusUnspecified AuthenticatedConnectionProtocolStatus = iota
+	StatusUnspecified AuthenticatedConnectionProtocolStatus = iota // this status is considered and handled as an error condition
 	StatusOK
 	StatusDeactivated
 	StatusUnavailable

@@ -132,9 +132,9 @@ func NewAuthenticatedConnectionSignature(status AuthenticatedConnectionProtocolS
 	}
 
 	s := &AuthenticatedConnectionSignature{}
+	s.status = status
 	s.from = from
 	s.invoking = invoking
-	s.status = status
 
 	return s, nil
 }

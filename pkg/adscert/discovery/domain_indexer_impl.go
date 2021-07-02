@@ -63,7 +63,7 @@ func (di *defaultDomainIndexer) LookupIdentitiesForDomain(invokingDomain string)
 	if !ok {
 		// domain was not found in domain store
 		// store a new entry so it can be processed and queue an update
-		di.domainStore.StoreDomainInfo(context.Background(), DomainInfo{Domain: invokingDomain, lastUpdateTime: time.Now().UTC().Add(-1 * time.Hour)})
+		di.domainStore.StoreDomainInfo(context.Background(), initializeDomainInfo(invokingDomain))
 		di.UpdateNow()
 		// return empty list
 		return []DomainInfo{}, nil
@@ -165,7 +165,8 @@ func (di *defaultDomainIndexer) checkDomainForPolicyRecords(ctx context.Context,
 	currentDomainInfo.IdentityDomains = utils.MergeUniques(currentDomainInfo.IdentityDomains)
 	for _, domain := range currentDomainInfo.IdentityDomains {
 		if _, ok, _ := di.domainStore.LookupDomainInfo(ctx, domain); !ok {
-			di.domainStore.StoreDomainInfo(ctx, DomainInfo{Domain: domain})
+			di.domainStore.StoreDomainInfo(ctx, initializeDomainInfo(domain))
+			di.UpdateNow()
 		}
 	}
 
@@ -231,5 +232,12 @@ func (di *defaultDomainIndexer) UpdateNow() {
 	default:
 		// Channel already has pending wake-up call.
 		logger.Infof("Didn't write to wake-up channel since there's a request pending")
+	}
+}
+
+func initializeDomainInfo(domain string) DomainInfo {
+	return DomainInfo{
+		Domain:         domain,
+		protocolStatus: formats.StatusNotYetChecked, // this is the proper initialize status, do not use Unspecified as that is an error condition
 	}
 }
