@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/IABTechLab/adscert/internal/api"
+	"github.com/IABTechLab/adscert/pkg/adscert/api"
 	"google.golang.org/grpc"
 )
 

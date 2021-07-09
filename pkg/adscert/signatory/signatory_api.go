@@ -1,7 +1,7 @@
 package signatory
 
 import (
-	"github.com/IABTechLab/adscert/internal/api"
+	"github.com/IABTechLab/adscert/pkg/adscert/api"
 )
 
 type AuthenticatedConnectionsSignatory interface {
