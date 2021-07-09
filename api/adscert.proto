@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package api;
 
-option go_package = "github.com/IABTechLab/adscert/internal/api";
+option go_package = "github.com/IABTechLab/adscert/pkg/adscert/api";
 
 // RequestInfo conveys the basic parameters required for an authenticated
 // connections signing or verify operation.

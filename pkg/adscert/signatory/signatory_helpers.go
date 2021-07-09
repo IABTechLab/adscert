@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/IABTechLab/adscert/internal/api"
 	"github.com/IABTechLab/adscert/internal/formats"
+	"github.com/IABTechLab/adscert/pkg/adscert/api"
 	"golang.org/x/net/publicsuffix"
 )
 
