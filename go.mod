@@ -3,7 +3,7 @@ module github.com/IABTechLab/adscert
 go 1.15
 
 require (
-	github.com/benbjohnson/clock v1.1.0
+	github.com/benbjohnson/clock v1.0.3
 	github.com/google/go-cmp v0.5.5
 	github.com/prometheus/client_golang v1.11.0
 	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a
