@@ -1,13 +1,10 @@
 package signatory
 
 import (
-	"context"
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
 
-	"github.com/IABTechLab/adscert/internal/logger"
-	"github.com/IABTechLab/adscert/pkg/adscert/discovery"
 	"golang.org/x/crypto/curve25519"
 )
 
@@ -30,16 +27,4 @@ func GenerateFakeKeyPairFromDomainNameForTesting(adscertCallsign string) ([32]by
 	var publicKey [32]byte
 	curve25519.ScalarBaseMult(&publicKey, &privateKey)
 	return publicKey, privateKey
-}
-
-type keyGeneratingDNSResolver struct{}
-
-func (r *keyGeneratingDNSResolver) LookupTXT(ctx context.Context, name string) ([]string, error) {
-	adsCertRecord := GenerateFakeAdsCertRecordForTesting(name)
-	logger.Infof("Serving fake DNS record for %s: %s", name, adsCertRecord)
-	return []string{adsCertRecord}, nil
-}
-
-func NewFakeKeyGeneratingDnsResolver() discovery.DNSResolver {
-	return &keyGeneratingDNSResolver{}
 }
