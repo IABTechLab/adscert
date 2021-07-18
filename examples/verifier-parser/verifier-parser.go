@@ -16,8 +16,7 @@ import (
 )
 
 var (
-	hostCallsign     = flag.String("host_callsign", "", "ads.cert callsign for the host party")
-	originCallsign   = flag.String("origin_callsign", "", "ads.cert callsign for the originating party")
+	origin           = flag.String("origin", "", "ads.cert identity domain for the receiving party")
 	signatureLogFile = flag.String("signature_log_file", "", "Verify all logged signatures and hashes in file")
 )
 
@@ -32,10 +31,10 @@ func main() {
 	}
 	defer file.Close()
 
-	privateKeysBase64 := signatory.GenerateFakePrivateKeysForTesting(*hostCallsign)
+	privateKeysBase64 := signatory.GenerateFakePrivateKeysForTesting(*origin)
 
 	signatoryApi := signatory.NewLocalAuthenticatedConnectionsSignatory(
-		*hostCallsign,
+		*origin,
 		crypto_rand.Reader,
 		clock.New(),
 		discovery.NewDefaultDnsResolver(),

@@ -25,7 +25,7 @@ var (
 	body             = flag.String("body", "", "POST request body")
 	sendRequests     = flag.Bool("send_requests", false, "Actually invoke the web server")
 	frequency        = flag.Duration("frequency", 10*time.Second, "Frequency to invoke the specified URL")
-	originCallsign   = flag.String("origin_callsign", "", "ads.cert callsign for the originating party")
+	origin           = flag.String("origin", "", "ads.cert identity domain for the originating (sending) party")
 	signatureLogFile = flag.String("signature_log_file", "", "write signature and hashes to file for offline verification")
 )
 
@@ -34,7 +34,7 @@ func main() {
 
 	logger.Infof("Starting demo client.")
 
-	privateKeysBase64 := signatory.GenerateFakePrivateKeysForTesting(*originCallsign)
+	privateKeysBase64 := signatory.GenerateFakePrivateKeysForTesting(*origin)
 
 	var signatureFileLogger *log.Logger
 	if *signatureLogFile != "" {
@@ -48,7 +48,7 @@ func main() {
 	}
 
 	signatoryApi := signatory.NewLocalAuthenticatedConnectionsSignatory(
-		*originCallsign,
+		*origin,
 		crypto_rand.Reader,
 		clock.New(),
 		discovery.NewDefaultDnsResolver(),

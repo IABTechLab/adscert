@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	hostCallsign = flag.String("host_callsign", "", "ads.cert callsign for the originating party")
+	origin = flag.String("origin", "", "ads.cert identity domain for the receiving party")
 )
 
 func main() {
@@ -25,10 +25,10 @@ func main() {
 
 	logger.Infof("Starting demo server.")
 
-	privateKeysBase64 := signatory.GenerateFakePrivateKeysForTesting(*hostCallsign)
+	privateKeysBase64 := signatory.GenerateFakePrivateKeysForTesting(*origin)
 
 	signatoryApi := signatory.NewLocalAuthenticatedConnectionsSignatory(
-		*hostCallsign,
+		*origin,
 		crypto_rand.Reader,
 		clock.New(),
 		discovery.NewDefaultDnsResolver(),
@@ -62,6 +62,7 @@ func (s *DemoServer) HandleRequest(w http.ResponseWriter, req *http.Request) {
 
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
+		logger.Errorf("failed to read request: %s", err)
 		req.Response.Status = "500 Server Error"
 		return
 	}
@@ -74,6 +75,10 @@ func (s *DemoServer) HandleRequest(w http.ResponseWriter, req *http.Request) {
 			RequestInfo:      reqInfo,
 			SignatureMessage: signatureHeaders,
 		})
+
+	if err != nil {
+		logger.Errorf("unable to verify message: %s", err)
+	}
 
 	fmt.Fprintf(w, "You invoked %s with X-Ads-Cert-Auth headers %v and verification body:%v URL:%v\n", reconstructedURL.String(), req.Header["X-Ads-Cert-Auth"], verification.BodyValid, verification.UrlValid)
 }
