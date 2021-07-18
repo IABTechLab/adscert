@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/IABTechLab/adscert/internal/logger"
 	"github.com/IABTechLab/adscert/pkg/adscert/api"
@@ -33,6 +34,8 @@ func main() {
 		clock.New(),
 		discovery.NewDefaultDnsResolver(),
 		discovery.NewDefaultDomainStore(),
+		time.Duration(30*time.Second), // domain check interval
+		time.Duration(30*time.Second), // domain renewal interval
 		base64PrivateKeys)
 
 	demoServer := &DemoServer{
