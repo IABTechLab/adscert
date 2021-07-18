@@ -12,13 +12,24 @@ import (
 	"github.com/IABTechLab/adscert/pkg/adscert/metrics"
 )
 
-func NewDefaultDomainIndexer(dnsResolver DNSResolver, domainStore DomainStore, base64PrivateKeys []string) DomainIndexer {
+func NewDefaultDomainIndexer(dnsResolver DNSResolver, domainStore DomainStore, domainCheckInterval time.Duration, domainRenewalInterval time.Duration, base64PrivateKeys []string) DomainIndexer {
+
+	// check domains every 30 seconds by default
+	if domainCheckInterval <= 0 {
+		domainCheckInterval = 30 * time.Second
+	}
+
+	// renew domains after 5 minutes by default
+	if domainRenewalInterval <= 0 {
+		domainRenewalInterval = 300 * time.Second
+	}
 
 	di := &defaultDomainIndexer{
-		ticker:      time.NewTicker(30 * time.Second),
-		wakeUp:      make(chan struct{}, 1),
-		dnsResolver: dnsResolver,
-		domainStore: domainStore,
+		ticker:                time.NewTicker(domainCheckInterval),
+		wakeUp:                make(chan struct{}, 1),
+		domainRenewalInterval: domainRenewalInterval,
+		dnsResolver:           dnsResolver,
+		domainStore:           domainStore,
 	}
 
 	myPrivateKeys, err := privateKeysToKeyMap(base64PrivateKeys)
@@ -41,9 +52,10 @@ func NewDefaultDomainIndexer(dnsResolver DNSResolver, domainStore DomainStore, b
 }
 
 type defaultDomainIndexer struct {
-	ticker *time.Ticker
-	cancel context.CancelFunc
-	wakeUp chan struct{}
+	ticker                *time.Ticker
+	cancel                context.CancelFunc
+	wakeUp                chan struct{}
+	domainRenewalInterval time.Duration
 
 	myPrivateKeys     keyMap
 	currentPrivateKey keyAlias
@@ -123,7 +135,7 @@ func (di *defaultDomainIndexer) performUpdateSweep(ctx context.Context) {
 		if err != nil {
 			logger.Infof("unable to retrieve domain info for domain %s, skipping update until next loop", domain)
 
-		} else if currentDomainInfo.lastUpdateTime.Before(time.Now().Add(-300 * time.Second)) {
+		} else if currentDomainInfo.lastUpdateTime.Before(time.Now().Add(di.domainRenewalInterval)) {
 			logger.Infof("Trying to do an update for domain %s", domain)
 			di.checkDomainForPolicyRecords(ctx, &currentDomainInfo)
 			di.checkDomainForKeyRecords(ctx, &currentDomainInfo)
