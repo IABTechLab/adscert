@@ -7,6 +7,7 @@ import (
 	"flag"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/IABTechLab/adscert/internal/logger"
 	"github.com/IABTechLab/adscert/pkg/adscert/api"
@@ -39,6 +40,8 @@ func main() {
 		clock.New(),
 		discovery.NewDefaultDnsResolver(),
 		discovery.NewDefaultDomainStore(),
+		time.Duration(30*time.Second), // domain check interval
+		time.Duration(30*time.Second), // domain renewal interval
 		base64PrivateKeys)
 
 	var logCount, parseErrorCount, verifyErrorCount, validRequestCount, validUrlCount int

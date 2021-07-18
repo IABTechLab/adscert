@@ -20,12 +20,12 @@ import (
 )
 
 var (
+	origin           = flag.String("origin", "", "ads.cert identity domain for the originating (sending) party")
 	method           = flag.String("http_method", "GET", "HTTP method, 'GET' or 'POST'")
 	destinationURL   = flag.String("url", "https://google.com/gen_204", "URL to invoke")
 	body             = flag.String("body", "", "POST request body")
 	sendRequests     = flag.Bool("send_requests", false, "Actually invoke the web server")
 	frequency        = flag.Duration("frequency", 10*time.Second, "Frequency to invoke the specified URL")
-	origin           = flag.String("origin", "", "ads.cert identity domain for the originating (sending) party")
 	signatureLogFile = flag.String("signature_log_file", "", "write signature and hashes to file for offline verification")
 )
 
@@ -53,6 +53,8 @@ func main() {
 		clock.New(),
 		discovery.NewDefaultDnsResolver(),
 		discovery.NewDefaultDomainStore(),
+		time.Duration(30*time.Second), // domain check interval
+		time.Duration(30*time.Second), // domain renewal interval
 		base64PrivateKeys)
 
 	demoClient := DemoClient{
