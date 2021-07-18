@@ -24,11 +24,11 @@ import (
 var (
 	serverPort            = flag.Int("server_port", 3000, "grpc server port")
 	metricsPort           = flag.Int("metrics_port", 3001, "http metrics port")
-	logLevel              = flag.String("loglevel", utils.GetEnvVar("LOGLEVEL"), "minimum log verbosity")
-	origin                = flag.String("origin", utils.GetEnvVar("ORIGIN"), "ads.cert hostname for the originating party")
-	domainCheckInterval   = flag.Duration("domain_check_interval", 30*time.Second, "interval for checking domain records")
-	domainRenewalInterval = flag.Duration("domain_renewal_interval", 300*time.Second, "interval before considering domain records for renewal")
-	privateKey            = flag.String("private_key", utils.GetEnvVar("PRIVATE_KEY"), "base-64 encoded private key")
+	logLevel              = flag.String("loglevel", utils.GetEnvVarString("LOGLEVEL", ""), "minimum log verbosity")
+	origin                = flag.String("origin", utils.GetEnvVarString("ORIGIN", ""), "ads.cert hostname for the originating party")
+	domainCheckInterval   = flag.Duration("domain_check_interval", time.Duration(utils.GetEnvVarInt("DOMAIN_CHECK_INTERVAL", 30))*time.Second, "interval for checking domain records")
+	domainRenewalInterval = flag.Duration("domain_renewal_interval", time.Duration(utils.GetEnvVarInt("DOMAIN_RENEWAL_INTERVAL", 300))*time.Second, "interval before considering domain records for renewal")
+	privateKey            = flag.String("private_key", utils.GetEnvVarString("PRIVATE_KEY", ""), "base-64 encoded private key")
 	signatoryApi          signatory.AuthenticatedConnectionsSignatory
 )
 
@@ -39,6 +39,11 @@ func main() {
 
 	if *origin == "" {
 		logger.Fatalf("Origin hostname is required")
+		os.Exit(returnExitCode())
+	}
+
+	if *privateKey == "" {
+		logger.Fatalf("Private key is required")
 		os.Exit(returnExitCode())
 	}
 
