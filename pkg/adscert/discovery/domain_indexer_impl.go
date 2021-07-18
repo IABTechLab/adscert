@@ -154,7 +154,7 @@ func (di *defaultDomainIndexer) checkDomainForPolicyRecords(ctx context.Context,
 	baseSubdomainRecords, err := di.dnsResolver.LookupTXT(ctx, baseSubdomain)
 
 	if err != nil {
-		logger.Warningf("Error looking up record for %s in %v: %v", baseSubdomain, time.Since(startTime), err)
+		logger.Warningf("No record found for %s in %v: %v", baseSubdomain, time.Since(startTime), err)
 		return
 
 	} else {
@@ -194,7 +194,7 @@ func (di *defaultDomainIndexer) checkDomainForKeyRecords(ctx context.Context, cu
 	deliverySubdomainRecords, err := di.dnsResolver.LookupTXT(ctx, deliverySubdomain)
 
 	if err != nil {
-		logger.Warningf("Error looking up record for %s in %v: %v", deliverySubdomain, time.Since(startTime), err)
+		logger.Warningf("No record found for %s in %v: %v", deliverySubdomain, time.Since(startTime), err)
 		return
 
 	} else {
