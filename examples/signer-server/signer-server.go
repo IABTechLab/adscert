@@ -34,7 +34,7 @@ func main() {
 
 	logger.Infof("Starting demo client.")
 
-	privateKeysBase64 := signatory.GenerateFakePrivateKeysForTesting(*origin)
+	base64PrivateKeys := signatory.GenerateFakePrivateKeysForTesting(*origin)
 
 	var signatureFileLogger *log.Logger
 	if *signatureLogFile != "" {
@@ -53,7 +53,7 @@ func main() {
 		clock.New(),
 		discovery.NewDefaultDnsResolver(),
 		discovery.NewDefaultDomainStore(),
-		privateKeysBase64)
+		base64PrivateKeys)
 
 	demoClient := DemoClient{
 		Signatory: signatoryApi,

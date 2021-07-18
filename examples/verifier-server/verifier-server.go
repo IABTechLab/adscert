@@ -25,7 +25,7 @@ func main() {
 
 	logger.Infof("Starting demo server.")
 
-	privateKeysBase64 := signatory.GenerateFakePrivateKeysForTesting(*origin)
+	base64PrivateKeys := signatory.GenerateFakePrivateKeysForTesting(*origin)
 
 	signatoryApi := signatory.NewLocalAuthenticatedConnectionsSignatory(
 		*origin,
@@ -33,7 +33,7 @@ func main() {
 		clock.New(),
 		discovery.NewDefaultDnsResolver(),
 		discovery.NewDefaultDomainStore(),
-		privateKeysBase64)
+		base64PrivateKeys)
 
 	demoServer := &DemoServer{
 		Signatory: signatoryApi,

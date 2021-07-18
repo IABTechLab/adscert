@@ -34,7 +34,7 @@ func main() {
 	logger.SetLevel(logger.GetLevelFromString(*logLevel))
 
 	// TODO: using randomly generated test certs for now
-	privateKeysBase64 := signatory.GenerateFakePrivateKeysForTesting(*origin)
+	base64PrivateKeys := signatory.GenerateFakePrivateKeysForTesting(*origin)
 
 	if *origin == "" {
 		logger.Fatalf("Origin hostname is required")
@@ -47,7 +47,7 @@ func main() {
 		clock.New(),
 		discovery.NewDefaultDnsResolver(),
 		discovery.NewDefaultDomainStore(),
-		privateKeysBase64)
+		base64PrivateKeys)
 
 	grpcServer := grpc.NewServer()
 	api.RegisterAdsCertSignatoryServer(grpcServer, &adsCertSignatoryServer{})
