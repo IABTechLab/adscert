@@ -2,14 +2,23 @@ package utils
 
 import (
 	"os"
+	"strconv"
 )
 
-func GetEnvVar(key string) string {
-	v, ok := os.LookupEnv(key)
-	if ok {
+func GetEnvVarString(key string, defaultValue string) string {
+	if v, ok := os.LookupEnv(key); ok {
 		return v
 	}
-	return ""
+	return defaultValue
+}
+
+func GetEnvVarInt(key string, defaultValue int) int {
+	if v, ok := os.LookupEnv(key); ok {
+		if i, err := strconv.Atoi(v); err != nil {
+			return i
+		}
+	}
+	return defaultValue
 }
 
 func MergeUniques(list []string) []string {
