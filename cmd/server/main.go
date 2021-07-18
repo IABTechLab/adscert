@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/IABTechLab/adscert/internal/logger"
 	"github.com/IABTechLab/adscert/internal/utils"
@@ -21,12 +22,14 @@ import (
 )
 
 var (
-	serverPort   = flag.Int("server_port", 3000, "grpc server port")
-	metricsPort  = flag.Int("metrics_port", 3001, "http metrics port")
-	logLevel     = flag.String("loglevel", utils.GetEnvVar("LOGLEVEL"), "minimum log verbosity")
-	origin       = flag.String("origin", utils.GetEnvVar("ORIGIN"), "ads.cert hostname for the originating party")
-	privateKey   = flag.String("private_key", utils.GetEnvVar("PRIVATE_KEY"), "base-64 encoded private key")
-	signatoryApi signatory.AuthenticatedConnectionsSignatory
+	serverPort            = flag.Int("server_port", 3000, "grpc server port")
+	metricsPort           = flag.Int("metrics_port", 3001, "http metrics port")
+	logLevel              = flag.String("loglevel", utils.GetEnvVar("LOGLEVEL"), "minimum log verbosity")
+	origin                = flag.String("origin", utils.GetEnvVar("ORIGIN"), "ads.cert hostname for the originating party")
+	domainCheckInterval   = flag.Duration("domain_check_interval", 30*time.Second, "interval for checking domain records")
+	domainRenewalInterval = flag.Duration("domain_renewal_interval", 300*time.Second, "interval before considering domain records for renewal")
+	privateKey            = flag.String("private_key", utils.GetEnvVar("PRIVATE_KEY"), "base-64 encoded private key")
+	signatoryApi          signatory.AuthenticatedConnectionsSignatory
 )
 
 func main() {
@@ -45,6 +48,8 @@ func main() {
 		clock.New(),
 		discovery.NewDefaultDnsResolver(),
 		discovery.NewDefaultDomainStore(),
+		*domainCheckInterval,
+		*domainRenewalInterval,
 		[]string{*privateKey})
 
 	grpcServer := grpc.NewServer()
