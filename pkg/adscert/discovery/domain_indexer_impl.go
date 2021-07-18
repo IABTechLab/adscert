@@ -161,16 +161,30 @@ func (di *defaultDomainIndexer) checkDomainForPolicyRecords(ctx context.Context,
 		logger.Infof("Found text record for %s in %v: %v", baseSubdomain, time.Since(startTime), baseSubdomainRecords)
 		metrics.RecordDNSLookupTime(time.Since(startTime))
 
-		adsCertPolicy, err := formats.DecodeAdsCertPolicyRecord(baseSubdomainRecords[0])
-		if err != nil {
-			logger.Warningf("Error parsing ads.cert policy record for %s: %v", baseSubdomain, err)
-			currentDomainInfo.protocolStatus = formats.StatusErrorOnDNS
-			metrics.RecordDNSLookup(adscerterrors.ErrDNSDecodePolicy)
+		// log warning if there are multiple policy records found because there should only be a single authoritative identity domain
+		// however this is not an error because there may be multiple records during a ownerhsip change
+		if len(baseSubdomainRecords) > 1 {
+			logger.Warningf("Found multiple policy records for %s: %v", baseSubdomain, baseSubdomainRecords)
+		}
 
+		dnsParseError := false
+		for _, v := range baseSubdomainRecords {
+			if adsCertPolicy, err := formats.DecodeAdsCertPolicyRecord(v); err != nil {
+				logger.Warningf("Error parsing ads.cert policy record for %s: %v", baseSubdomain, err)
+				metrics.RecordDNSLookup(adscerterrors.ErrDNSDecodePolicy)
+				dnsParseError = true
+
+			} else {
+				currentDomainInfo.IdentityDomains = append(currentDomainInfo.IdentityDomains, adsCertPolicy.CanonicalCallsignDomain)
+				metrics.RecordDNSLookup(nil)
+			}
+		}
+
+		// any DNS parse failure should set the entire status to errors to be checked later
+		if dnsParseError {
+			currentDomainInfo.protocolStatus = formats.StatusErrorOnDNS
 		} else {
-			currentDomainInfo.IdentityDomains = append(currentDomainInfo.IdentityDomains, adsCertPolicy.CanonicalCallsignDomain)
 			currentDomainInfo.protocolStatus = formats.StatusOK
-			metrics.RecordDNSLookup(nil)
 		}
 	}
 
