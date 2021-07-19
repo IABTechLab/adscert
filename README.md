@@ -47,6 +47,7 @@ The `Signatory` is available as a [standalone GRPC server](cmd/server/main.go). 
 
 - `rpc SignAuthenticatedConnection(AuthenticatedConnectionSignatureRequest) returns (AuthenticatedConnectionSignatureResponse) {}`
 - `rpc VerifyAuthenticatedConnection(AuthenticatedConnectionVerificationRequest) returns (AuthenticatedConnectionVerificationResponse) {}`
+- `rpc VerifyAuthenticatedConnectionBatch(AuthenticatedConnectionVerificationBatchRequest) returns (AuthenticatedConnectionVerificationBatchResponse) {}`
 
 Clients are available for various langauges: 
 - Golang - [GRPC cient available here](api/golang) or the Signatory can be use as an [in-process Go library](pkg/adscert/signatory/signatory_local_impl.go) directly.

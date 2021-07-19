@@ -47,3 +47,13 @@ func (sc *AuthenticatedConnectionsSignatoryClient) VerifyAuthenticatedConnection
 	response, err := sc.grpcClient.VerifyAuthenticatedConnection(ctx, request)
 	return response, err
 }
+
+func (sc *AuthenticatedConnectionsSignatoryClient) VerifyAuthenticatedConnectionBatch(request *api.AuthenticatedConnectionVerificationBatchRequest) (*api.AuthenticatedConnectionVerificationBatchResponse, error) {
+
+	// set network call context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), sc.timeout)
+	defer cancel()
+
+	response, err := sc.grpcClient.VerifyAuthenticatedConnectionBatch(ctx, request)
+	return response, err
+}

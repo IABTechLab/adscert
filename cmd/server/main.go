@@ -100,3 +100,8 @@ func (s *adsCertSignatoryServer) VerifyAuthenticatedConnection(ctx context.Conte
 	response, err := signatoryApi.VerifyAuthenticatedConnection(req)
 	return response, err
 }
+
+func (s *adsCertSignatoryServer) VerifyAuthenticatedConnectionBatch(ctx context.Context, req *api.AuthenticatedConnectionVerificationBatchRequest) (*api.AuthenticatedConnectionVerificationBatchResponse, error) {
+	response, err := signatoryApi.VerifyAuthenticatedConnectionBatch(req)
+	return response, err
+}
