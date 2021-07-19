@@ -124,7 +124,7 @@ func (c *DemoClient) initiateRequest() error {
 	if c.SignatureFileLogger != nil {
 		c.SignatureFileLogger.Printf("%s,%s,%s,%s",
 			reqInfo.BodyHash,
-			signatureResponse.SignatureInfo[0],
+			signatureResponse.RequestInfo.SignatureInfo[0],
 			base64.StdEncoding.EncodeToString(reqInfo.BodyHash),
 			base64.StdEncoding.EncodeToString(reqInfo.UrlHash))
 	}

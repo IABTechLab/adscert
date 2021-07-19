@@ -72,13 +72,9 @@ func (s *DemoServer) HandleRequest(w http.ResponseWriter, req *http.Request) {
 
 	reqInfo := &api.RequestInfo{}
 	signatory.SetRequestInfo(reqInfo, reconstructedURL.String(), body)
+	signatory.SetRequestSignatures(reqInfo, signatureHeaders)
 
-	verification, err := s.Signatory.VerifyAuthenticatedConnection(
-		&api.AuthenticatedConnectionVerificationRequest{
-			RequestInfo:      reqInfo,
-			SignatureMessage: signatureHeaders,
-		})
-
+	verification, err := s.Signatory.VerifyAuthenticatedConnection(&api.AuthenticatedConnectionVerificationRequest{RequestInfo: reqInfo})
 	if err != nil {
 		logger.Errorf("unable to verify message: %s", err)
 	}

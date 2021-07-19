@@ -18,9 +18,9 @@ var (
 type SigningErrorCode *errorcode.Error
 
 var (
-	ErrSigningGenerateNonce                SigningErrorCode = errorcode.New("generate_nonce", errors.New("failed to generate nonce"))
-	ErrSigningInvocationCounterpartyLookup SigningErrorCode = errorcode.New("invocation_counterparty_lookup", errors.New("failed to lookup invocation counterparty"))
-	ErrSigningEmbossMessage                SigningErrorCode = errorcode.New("emboss_message", errors.New("failed to emboss message"))
+	ErrSigningGenerateNonce      SigningErrorCode = errorcode.New("generate_nonce", errors.New("failed to generate nonce"))
+	ErrSigningCounterpartyLookup SigningErrorCode = errorcode.New("invocation_counterparty_lookup", errors.New("failed to lookup invocation counterparty"))
+	ErrSigningEmbossMessage      SigningErrorCode = errorcode.New("emboss_message", errors.New("failed to emboss message"))
 )
 
 type VerifyErrorCode *errorcode.Error
