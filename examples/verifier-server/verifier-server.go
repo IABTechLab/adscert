@@ -79,5 +79,5 @@ func (s *DemoServer) HandleRequest(w http.ResponseWriter, req *http.Request) {
 		logger.Errorf("unable to verify message: %s", err)
 	}
 
-	fmt.Fprintf(w, "You invoked %s with X-Ads-Cert-Auth headers %v and verification body:%v URL:%v\n", reconstructedURL.String(), req.Header["X-Ads-Cert-Auth"], verification.BodyValid, verification.UrlValid)
+	fmt.Fprintf(w, "You invoked %s with X-Ads-Cert-Auth headers %v and verification body:%v URL:%v\n", reconstructedURL.String(), req.Header["X-Ads-Cert-Auth"], verification.VerificationInfo.BodyValid, verification.VerificationInfo.UrlValid)
 }
