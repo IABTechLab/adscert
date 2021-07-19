@@ -27,10 +27,16 @@ func SetRequestInfo(requestInfo *api.RequestInfo, url string, body []byte) error
 	return err
 }
 
+func SetRequestSignatures(requestInfo *api.RequestInfo, signatures []string) {
+	for _, v := range signatures {
+		requestInfo.SignatureInfo = append(requestInfo.SignatureInfo, &api.SignatureInfo{SignatureMessage: v})
+	}
+}
+
 func GetSignatures(response *api.AuthenticatedConnectionSignatureResponse) []string {
 	signatures := make([]string, 0)
 
-	for _, si := range response.SignatureInfo {
+	for _, si := range response.RequestInfo.SignatureInfo {
 		signatures = append(signatures, si.SignatureMessage)
 	}
 

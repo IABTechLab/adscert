@@ -47,7 +47,7 @@ func (s *localAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(req
 
 	var err error
 	startTime := time.Now()
-	response := &api.AuthenticatedConnectionSignatureResponse{}
+	response := &api.AuthenticatedConnectionSignatureResponse{RequestInfo: request.RequestInfo}
 
 	if request.RequestInfo == nil || request.RequestInfo.InvokingDomain == "" || len(request.RequestInfo.UrlHash) == 0 {
 		response.SignatureStatus = api.SignatureStatus_SIGNATURE_STATUS_MISSING_REQUIRED_PARAMETER
@@ -85,7 +85,7 @@ func (s *localAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(req
 			response.SignatureStatus = api.SignatureStatus_SIGNATURE_STATUS_SIGNATORY_INTERNAL_ERROR
 			return response, err
 		}
-		response.SignatureInfo = append(response.SignatureInfo, signatureInfo)
+		response.RequestInfo.SignatureInfo = append(response.RequestInfo.SignatureInfo, signatureInfo)
 	}
 
 	metrics.RecordSigning(nil)
@@ -134,7 +134,7 @@ func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(r
 	startTime := time.Now()
 	response := &api.AuthenticatedConnectionVerificationResponse{}
 
-	signatureMessage := request.SignatureMessage[0]
+	signatureMessage := request.RequestInfo.SignatureInfo[0].SignatureMessage
 	acs, err := formats.DecodeAuthenticatedConnectionSignature(signatureMessage)
 	if err != nil {
 		metrics.RecordVerify(adscerterrors.ErrVerifyDecodeSignature)
