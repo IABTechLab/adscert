@@ -66,16 +66,11 @@ func (s *localAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(req
 	}
 
 	domainInfos, err := s.counterpartyManager.LookupIdentitiesForDomain(request.RequestInfo.InvokingDomain)
-	if err != nil {
-		metrics.RecordSigning(adscerterrors.ErrSigningInvocationCounterpartyLookup)
+	if err != nil || len(domainInfos) == 0 {
+		logger.Infof("counterparty lookup error")
+		metrics.RecordSigning(adscerterrors.ErrSigningCounterpartyLookup)
 		response.SignatureStatus = api.SignatureStatus_SIGNATURE_STATUS_NO_COUNTERPARTY_INFO
 		return response, err
-	}
-
-	if len(domainInfos) == 0 {
-		metrics.RecordSigning(adscerterrors.ErrSigningInvocationCounterpartyLookup)
-		response.SignatureStatus = api.SignatureStatus_SIGNATURE_STATUS_NO_COUNTERPARTY_INFO
-		return response, nil
 	}
 
 	for _, domainInfo := range domainInfos {
@@ -133,49 +128,63 @@ func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(r
 
 	startTime := time.Now()
 	response := &api.AuthenticatedConnectionVerificationResponse{}
+	checkErrors := []error{}
+	checked := false
 
-	signatureMessage := request.RequestInfo.SignatureInfo[0].SignatureMessage
-	acs, err := formats.DecodeAuthenticatedConnectionSignature(signatureMessage)
-	if err != nil {
-		metrics.RecordVerify(adscerterrors.ErrVerifyDecodeSignature)
-		response.VerificationStatus = api.VerificationStatus_VERIFICATION_STATUS_MISSING_REQUIRED_PARAMETER
-		return response, fmt.Errorf("signature decode failure: %v", err)
+	for _, signatureInfo := range request.RequestInfo.SignatureInfo {
+		acs, err := formats.DecodeAuthenticatedConnectionSignature(signatureInfo.SignatureMessage)
+		if err != nil {
+			metrics.RecordVerify(adscerterrors.ErrVerifyDecodeSignature)
+			response.VerificationStatus = api.VerificationStatus_VERIFICATION_STATUS_MISSING_REQUIRED_PARAMETER
+			checkErrors = append(checkErrors, fmt.Errorf("signature decode failure: %v", err))
+			continue
+		}
+
+		// Validate invocation hostname matches request
+		if acs.GetAttributeInvoking() != request.RequestInfo.InvokingDomain {
+			logger.Infof("unrelated signature %s versus %s", acs.GetAttributeInvoking(), request.RequestInfo.InvokingDomain)
+			metrics.RecordVerify(adscerterrors.ErrVerifySignatureRequestHostMismatch)
+			checkErrors = append(checkErrors, fmt.Errorf("%w: %s versus %s", *adscerterrors.ErrVerifySignatureRequestHostMismatch, acs.GetAttributeInvoking(), request.RequestInfo.InvokingDomain))
+			continue
+		}
+
+		domainInfos, err := s.counterpartyManager.LookupIdentitiesForDomain(acs.GetAttributeFrom())
+		if err != nil || len(domainInfos) == 0 {
+			logger.Infof("counterparty lookup error")
+			metrics.RecordVerify(adscerterrors.ErrVerifyCounterpartyLookup)
+			checkErrors = append(checkErrors, fmt.Errorf("%v", *adscerterrors.ErrVerifyCounterpartyLookup))
+			continue
+		}
+
+		for _, domainInfo := range domainInfos {
+			if _, hasSecret := domainInfo.GetSharedSecret(); !hasSecret {
+				logger.Infof("no shared secret")
+				metrics.RecordVerify(adscerterrors.ErrVerifyMissingSharedSecret)
+				checkErrors = append(checkErrors, fmt.Errorf("%v", *adscerterrors.ErrVerifyMissingSharedSecret))
+				continue
+			}
+
+			metrics.RecordVerify(nil)
+			bodyHMAC, urlHMAC := generateSignatures(domainInfo, []byte(acs.EncodeMessage()), request.RequestInfo.BodyHash[:], request.RequestInfo.UrlHash[:])
+			response.BodyValid, response.UrlValid = acs.CompareSignatures(bodyHMAC, urlHMAC)
+			checked = true
+			break
+		}
 	}
 
-	// Validate invocation hostname matches request
-	if acs.GetAttributeInvoking() != request.RequestInfo.InvokingDomain {
-		logger.Infof("unrelated signature %s versus %s", acs.GetAttributeInvoking(), request.RequestInfo.InvokingDomain)
-		metrics.RecordVerify(adscerterrors.ErrVerifySignatureRequestHostMismatch)
-		response.VerificationStatus = api.VerificationStatus_VERIFICATION_STATUS_SIGNATORY_INTERNAL_ERROR
-		return response, fmt.Errorf("%w: %s versus %s", *adscerterrors.ErrVerifySignatureRequestHostMismatch, acs.GetAttributeInvoking(), request.RequestInfo.InvokingDomain)
-	}
-
-	domainInfos, err := s.counterpartyManager.LookupIdentitiesForDomain(acs.GetAttributeFrom())
-	if err != nil {
-		logger.Infof("counterparty lookup error")
-		metrics.RecordVerify(adscerterrors.ErrVerifyCounterpartyLookup)
-		response.VerificationStatus = api.VerificationStatus_VERIFICATION_STATUS_SIGNATORY_INTERNAL_ERROR
-		return response, err
-	}
-
-	domainInfo := domainInfos[0]
-	_, hasSecret := domainInfo.GetSharedSecret()
-	if !hasSecret {
-		logger.Infof("no shared secret")
-		metrics.RecordVerify(adscerterrors.ErrVerifyMissingSharedSecret)
-		response.VerificationStatus = api.VerificationStatus_VERIFICATION_STATUS_SIGNATORY_INTERNAL_ERROR
-		return response, *adscerterrors.ErrVerifyMissingSharedSecret
-	}
-
-	bodyHMAC, urlHMAC := generateSignatures(domainInfo, []byte(acs.EncodeMessage()), request.RequestInfo.BodyHash[:], request.RequestInfo.UrlHash[:])
-	response.BodyValid, response.UrlValid = acs.CompareSignatures(bodyHMAC, urlHMAC)
-
-	metrics.RecordVerify(nil)
 	metrics.RecordVerifyTime(time.Since(startTime))
 	metrics.RecordVerifyOutcome(metrics.VerifyOutcomeTypeBody, response.BodyValid)
 	metrics.RecordVerifyOutcome(metrics.VerifyOutcomeTypeUrl, response.UrlValid)
-	response.VerificationStatus = api.VerificationStatus_VERIFICATION_STATUS_OK
-	return response, nil
+
+	if checked {
+		// signature has been checked, verification operation is successful (regardless of siganture result)
+		response.VerificationStatus = api.VerificationStatus_VERIFICATION_STATUS_OK
+		return response, nil
+	} else {
+		// signature has not been checked due to possibly multiple errors, need to wrap them here
+		response.VerificationStatus = api.VerificationStatus_VERIFICATION_STATUS_SIGNATORY_INTERNAL_ERROR
+		return response, fmt.Errorf("verification failed: %v errors", len(checkErrors))
+	}
 }
 
 func generateSignatures(domainInfo discovery.DomainInfo, message []byte, bodyHash []byte, urlHash []byte) ([]byte, []byte) {
