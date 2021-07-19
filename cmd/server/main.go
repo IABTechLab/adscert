@@ -25,6 +25,7 @@ var (
 	metricsPort  = flag.Int("metrics_port", 3001, "http metrics port")
 	logLevel     = flag.String("loglevel", utils.GetEnvVar("LOGLEVEL"), "minimum log verbosity")
 	origin       = flag.String("origin", utils.GetEnvVar("ORIGIN"), "ads.cert hostname for the originating party")
+	privateKey   = flag.String("private_key", utils.GetEnvVar("PRIVATE_KEY"), "base-64 encoded private key")
 	signatoryApi signatory.AuthenticatedConnectionsSignatory
 )
 
@@ -32,9 +33,6 @@ func main() {
 
 	flag.Parse()
 	logger.SetLevel(logger.GetLevelFromString(*logLevel))
-
-	// TODO: using randomly generated test certs for now
-	privateKeysBase64 := signatory.GenerateFakePrivateKeysForTesting(*origin)
 
 	if *origin == "" {
 		logger.Fatalf("Origin hostname is required")
@@ -47,7 +45,7 @@ func main() {
 		clock.New(),
 		discovery.NewDefaultDnsResolver(),
 		discovery.NewDefaultDomainStore(),
-		privateKeysBase64)
+		[]string{*privateKey})
 
 	grpcServer := grpc.NewServer()
 	api.RegisterAdsCertSignatoryServer(grpcServer, &adsCertSignatoryServer{})

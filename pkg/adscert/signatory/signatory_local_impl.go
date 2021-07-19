@@ -17,12 +17,12 @@ import (
 	"github.com/benbjohnson/clock"
 )
 
-func NewLocalAuthenticatedConnectionsSignatory(originCallsign string, reader io.Reader, clock clock.Clock, dnsResolver discovery.DNSResolver, domainStore discovery.DomainStore, privateKeyBase64Strings []string) AuthenticatedConnectionsSignatory {
+func NewLocalAuthenticatedConnectionsSignatory(originCallsign string, reader io.Reader, clock clock.Clock, dnsResolver discovery.DNSResolver, domainStore discovery.DomainStore, base64PrivateKeys []string) AuthenticatedConnectionsSignatory {
 	return &localAuthenticatedConnectionsSignatory{
 		originCallsign:      originCallsign,
 		secureRandom:        reader,
 		clock:               clock,
-		counterpartyManager: discovery.NewDefaultDomainIndexer(dnsResolver, domainStore, privateKeyBase64Strings),
+		counterpartyManager: discovery.NewDefaultDomainIndexer(dnsResolver, domainStore, base64PrivateKeys),
 	}
 }
 

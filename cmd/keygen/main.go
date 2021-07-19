@@ -8,10 +8,6 @@ import (
 	"golang.org/x/crypto/curve25519"
 )
 
-// Curtis notes:
-// This code is really only meant to assist with the proof-of-concept.  Please see the design doc
-// for details about the proper key generation and storage solution that will replace this code.
-
 func main() {
 	publicKey, privateKey, err := GenerateKeyPair()
 	if err != nil {
