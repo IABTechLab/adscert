@@ -86,7 +86,7 @@ func parseLog(log string) (*api.AuthenticatedConnectionVerificationRequest, erro
 	parsedLog := strings.Split(log, ",")
 
 	invokingDomain := parsedLog[0]
-	signaturesHeader := parsedLog[1]
+	signatureHeader := parsedLog[1]
 	hashedRequestBodyBytes, err := base64.StdEncoding.DecodeString(parsedLog[2])
 	if err != nil {
 		return nil, err
@@ -98,13 +98,10 @@ func parseLog(log string) (*api.AuthenticatedConnectionVerificationRequest, erro
 
 	reqInfo := &api.RequestInfo{
 		InvokingDomain: invokingDomain,
+		UrlHash:        hashedDestinationURLBytes[:32],
+		BodyHash:       hashedRequestBodyBytes[:32],
 	}
+	signatory.SetRequestSignatures(reqInfo, []string{signatureHeader})
 
-	copy(reqInfo.UrlHash[:], hashedDestinationURLBytes[:32])
-	copy(reqInfo.BodyHash[:], hashedRequestBodyBytes[:32])
-
-	return &api.AuthenticatedConnectionVerificationRequest{
-		RequestInfo:      reqInfo,
-		SignatureMessage: []string{signaturesHeader},
-	}, nil
+	return &api.AuthenticatedConnectionVerificationRequest{RequestInfo: reqInfo}, nil
 }

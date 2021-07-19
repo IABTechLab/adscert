@@ -46,7 +46,7 @@ func main() {
 		logger.Warningf("unable to sign message: %v", err)
 	}
 
-	for _, si := range signatureResponse.SignatureInfo {
+	for _, si := range signatureResponse.RequestInfo.SignatureInfo {
 		logger.Infof("signature: %v", si.SignatureMessage)
 	}
 
