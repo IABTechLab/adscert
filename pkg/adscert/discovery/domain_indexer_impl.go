@@ -158,7 +158,7 @@ func (di *defaultDomainIndexer) checkDomainForPolicyRecords(ctx context.Context,
 		return
 
 	} else {
-		logger.Infof("Found text record for %s in %v: %v", baseSubdomain, time.Since(startTime), baseSubdomainRecords)
+		logger.Infof("Found records for %s in %v: %v", baseSubdomain, time.Since(startTime), baseSubdomainRecords)
 		metrics.RecordDNSLookupTime(time.Since(startTime))
 
 		// log warning if there are multiple policy records found because there should only be a single authoritative identity domain
@@ -212,21 +212,35 @@ func (di *defaultDomainIndexer) checkDomainForKeyRecords(ctx context.Context, cu
 		return
 
 	} else {
-		logger.Infof("Found text record for %s in %v: %v", deliverySubdomain, time.Since(startTime), deliverySubdomainRecords)
+		logger.Infof("Found records for %s in %v: %v", deliverySubdomain, time.Since(startTime), deliverySubdomainRecords)
 		metrics.RecordDNSLookupTime(time.Since(startTime))
 
-		// Assume one and only one TXT record
-		adsCertKeys, err := formats.DecodeAdsCertKeysRecord(deliverySubdomainRecords[0])
-		if err != nil {
-			logger.Warningf("Error parsing ads.cert record for %s: %v", deliverySubdomain, err)
-			currentDomainInfo.protocolStatus = formats.StatusErrorOnDNS
-			metrics.RecordDNSLookup(adscerterrors.ErrDNSDecodeKeys)
+		// log warning if there are multiple key records found
+		// however this is not an error because there may be multiple records as keys are aged out and/or records become large
+		if len(deliverySubdomainRecords) > 1 {
+			logger.Warningf("Found multiple key records for %s: %v", deliverySubdomain, deliverySubdomainRecords)
+		}
 
-		} else if len(adsCertKeys.PublicKeys) > 0 {
-			currentDomainInfo.allPublicKeys = asKeyMap(*adsCertKeys)
-			currentDomainInfo.currentPublicKeyId = keyAlias(adsCertKeys.PublicKeys[0].KeyAlias)
+		dnsParseError := false
+		for _, v := range deliverySubdomainRecords {
+			adsCertKeys, err := formats.DecodeAdsCertKeysRecord(v)
+			if err != nil {
+				logger.Warningf("Error parsing ads.cert record for %s: %v", deliverySubdomain, err)
+				metrics.RecordDNSLookup(adscerterrors.ErrDNSDecodeKeys)
+				dnsParseError = true
+
+			} else if len(adsCertKeys.PublicKeys) > 0 {
+				currentDomainInfo.allPublicKeys = asKeyMap(*adsCertKeys)
+				currentDomainInfo.currentPublicKeyId = keyAlias(adsCertKeys.PublicKeys[0].KeyAlias)
+				metrics.RecordDNSLookup(nil)
+			}
+		}
+
+		// any DNS parse failure should set the entire status to errors to be checked later
+		if dnsParseError {
+			currentDomainInfo.protocolStatus = formats.StatusErrorOnDNS
+		} else {
 			currentDomainInfo.protocolStatus = formats.StatusOK
-			metrics.RecordDNSLookup(nil)
 		}
 	}
 
