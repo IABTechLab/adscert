@@ -161,36 +161,17 @@ func (di *defaultDomainIndexer) checkDomainForPolicyRecords(ctx context.Context,
 		logger.Infof("Found records for %s in %v: %v", baseSubdomain, time.Since(startTime), baseSubdomainRecords)
 		metrics.RecordDNSLookupTime(time.Since(startTime))
 
-		// log warning if there are multiple policy records found because there should only be a single authoritative identity domain
-		// however this is not an error because there may be multiple records during a ownerhsip change
-		if len(baseSubdomainRecords) > 1 {
-			logger.Warningf("Found multiple policy records for %s: %v", baseSubdomain, baseSubdomainRecords)
-		}
-
-		dnsParseError := false
-		for _, v := range baseSubdomainRecords {
-			if adsCertPolicy, err := formats.DecodeAdsCertPolicyRecord(v); err != nil {
-				logger.Warningf("Error parsing ads.cert policy record for %s: %v", baseSubdomain, err)
-				metrics.RecordDNSLookup(adscerterrors.ErrDNSDecodePolicy)
-				dnsParseError = true
-
-			} else {
-				currentDomainInfo.IdentityDomains = append(currentDomainInfo.IdentityDomains, adsCertPolicy.CanonicalCallsignDomain)
-				metrics.RecordDNSLookup(nil)
-			}
-		}
-
-		// any DNS parse failure should set the entire status to errors to be checked later
-		if dnsParseError {
+		if foundDomains, parseError := parsePolicyRecords(baseSubdomain, baseSubdomainRecords); parseError {
 			currentDomainInfo.protocolStatus = formats.StatusErrorOnDNS
 		} else {
+			// replace current domain info with new identity domains (and filter to keep uniques)
+			currentDomainInfo.IdentityDomains = foundDomains
+			currentDomainInfo.IdentityDomains = utils.MergeUniques(currentDomainInfo.IdentityDomains)
 			currentDomainInfo.protocolStatus = formats.StatusOK
 		}
 	}
 
-	// merge identity domains list to avoid infinitely appending to the list
 	// loop through and ensure that all identity domains are also stored for processing and lookup
-	currentDomainInfo.IdentityDomains = utils.MergeUniques(currentDomainInfo.IdentityDomains)
 	for _, domain := range currentDomainInfo.IdentityDomains {
 		if _, ok, _ := di.domainStore.LookupDomainInfo(ctx, domain); !ok {
 			di.domainStore.StoreDomainInfo(ctx, initializeDomainInfo(domain))
@@ -215,31 +196,12 @@ func (di *defaultDomainIndexer) checkDomainForKeyRecords(ctx context.Context, cu
 		logger.Infof("Found records for %s in %v: %v", deliverySubdomain, time.Since(startTime), deliverySubdomainRecords)
 		metrics.RecordDNSLookupTime(time.Since(startTime))
 
-		// log warning if there are multiple key records found
-		// however this is not an error because there may be multiple records as keys are aged out and/or records become large
-		if len(deliverySubdomainRecords) > 1 {
-			logger.Warningf("Found multiple key records for %s: %v", deliverySubdomain, deliverySubdomainRecords)
-		}
-
-		dnsParseError := false
-		for _, v := range deliverySubdomainRecords {
-			adsCertKeys, err := formats.DecodeAdsCertKeysRecord(v)
-			if err != nil {
-				logger.Warningf("Error parsing ads.cert record for %s: %v", deliverySubdomain, err)
-				metrics.RecordDNSLookup(adscerterrors.ErrDNSDecodeKeys)
-				dnsParseError = true
-
-			} else if len(adsCertKeys.PublicKeys) > 0 {
-				currentDomainInfo.allPublicKeys = asKeyMap(*adsCertKeys)
-				currentDomainInfo.currentPublicKeyId = keyAlias(adsCertKeys.PublicKeys[0].KeyAlias)
-				metrics.RecordDNSLookup(nil)
-			}
-		}
-
-		// any DNS parse failure should set the entire status to errors to be checked later
-		if dnsParseError {
+		if foundKeys, parseError := parseKeyRecords(deliverySubdomain, deliverySubdomainRecords); parseError {
 			currentDomainInfo.protocolStatus = formats.StatusErrorOnDNS
 		} else {
+			// replace current domain info with new public keys
+			currentDomainInfo.allPublicKeys = asKeyMap(formats.AdsCertKeys{PublicKeys: foundKeys})
+			currentDomainInfo.currentPublicKeyId = keyAlias(foundKeys[0].KeyAlias)
 			currentDomainInfo.protocolStatus = formats.StatusOK
 		}
 	}
@@ -260,6 +222,53 @@ func (di *defaultDomainIndexer) checkDomainForKeyRecords(ctx context.Context, cu
 
 	currentDomainInfo.currentSharedSecretId = newKeyPairAlias(di.currentPrivateKey, currentDomainInfo.currentPublicKeyId)
 	currentDomainInfo.lastUpdateTime = time.Now()
+}
+
+func parsePolicyRecords(baseSubdomain string, baseSubdomainRecords []string) (foundDomains []string, parseError bool) {
+
+	// log warning if there are multiple policy records found because there should only be a single authoritative identity domain
+	// however this is not an error because there may be multiple records during a ownerhsip change
+	if len(baseSubdomainRecords) > 1 {
+		logger.Warningf("Found multiple policy records for %s: %v", baseSubdomain, baseSubdomainRecords)
+	}
+
+	for _, v := range baseSubdomainRecords {
+		if adsCertPolicy, err := formats.DecodeAdsCertPolicyRecord(v); err != nil {
+			logger.Warningf("Error parsing ads.cert policy record for %s: %v", baseSubdomain, err)
+			metrics.RecordDNSLookup(adscerterrors.ErrDNSDecodePolicy)
+			parseError = true
+
+		} else {
+			foundDomains = append(foundDomains, adsCertPolicy.CanonicalCallsignDomain)
+			metrics.RecordDNSLookup(nil)
+		}
+	}
+
+	return foundDomains, parseError
+}
+
+func parseKeyRecords(deliverySubdomain string, deliverySubdomainRecords []string) (foundKeys []formats.ParsedPublicKey, parseError bool) {
+
+	// log warning if there are multiple key records found
+	// however this is not an error because there may be multiple records as keys are aged out and/or records become large
+	if len(deliverySubdomainRecords) > 1 {
+		logger.Warningf("Found multiple key records for %s: %v", deliverySubdomain, deliverySubdomainRecords)
+	}
+
+	for _, v := range deliverySubdomainRecords {
+		adsCertKeys, err := formats.DecodeAdsCertKeysRecord(v)
+		if err != nil {
+			logger.Warningf("Error parsing ads.cert key record for %s: %v", deliverySubdomain, err)
+			metrics.RecordDNSLookup(adscerterrors.ErrDNSDecodeKeys)
+			parseError = true
+
+		} else if len(adsCertKeys.PublicKeys) > 0 {
+			foundKeys = append(foundKeys, adsCertKeys.PublicKeys...)
+			metrics.RecordDNSLookup(nil)
+		}
+	}
+
+	return foundKeys, parseError
 }
 
 func (di *defaultDomainIndexer) StopAutoUpdate() {
