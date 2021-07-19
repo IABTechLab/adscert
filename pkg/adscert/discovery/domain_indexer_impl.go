@@ -225,8 +225,6 @@ func (di *defaultDomainIndexer) checkDomainForKeyRecords(ctx context.Context, cu
 		} else if len(adsCertKeys.PublicKeys) > 0 {
 			currentDomainInfo.allPublicKeys = asKeyMap(*adsCertKeys)
 			currentDomainInfo.currentPublicKeyId = keyAlias(adsCertKeys.PublicKeys[0].KeyAlias)
-			currentDomainInfo.allSharedSecrets = keyPairMap{}
-			currentDomainInfo.currentSharedSecretId = keyPairAlias{}
 			currentDomainInfo.protocolStatus = formats.StatusOK
 			metrics.RecordDNSLookup(nil)
 		}
@@ -268,7 +266,13 @@ func (di *defaultDomainIndexer) UpdateNow() {
 
 func initializeDomainInfo(domain string) DomainInfo {
 	return DomainInfo{
-		Domain:         domain,
-		protocolStatus: formats.StatusNotYetChecked, // this is the proper initialize status, do not use Unspecified as that is an error condition
+		Domain:                domain,
+		IdentityDomains:       []string{},
+		currentPublicKeyId:    "",
+		currentSharedSecretId: keyPairAlias{},
+		allPublicKeys:         map[keyAlias]*x25519Key{},
+		allSharedSecrets:      keyPairMap{},
+		protocolStatus:        formats.StatusNotYetChecked,
+		lastUpdateTime:        time.Time{},
 	}
 }
