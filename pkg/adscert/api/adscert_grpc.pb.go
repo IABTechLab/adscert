@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 type AdsCertSignatoryClient interface {
 	SignAuthenticatedConnection(ctx context.Context, in *AuthenticatedConnectionSignatureRequest, opts ...grpc.CallOption) (*AuthenticatedConnectionSignatureResponse, error)
 	VerifyAuthenticatedConnection(ctx context.Context, in *AuthenticatedConnectionVerificationRequest, opts ...grpc.CallOption) (*AuthenticatedConnectionVerificationResponse, error)
+	VerifyAuthenticatedConnectionBatch(ctx context.Context, in *AuthenticatedConnectionVerificationBatchRequest, opts ...grpc.CallOption) (*AuthenticatedConnectionVerificationBatchResponse, error)
 }
 
 type adsCertSignatoryClient struct {
@@ -48,12 +49,22 @@ func (c *adsCertSignatoryClient) VerifyAuthenticatedConnection(ctx context.Conte
 	return out, nil
 }
 
+func (c *adsCertSignatoryClient) VerifyAuthenticatedConnectionBatch(ctx context.Context, in *AuthenticatedConnectionVerificationBatchRequest, opts ...grpc.CallOption) (*AuthenticatedConnectionVerificationBatchResponse, error) {
+	out := new(AuthenticatedConnectionVerificationBatchResponse)
+	err := c.cc.Invoke(ctx, "/api.AdsCertSignatory/VerifyAuthenticatedConnectionBatch", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AdsCertSignatoryServer is the server API for AdsCertSignatory service.
 // All implementations must embed UnimplementedAdsCertSignatoryServer
 // for forward compatibility
 type AdsCertSignatoryServer interface {
 	SignAuthenticatedConnection(context.Context, *AuthenticatedConnectionSignatureRequest) (*AuthenticatedConnectionSignatureResponse, error)
 	VerifyAuthenticatedConnection(context.Context, *AuthenticatedConnectionVerificationRequest) (*AuthenticatedConnectionVerificationResponse, error)
+	VerifyAuthenticatedConnectionBatch(context.Context, *AuthenticatedConnectionVerificationBatchRequest) (*AuthenticatedConnectionVerificationBatchResponse, error)
 	mustEmbedUnimplementedAdsCertSignatoryServer()
 }
 
@@ -66,6 +77,9 @@ func (UnimplementedAdsCertSignatoryServer) SignAuthenticatedConnection(context.C
 }
 func (UnimplementedAdsCertSignatoryServer) VerifyAuthenticatedConnection(context.Context, *AuthenticatedConnectionVerificationRequest) (*AuthenticatedConnectionVerificationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VerifyAuthenticatedConnection not implemented")
+}
+func (UnimplementedAdsCertSignatoryServer) VerifyAuthenticatedConnectionBatch(context.Context, *AuthenticatedConnectionVerificationBatchRequest) (*AuthenticatedConnectionVerificationBatchResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VerifyAuthenticatedConnectionBatch not implemented")
 }
 func (UnimplementedAdsCertSignatoryServer) mustEmbedUnimplementedAdsCertSignatoryServer() {}
 
@@ -116,6 +130,24 @@ func _AdsCertSignatory_VerifyAuthenticatedConnection_Handler(srv interface{}, ct
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AdsCertSignatory_VerifyAuthenticatedConnectionBatch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AuthenticatedConnectionVerificationBatchRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdsCertSignatoryServer).VerifyAuthenticatedConnectionBatch(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.AdsCertSignatory/VerifyAuthenticatedConnectionBatch",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdsCertSignatoryServer).VerifyAuthenticatedConnectionBatch(ctx, req.(*AuthenticatedConnectionVerificationBatchRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AdsCertSignatory_ServiceDesc is the grpc.ServiceDesc for AdsCertSignatory service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -130,6 +162,10 @@ var AdsCertSignatory_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "VerifyAuthenticatedConnection",
 			Handler:    _AdsCertSignatory_VerifyAuthenticatedConnection_Handler,
+		},
+		{
+			MethodName: "VerifyAuthenticatedConnectionBatch",
+			Handler:    _AdsCertSignatory_VerifyAuthenticatedConnectionBatch_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
