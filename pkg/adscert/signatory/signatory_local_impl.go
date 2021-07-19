@@ -187,6 +187,20 @@ func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(r
 	}
 }
 
+func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnectionBatch(request *api.AuthenticatedConnectionVerificationBatchRequest) (*api.AuthenticatedConnectionVerificationBatchResponse, error) {
+	response := &api.AuthenticatedConnectionVerificationBatchResponse{}
+
+	for _, reqInfo := range request.RequestInfo {
+		verifyResopnse, err := s.VerifyAuthenticatedConnection(&api.AuthenticatedConnectionVerificationRequest{RequestInfo: reqInfo})
+		if err != nil {
+			logger.Warningf("verification error within request batch: %w", err)
+		}
+		response.VerificationInfo = append(response.VerificationInfo, verifyResopnse.VerificationInfo)
+	}
+
+	return response, nil
+}
+
 func generateSignatures(domainInfo discovery.DomainInfo, message []byte, bodyHash []byte, urlHash []byte) ([]byte, []byte) {
 
 	sharedSecret, _ := domainInfo.GetSharedSecret()
