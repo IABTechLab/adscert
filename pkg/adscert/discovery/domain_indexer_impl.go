@@ -154,29 +154,24 @@ func (di *defaultDomainIndexer) checkDomainForPolicyRecords(ctx context.Context,
 	baseSubdomainRecords, err := di.dnsResolver.LookupTXT(ctx, baseSubdomain)
 
 	if err != nil {
-		logger.Warningf("Error looking up record for %s in %v: %v", baseSubdomain, time.Since(startTime), err)
+		logger.Warningf("No record found for %s in %v: %v", baseSubdomain, time.Since(startTime), err)
 		return
 
 	} else {
-		logger.Infof("Found text record for %s in %v: %v", baseSubdomain, time.Since(startTime), baseSubdomainRecords)
+		logger.Infof("Found records for %s in %v: %v", baseSubdomain, time.Since(startTime), baseSubdomainRecords)
 		metrics.RecordDNSLookupTime(time.Since(startTime))
 
-		adsCertPolicy, err := formats.DecodeAdsCertPolicyRecord(baseSubdomainRecords[0])
-		if err != nil {
-			logger.Warningf("Error parsing ads.cert policy record for %s: %v", baseSubdomain, err)
+		if foundDomains, parseError := parsePolicyRecords(baseSubdomain, baseSubdomainRecords); parseError {
 			currentDomainInfo.protocolStatus = formats.StatusErrorOnDNS
-			metrics.RecordDNSLookup(adscerterrors.ErrDNSDecodePolicy)
-
 		} else {
-			currentDomainInfo.IdentityDomains = append(currentDomainInfo.IdentityDomains, adsCertPolicy.CanonicalCallsignDomain)
+			// replace current domain info with new identity domains (and filter to keep uniques)
+			currentDomainInfo.IdentityDomains = foundDomains
+			currentDomainInfo.IdentityDomains = utils.MergeUniques(currentDomainInfo.IdentityDomains)
 			currentDomainInfo.protocolStatus = formats.StatusOK
-			metrics.RecordDNSLookup(nil)
 		}
 	}
 
-	// merge identity domains list to avoid infinitely appending to the list
 	// loop through and ensure that all identity domains are also stored for processing and lookup
-	currentDomainInfo.IdentityDomains = utils.MergeUniques(currentDomainInfo.IdentityDomains)
 	for _, domain := range currentDomainInfo.IdentityDomains {
 		if _, ok, _ := di.domainStore.LookupDomainInfo(ctx, domain); !ok {
 			di.domainStore.StoreDomainInfo(ctx, initializeDomainInfo(domain))
@@ -194,27 +189,20 @@ func (di *defaultDomainIndexer) checkDomainForKeyRecords(ctx context.Context, cu
 	deliverySubdomainRecords, err := di.dnsResolver.LookupTXT(ctx, deliverySubdomain)
 
 	if err != nil {
-		logger.Warningf("Error looking up record for %s in %v: %v", deliverySubdomain, time.Since(startTime), err)
+		logger.Warningf("No record found for %s in %v: %v", deliverySubdomain, time.Since(startTime), err)
 		return
 
 	} else {
-		logger.Infof("Found text record for %s in %v: %v", deliverySubdomain, time.Since(startTime), deliverySubdomainRecords)
+		logger.Infof("Found records for %s in %v: %v", deliverySubdomain, time.Since(startTime), deliverySubdomainRecords)
 		metrics.RecordDNSLookupTime(time.Since(startTime))
 
-		// Assume one and only one TXT record
-		adsCertKeys, err := formats.DecodeAdsCertKeysRecord(deliverySubdomainRecords[0])
-		if err != nil {
-			logger.Warningf("Error parsing ads.cert record for %s: %v", deliverySubdomain, err)
+		if foundKeys, parseError := parseKeyRecords(deliverySubdomain, deliverySubdomainRecords); parseError {
 			currentDomainInfo.protocolStatus = formats.StatusErrorOnDNS
-			metrics.RecordDNSLookup(adscerterrors.ErrDNSDecodeKeys)
-
-		} else if len(adsCertKeys.PublicKeys) > 0 {
-			currentDomainInfo.allPublicKeys = asKeyMap(*adsCertKeys)
-			currentDomainInfo.currentPublicKeyId = keyAlias(adsCertKeys.PublicKeys[0].KeyAlias)
-			currentDomainInfo.allSharedSecrets = keyPairMap{}
-			currentDomainInfo.currentSharedSecretId = keyPairAlias{}
+		} else {
+			// replace current domain info with new public keys
+			currentDomainInfo.allPublicKeys = asKeyMap(formats.AdsCertKeys{PublicKeys: foundKeys})
+			currentDomainInfo.currentPublicKeyId = keyAlias(foundKeys[0].KeyAlias)
 			currentDomainInfo.protocolStatus = formats.StatusOK
-			metrics.RecordDNSLookup(nil)
 		}
 	}
 
@@ -236,6 +224,53 @@ func (di *defaultDomainIndexer) checkDomainForKeyRecords(ctx context.Context, cu
 	currentDomainInfo.lastUpdateTime = time.Now()
 }
 
+func parsePolicyRecords(baseSubdomain string, baseSubdomainRecords []string) (foundDomains []string, parseError bool) {
+
+	// log warning if there are multiple policy records found because there should only be a single authoritative identity domain
+	// however this is not an error because there may be multiple records during a ownerhsip change
+	if len(baseSubdomainRecords) > 1 {
+		logger.Warningf("Found multiple policy records for %s: %v", baseSubdomain, baseSubdomainRecords)
+	}
+
+	for _, v := range baseSubdomainRecords {
+		if adsCertPolicy, err := formats.DecodeAdsCertPolicyRecord(v); err != nil {
+			logger.Warningf("Error parsing ads.cert policy record for %s: %v", baseSubdomain, err)
+			metrics.RecordDNSLookup(adscerterrors.ErrDNSDecodePolicy)
+			parseError = true
+
+		} else {
+			foundDomains = append(foundDomains, adsCertPolicy.CanonicalCallsignDomain)
+			metrics.RecordDNSLookup(nil)
+		}
+	}
+
+	return foundDomains, parseError
+}
+
+func parseKeyRecords(deliverySubdomain string, deliverySubdomainRecords []string) (foundKeys []formats.ParsedPublicKey, parseError bool) {
+
+	// log warning if there are multiple key records found
+	// however this is not an error because there may be multiple records as keys are aged out and/or records become large
+	if len(deliverySubdomainRecords) > 1 {
+		logger.Warningf("Found multiple key records for %s: %v", deliverySubdomain, deliverySubdomainRecords)
+	}
+
+	for _, v := range deliverySubdomainRecords {
+		adsCertKeys, err := formats.DecodeAdsCertKeysRecord(v)
+		if err != nil {
+			logger.Warningf("Error parsing ads.cert key record for %s: %v", deliverySubdomain, err)
+			metrics.RecordDNSLookup(adscerterrors.ErrDNSDecodeKeys)
+			parseError = true
+
+		} else if len(adsCertKeys.PublicKeys) > 0 {
+			foundKeys = append(foundKeys, adsCertKeys.PublicKeys...)
+			metrics.RecordDNSLookup(nil)
+		}
+	}
+
+	return foundKeys, parseError
+}
+
 func (di *defaultDomainIndexer) StopAutoUpdate() {
 	di.ticker.Stop()
 	di.cancel()
@@ -254,7 +289,13 @@ func (di *defaultDomainIndexer) UpdateNow() {
 
 func initializeDomainInfo(domain string) DomainInfo {
 	return DomainInfo{
-		Domain:         domain,
-		protocolStatus: formats.StatusNotYetChecked, // this is the proper initialize status, do not use Unspecified as that is an error condition
+		Domain:                domain,
+		IdentityDomains:       []string{},
+		currentPublicKeyId:    "",
+		currentSharedSecretId: keyPairAlias{},
+		allPublicKeys:         map[keyAlias]*x25519Key{},
+		allSharedSecrets:      keyPairMap{},
+		protocolStatus:        formats.StatusNotYetChecked,
+		lastUpdateTime:        time.Time{},
 	}
 }
