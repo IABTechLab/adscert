@@ -26,6 +26,11 @@ message SignatureInfo {
     string to_key = 7;
 }
 
+message VerificationInfo {
+    bool body_valid = 1;
+    bool url_valid = 2;
+}
+
 // AuthenticatedConnectionSignatureRequest contains the parameters for a signing
 // request.
 message AuthenticatedConnectionSignatureRequest {
@@ -61,8 +66,7 @@ message AuthenticatedConnectionVerificationRequest {
 // signatures.
 message AuthenticatedConnectionVerificationResponse {
     VerificationStatus verification_status = 1;
-    bool body_valid = 2;
-    bool url_valid = 3;
+    VerificationInfo verification_info = 2;
 }
 
 enum VerificationStatus {
