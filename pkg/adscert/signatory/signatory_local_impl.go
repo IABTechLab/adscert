@@ -127,7 +127,7 @@ func (s *localAuthenticatedConnectionsSignatory) signSingleMessage(request *api.
 func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(request *api.AuthenticatedConnectionVerificationRequest) (*api.AuthenticatedConnectionVerificationResponse, error) {
 
 	startTime := time.Now()
-	response := &api.AuthenticatedConnectionVerificationResponse{VerificationInfo: &api.VerificationInfo{SignatureDecodeStatus: []api.SignatureDecodeStatus{}}}
+	response := &api.AuthenticatedConnectionVerificationResponse{VerificationInfo: &api.RequestVerificationInfo{SignatureDecodeStatus: []api.SignatureDecodeStatus{}}}
 
 	for _, signatureInfo := range request.RequestInfo.SignatureInfo {
 		decodeStatus := s.checkSingleSignature(request.RequestInfo, signatureInfo)

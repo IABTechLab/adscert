@@ -26,9 +26,9 @@ message SignatureInfo {
     string to_key = 7;
 }
 
-// VerificationInfo captures the result of a verifying operation against 
+// RequestVerificationInfo captures the result of a verifying operation against 
 // the signatures of a request.
-message VerificationInfo {
+message RequestVerificationInfo {
     repeated SignatureDecodeStatus signature_decode_status = 1;
 }
 
@@ -58,7 +58,7 @@ message AuthenticatedConnectionVerificationRequest {
 // signatures.
 message AuthenticatedConnectionVerificationResponse {
     VerificationOperationStatus verification_operation_status = 1;
-    VerificationInfo verification_info = 2;
+    RequestVerificationInfo verification_info = 2;
 }
 
 enum SignatureDecodeStatus {
