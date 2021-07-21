@@ -166,15 +166,15 @@ func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(r
 
 			metrics.RecordVerify(nil)
 			bodyHMAC, urlHMAC := generateSignatures(domainInfo, []byte(acs.EncodeMessage()), request.RequestInfo.BodyHash[:], request.RequestInfo.UrlHash[:])
-			response.BodyValid, response.UrlValid = acs.CompareSignatures(bodyHMAC, urlHMAC)
+			response.VerificationInfo.BodyValid, response.VerificationInfo.UrlValid = acs.CompareSignatures(bodyHMAC, urlHMAC)
 			checked = true
 			break
 		}
 	}
 
 	metrics.RecordVerifyTime(time.Since(startTime))
-	metrics.RecordVerifyOutcome(metrics.VerifyOutcomeTypeBody, response.BodyValid)
-	metrics.RecordVerifyOutcome(metrics.VerifyOutcomeTypeUrl, response.UrlValid)
+	metrics.RecordVerifyOutcome(metrics.VerifyOutcomeTypeBody, response.VerificationInfo.BodyValid)
+	metrics.RecordVerifyOutcome(metrics.VerifyOutcomeTypeUrl, response.VerificationInfo.UrlValid)
 
 	if checked {
 		// signature has been checked, verification operation is successful (regardless of siganture result)

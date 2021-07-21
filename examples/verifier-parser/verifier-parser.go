@@ -66,13 +66,13 @@ func main() {
 			continue
 		}
 
-		if verification.BodyValid {
+		if verification.VerificationInfo.BodyValid {
 			validRequestCount++
 		}
-		if verification.UrlValid {
+		if verification.VerificationInfo.UrlValid {
 			validUrlCount++
 		}
-		logger.Infof("Valid Request Body: %t, Valid Request URL: %t", verification.BodyValid, verification.UrlValid)
+		logger.Infof("Valid Request Body: %t, Valid Request URL: %t", verification.VerificationInfo.BodyValid, verification.VerificationInfo.UrlValid)
 	}
 
 	logger.Infof("\n--- Summary --- \nlogEntries: %d, parseErrors: %d, verificationErrors: %d, validRequests: %d, validUrls: %d", logCount, parseErrorCount, verifyErrorCount, validRequestCount, validUrlCount)
