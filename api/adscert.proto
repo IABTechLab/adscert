@@ -26,9 +26,22 @@ message SignatureInfo {
     string to_key = 7;
 }
 
+// VerificationInfo captures the result of a verifying operation against 
+// the signature of a request.
 message VerificationInfo {
-    bool body_valid = 2;
-    bool url_valid = 3;
+    SignatureDecodeStatus signature_decode_status = 1;
+}
+
+enum SignatureDecodeStatus {
+    SIGNATURE_DECODE_STATUS_UNDEFINED = 0;
+    SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID = 1;
+    SIGNATURE_DECODE_STATUS_BODY_VALID = 2;
+    SIGNATURE_DECODE_STATUS_INVALID_SIGNATURE = 3;
+    SIGNATURE_DECODE_STATUS_SIGNATURE_NOT_PRESENT = 4;
+    SIGNATURE_DECODE_STATUS_SIGNATURE_MALFORMED = 5;
+    SIGNATURE_DECODE_STATUS_UNRELATED_SIGNATURE = 6;
+    SIGNATURE_DECODE_STATUS_COUNTERPARTY_LOOKUP_ERROR = 7;
+    SIGNATURE_DECODE_STATUS_NO_SHARED_SECRET_AVAILABLE = 8;
 }
 
 // AuthenticatedConnectionSignatureRequest contains the parameters for a signing
