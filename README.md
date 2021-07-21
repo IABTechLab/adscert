@@ -36,10 +36,10 @@ from=ssai-serving.tk&from_key=w8f316&invoking=ad-exchange.tk&nonce=u_sDzKMIp0eD&
 
 ## Architecture
 
-- `Signatory` - Main library that handles signing and verification operations.
-- `Dns Resolver` - Discovers TXT records for a domain name (with the appropriate subdomains for policy and key records)
-- `Domain Store` - Stores domain information for invoking and identity domains and the associated keys
-- `Domain Indexer` - Uses the above components to maintain a list of domains used in signing/verification operations, runs background crawls to update domain records, stores private keys, calculates shared secrets for use by the Signatory.
+- **Signatory`**- Main library that handles signing and verification operations.
+- **Dns Resolver** - Discovers TXT records for a domain name (with the appropriate subdomains for policy and key records)
+- **Domain Store** - Stores domain information for invoking and identity domains and the associated keys
+- **Domain Indexer** - Uses the above components to maintain a list of domains used in signing/verification operations, runs background crawls to update domain records, stores private keys, calculates shared secrets for use by the Signatory.
 
 ## API Usage
 
@@ -49,7 +49,7 @@ The `Signatory` is available as a [standalone GRPC server](cmd/server/main.go). 
 - `rpc VerifyAuthenticatedConnection(AuthenticatedConnectionVerificationRequest) returns (AuthenticatedConnectionVerificationResponse) {}`
 
 Clients are available for various langauges: 
-- Golang - [GRPC cient available here](api/golang) or the Signatory can be use as an [in-process Go library](pkg/adscert/signatory/signatory_local_impl.go) directly.
+- Golang - [GRPC client available here](api/golang) or the Signatory can be use as an [in-process Go library](pkg/adscert/signatory/signatory_local_impl.go) directly.
 - Java - Coming soon...
 - C++ - Coming soon...
 

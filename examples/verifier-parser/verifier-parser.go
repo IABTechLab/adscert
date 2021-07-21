@@ -50,7 +50,7 @@ func main() {
 	for scanner.Scan() {
 		logCount++
 		line := scanner.Text()
-		signatureRequest, err := parseLog(line)
+		verificationRequest, err := parseLog(line)
 		if err != nil {
 			parseErrorCount++
 			logger.Errorf("Error parsing log: %s", err)
@@ -59,20 +59,29 @@ func main() {
 
 		// verification only returns an error if there are issues trying to validate the signatures
 		// as opposed to whether the signatures are actually valid or not.
-		verification, err := signatoryApi.VerifyAuthenticatedConnection(signatureRequest)
+		verificationResponse, err := signatoryApi.VerifyAuthenticatedConnection(verificationRequest)
 		if err != nil {
 			verifyErrorCount++
 			logger.Errorf("unable to verify message: %s", err)
 			continue
 		}
 
-		if verification.BodyValid {
-			validRequestCount++
+		var bodyValid, urlValid bool
+		for _, decode := range verificationResponse.VerificationInfo[0].SignatureDecodeStatus {
+			if decode == api.SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID {
+				validRequestCount++
+				bodyValid = true
+				validUrlCount++
+				urlValid = true
+				break
+			} else if decode == api.SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_BODY_VALID {
+				validRequestCount++
+				bodyValid = true
+				break
+			}
 		}
-		if verification.UrlValid {
-			validUrlCount++
-		}
-		logger.Infof("Valid Request Body: %t, Valid Request URL: %t", verification.BodyValid, verification.UrlValid)
+
+		logger.Infof("Valid Request Body: %t, Valid Request URL: %t", bodyValid, urlValid)
 	}
 
 	logger.Infof("\n--- Summary --- \nlogEntries: %d, parseErrors: %d, verificationErrors: %d, validRequests: %d, validUrls: %d", logCount, parseErrorCount, verifyErrorCount, validRequestCount, validUrlCount)
@@ -103,5 +112,5 @@ func parseLog(log string) (*api.AuthenticatedConnectionVerificationRequest, erro
 	}
 	signatory.SetRequestSignatures(reqInfo, []string{signatureHeader})
 
-	return &api.AuthenticatedConnectionVerificationRequest{RequestInfo: reqInfo}, nil
+	return &api.AuthenticatedConnectionVerificationRequest{RequestInfo: []*api.RequestInfo{reqInfo}}, nil
 }
