@@ -30,4 +30,5 @@ var (
 	ErrVerifySignatureRequestHostMismatch VerifyErrorCode = errorcode.New("signature_host_mismatch", errors.New("invocation hostname does not match request"))
 	ErrVerifyCounterpartyLookup           VerifyErrorCode = errorcode.New("counterparty_lookup", errors.New("failed to lookup signature counterparty"))
 	ErrVerifyMissingSharedSecret          VerifyErrorCode = errorcode.New("missing_shared_secret", errors.New("signature counterparty missing shared secret"))
+	ErrVerifyInvalidSignature             VerifyErrorCode = errorcode.New("invalid_signature", errors.New("signature is not valid"))
 )

@@ -74,10 +74,23 @@ func (s *DemoServer) HandleRequest(w http.ResponseWriter, req *http.Request) {
 	signatory.SetRequestInfo(reqInfo, reconstructedURL.String(), body)
 	signatory.SetRequestSignatures(reqInfo, signatureHeaders)
 
-	verification, err := s.Signatory.VerifyAuthenticatedConnection(&api.AuthenticatedConnectionVerificationRequest{RequestInfo: reqInfo})
+	verificationRequest := &api.AuthenticatedConnectionVerificationRequest{RequestInfo: reqInfo}
+	verificationResponse, err := s.Signatory.VerifyAuthenticatedConnection(verificationRequest)
 	if err != nil {
 		logger.Errorf("unable to verify message: %s", err)
 	}
 
-	fmt.Fprintf(w, "You invoked %s with X-Ads-Cert-Auth headers %v and verification body:%v URL:%v\n", reconstructedURL.String(), req.Header["X-Ads-Cert-Auth"], verification.VerificationInfo.BodyValid, verification.VerificationInfo.UrlValid)
+	var bodyValid, urlValid bool
+	for _, decode := range verificationResponse.VerificationInfo.SignatureDecodeStatus {
+		if decode == api.SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID {
+			bodyValid = true
+			urlValid = true
+			break
+		} else if decode == api.SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_BODY_VALID {
+			bodyValid = true
+			break
+		}
+	}
+
+	fmt.Fprintf(w, "You invoked %s with X-Ads-Cert-Auth headers %v and verification body:%v URL:%v\n", reconstructedURL.String(), req.Header["X-Ads-Cert-Auth"], bodyValid, urlValid)
 }
