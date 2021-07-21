@@ -162,12 +162,12 @@ func (di *defaultDomainIndexer) checkDomainForPolicyRecords(ctx context.Context,
 		metrics.RecordDNSLookupTime(time.Since(startTime))
 
 		if foundDomains, parseError := parsePolicyRecords(baseSubdomain, baseSubdomainRecords); parseError {
-			currentDomainInfo.protocolStatus = formats.StatusErrorOnDNS
+			currentDomainInfo.domainStatus = DomainStatusADPFParseError
 		} else {
 			// replace current domain info with new identity domains (and filter to keep uniques)
 			currentDomainInfo.IdentityDomains = foundDomains
 			currentDomainInfo.IdentityDomains = utils.MergeUniques(currentDomainInfo.IdentityDomains)
-			currentDomainInfo.protocolStatus = formats.StatusOK
+			currentDomainInfo.domainStatus = DomainStatusOK
 		}
 	}
 
@@ -197,12 +197,12 @@ func (di *defaultDomainIndexer) checkDomainForKeyRecords(ctx context.Context, cu
 		metrics.RecordDNSLookupTime(time.Since(startTime))
 
 		if foundKeys, parseError := parseKeyRecords(deliverySubdomain, deliverySubdomainRecords); parseError {
-			currentDomainInfo.protocolStatus = formats.StatusErrorOnDNS
+			currentDomainInfo.domainStatus = DomainStatusADCRTDParseError
 		} else {
 			// replace current domain info with new public keys
 			currentDomainInfo.allPublicKeys = asKeyMap(formats.AdsCertKeys{PublicKeys: foundKeys})
 			currentDomainInfo.currentPublicKeyId = keyAlias(foundKeys[0].KeyAlias)
-			currentDomainInfo.protocolStatus = formats.StatusOK
+			currentDomainInfo.domainStatus = DomainStatusOK
 		}
 	}
 
@@ -214,7 +214,7 @@ func (di *defaultDomainIndexer) checkDomainForKeyRecords(ctx context.Context, cu
 				currentDomainInfo.allSharedSecrets[keyPairAlias], err = calculateSharedSecret(myKey, theirKey)
 				if err != nil {
 					logger.Warningf("error calculating shared secret for record %s: %v", currentDomainInfo.Domain, err)
-					currentDomainInfo.protocolStatus = formats.StatusErrorOnSharedSecretCalculation
+					currentDomainInfo.domainStatus = DomainStatusErrorOnSharedSecretCalculation
 				}
 			}
 		}
@@ -295,7 +295,7 @@ func initializeDomainInfo(domain string) DomainInfo {
 		currentSharedSecretId: keyPairAlias{},
 		allPublicKeys:         map[keyAlias]*x25519Key{},
 		allSharedSecrets:      keyPairMap{},
-		protocolStatus:        formats.StatusNotYetChecked,
+		domainStatus:          DomainStatusNotYetChecked,
 		lastUpdateTime:        time.Time{},
 	}
 }

@@ -92,11 +92,17 @@ func (s *localAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(req
 func (s *localAuthenticatedConnectionsSignatory) signSingleMessage(request *api.AuthenticatedConnectionSignatureRequest, domainInfo discovery.DomainInfo) (*api.SignatureInfo, error) {
 
 	sigInfo := &api.SignatureInfo{}
-	acs, err := formats.NewAuthenticatedConnectionSignature(domainInfo.GetStatus(), s.originCallsign, request.RequestInfo.InvokingDomain)
+	acs, err := formats.NewAuthenticatedConnectionSignature(formats.StatusOK, s.originCallsign, request.RequestInfo.InvokingDomain)
 	if err != nil {
 		acs.SetStatus(formats.StatusErrorOnSignature)
 		setSignatureInfoFromAuthenticatedConnection(sigInfo, acs)
 		return sigInfo, fmt.Errorf("error constructing authenticated connection signature format: %v", err)
+	}
+
+	if domainInfo.GetStatus() != discovery.DomainStatusOK {
+		acs.SetStatus(formats.StatusErrorOnSignature)
+		setSignatureInfoFromAuthenticatedConnection(sigInfo, acs)
+		return sigInfo, fmt.Errorf("domain info is not available: %v", err)
 	}
 
 	sharedSecret, hasSecret := domainInfo.GetSharedSecret()
