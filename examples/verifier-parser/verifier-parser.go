@@ -67,7 +67,7 @@ func main() {
 		}
 
 		var bodyValid, urlValid bool
-		for _, decode := range verificationResponse.VerificationInfo.SignatureDecodeStatus {
+		for _, decode := range verificationResponse.VerificationInfo[0].SignatureDecodeStatus {
 			if decode == api.SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID {
 				validRequestCount++
 				bodyValid = true
@@ -112,5 +112,5 @@ func parseLog(log string) (*api.AuthenticatedConnectionVerificationRequest, erro
 	}
 	signatory.SetRequestSignatures(reqInfo, []string{signatureHeader})
 
-	return &api.AuthenticatedConnectionVerificationRequest{RequestInfo: reqInfo}, nil
+	return &api.AuthenticatedConnectionVerificationRequest{RequestInfo: []*api.RequestInfo{reqInfo}}, nil
 }

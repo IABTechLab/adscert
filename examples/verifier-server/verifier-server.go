@@ -74,14 +74,14 @@ func (s *DemoServer) HandleRequest(w http.ResponseWriter, req *http.Request) {
 	signatory.SetRequestInfo(reqInfo, reconstructedURL.String(), body)
 	signatory.SetRequestSignatures(reqInfo, signatureHeaders)
 
-	verificationRequest := &api.AuthenticatedConnectionVerificationRequest{RequestInfo: reqInfo}
+	verificationRequest := &api.AuthenticatedConnectionVerificationRequest{RequestInfo: []*api.RequestInfo{reqInfo}}
 	verificationResponse, err := s.Signatory.VerifyAuthenticatedConnection(verificationRequest)
 	if err != nil {
 		logger.Errorf("unable to verify message: %s", err)
 	}
 
 	var bodyValid, urlValid bool
-	for _, decode := range verificationResponse.VerificationInfo.SignatureDecodeStatus {
+	for _, decode := range verificationResponse.VerificationInfo[0].SignatureDecodeStatus {
 		if decode == api.SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID {
 			bodyValid = true
 			urlValid = true

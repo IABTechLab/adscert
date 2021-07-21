@@ -127,12 +127,18 @@ func (s *localAuthenticatedConnectionsSignatory) signSingleMessage(request *api.
 func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(request *api.AuthenticatedConnectionVerificationRequest) (*api.AuthenticatedConnectionVerificationResponse, error) {
 
 	startTime := time.Now()
-	response := &api.AuthenticatedConnectionVerificationResponse{VerificationInfo: &api.RequestVerificationInfo{SignatureDecodeStatus: []api.SignatureDecodeStatus{}}}
+	response := &api.AuthenticatedConnectionVerificationResponse{}
 
-	for _, signatureInfo := range request.RequestInfo.SignatureInfo {
-		decodeStatus := s.checkSingleSignature(request.RequestInfo, signatureInfo)
-		logger.Infof("%v", decodeStatus)
-		response.VerificationInfo.SignatureDecodeStatus = append(response.VerificationInfo.SignatureDecodeStatus, decodeStatus)
+	for _, requestInfo := range request.RequestInfo {
+		verificationInfo := &api.RequestVerificationInfo{}
+
+		for _, signatureInfo := range requestInfo.SignatureInfo {
+			decodeStatus := s.checkSingleSignature(requestInfo, signatureInfo)
+			logger.Infof("%v", decodeStatus)
+			verificationInfo.SignatureDecodeStatus = append(verificationInfo.SignatureDecodeStatus, decodeStatus)
+		}
+
+		response.VerificationInfo = append(response.VerificationInfo, verificationInfo)
 	}
 
 	metrics.RecordVerifyTime(time.Since(startTime))
