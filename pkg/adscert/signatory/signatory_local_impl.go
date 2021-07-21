@@ -50,7 +50,7 @@ func (s *localAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(req
 	response := &api.AuthenticatedConnectionSignatureResponse{RequestInfo: request.RequestInfo}
 
 	if request.RequestInfo == nil || request.RequestInfo.InvokingDomain == "" || len(request.RequestInfo.UrlHash) == 0 {
-		response.SignatureStatus = api.SignatureStatus_SIGNATURE_STATUS_MISSING_REQUIRED_PARAMETER
+		response.SignatureOperationStatus = api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_MALFORMED_REQUEST
 		return response, errors.New("required parameters are missing")
 	}
 
@@ -69,7 +69,7 @@ func (s *localAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(req
 	if err != nil || len(domainInfos) == 0 {
 		logger.Infof("counterparty lookup error")
 		metrics.RecordSigning(adscerterrors.ErrSigningCounterpartyLookup)
-		response.SignatureStatus = api.SignatureStatus_SIGNATURE_STATUS_NO_COUNTERPARTY_INFO
+		response.SignatureOperationStatus = api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_SIGNATORY_INTERNAL_ERROR
 		return response, err
 	}
 
@@ -77,7 +77,7 @@ func (s *localAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(req
 		signatureInfo, err := s.embossSingleMessage(request, domainInfo)
 		if err != nil {
 			metrics.RecordSigning(adscerterrors.ErrSigningEmbossMessage)
-			response.SignatureStatus = api.SignatureStatus_SIGNATURE_STATUS_SIGNATORY_INTERNAL_ERROR
+			response.SignatureOperationStatus = api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_SIGNATORY_INTERNAL_ERROR
 			return response, err
 		}
 		response.RequestInfo.SignatureInfo = append(response.RequestInfo.SignatureInfo, signatureInfo)
@@ -85,7 +85,7 @@ func (s *localAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(req
 
 	metrics.RecordSigning(nil)
 	metrics.RecordSigningTime(time.Since(startTime))
-	response.SignatureStatus = api.SignatureStatus_SIGNATURE_STATUS_OK
+	response.SignatureOperationStatus = api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK
 	return response, nil
 }
 
@@ -135,7 +135,7 @@ func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(r
 		acs, err := formats.DecodeAuthenticatedConnectionSignature(signatureInfo.SignatureMessage)
 		if err != nil {
 			metrics.RecordVerify(adscerterrors.ErrVerifyDecodeSignature)
-			response.VerificationStatus = api.VerificationStatus_VERIFICATION_STATUS_MISSING_REQUIRED_PARAMETER
+			response.VerificationOperationStatus = api.VerificationOperationStatus_VERIFICATION_OPERATION_STATUS_MALFORMED_REQUEST
 			checkErrors = append(checkErrors, fmt.Errorf("signature decode failure: %v", err))
 			continue
 		}
@@ -178,11 +178,11 @@ func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(r
 
 	if checked {
 		// signature has been checked, verification operation is successful (regardless of siganture result)
-		response.VerificationStatus = api.VerificationStatus_VERIFICATION_STATUS_OK
+		response.VerificationOperationStatus = api.VerificationOperationStatus_VERIFICATION_OPERATION_STATUS_OK
 		return response, nil
 	} else {
 		// signature has not been checked due to possibly multiple errors, need to wrap them here
-		response.VerificationStatus = api.VerificationStatus_VERIFICATION_STATUS_SIGNATORY_INTERNAL_ERROR
+		response.VerificationOperationStatus = api.VerificationOperationStatus_VERIFICATION_OPERATION_STATUS_SIGNATORY_INTERNAL_ERROR
 		return response, fmt.Errorf("verification failed: %v errors", len(checkErrors))
 	}
 }

@@ -38,17 +38,16 @@ message AuthenticatedConnectionSignatureRequest {
 // request, including any signature and relevant metadata. Multiple signatures
 // can technically be present according to the specification.
 message AuthenticatedConnectionSignatureResponse {
-    SignatureStatus signature_status = 1;
+    SignatureOperationStatus signature_operation_status = 1;
     RequestInfo request_info = 2;
 }
 
-enum SignatureStatus {
-    SIGNATURE_STATUS_UNDEFINED = 0;
-    SIGNATURE_STATUS_OK = 1;
-    SIGNATURE_STATUS_SIGNATORY_DEACTIVATED = 2;
-    SIGNATURE_STATUS_SIGNATORY_INTERNAL_ERROR = 3;
-    SIGNATURE_STATUS_MISSING_REQUIRED_PARAMETER = 4;
-    SIGNATURE_STATUS_NO_COUNTERPARTY_INFO = 5;
+enum SignatureOperationStatus {
+    SIGNATURE_OPERATION_STATUS_UNDEFINED = 0;
+    SIGNATURE_OPERATION_STATUS_OK = 1;
+    SIGNATURE_OPERATION_STATUS_SIGNATORY_DEACTIVATED = 2;
+    SIGNATURE_OPERATION_STATUS_SIGNATORY_INTERNAL_ERROR = 3;
+    SIGNATURE_OPERATION_STATUS_MALFORMED_REQUEST = 4;
 }
 
 // AuthenticatedConnectionVerificationRequest contains a request for verifying
@@ -60,18 +59,17 @@ message AuthenticatedConnectionVerificationRequest {
 // AuthenticatedConnectionVerificationResponse contains the results of verifying
 // signatures.
 message AuthenticatedConnectionVerificationResponse {
-    VerificationStatus verification_status = 1;
+    VerificationOperationStatus verification_operation_status = 1;
     bool body_valid = 2;
     bool url_valid = 3;
 }
 
-enum VerificationStatus {
-    VERIFICATION_STATUS_UNDEFINED = 0;
-    VERIFICATION_STATUS_OK = 1;
-    VERIFICATION_STATUS_SIGNATORY_DEACTIVATED = 2;
-    VERIFICATION_STATUS_SIGNATORY_INTERNAL_ERROR = 3;
-    VERIFICATION_STATUS_MISSING_REQUIRED_PARAMETER = 4;
-    VERIFICATION_STATUS_NO_COUNTERPARTY_INFO = 5;
+enum VerificationOperationStatus {
+    VERIFICATION_OPERATION_STATUS_UNDEFINED = 0;
+    VERIFICATION_OPERATION_STATUS_OK = 1;
+    VERIFICATION_OPERATION_STATUS_SIGNATORY_DEACTIVATED = 2;
+    VERIFICATION_OPERATION_STATUS_SIGNATORY_INTERNAL_ERROR = 3;
+    VERIFICATION_OPERATION_STATUS_MALFORMED_REQUEST = 4;
 }
 
 service AdsCertSignatory {
