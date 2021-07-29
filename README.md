@@ -1,3 +1,5 @@
+Please review the IAB Tech Lab Open Source Initiative Governance guidelines [here](http://iabtechlab.com/opensource) for contributing to this project.
+
 # ads.cert
 
 ![Build/Test](https://github.com/IABTechLab/adscert/actions/workflows/go.yml/badge.svg)
