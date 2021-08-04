@@ -89,8 +89,9 @@ func (s *localAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(req
 	return response, nil
 }
 
-func (s *localAuthenticatedConnectionsSignatory) signSingleMessage(request *api.AuthenticatedConnectionSignatureRequest, domainInfo discovery.DomainInfo) (sigInfo *api.SignatureInfo, err error) {
+func (s *localAuthenticatedConnectionsSignatory) signSingleMessage(request *api.AuthenticatedConnectionSignatureRequest, domainInfo discovery.DomainInfo) (*api.SignatureInfo, error) {
 
+	sigInfo := &api.SignatureInfo{}
 	acs, err := formats.NewAuthenticatedConnectionSignature(formats.StatusOK, s.originCallsign, request.RequestInfo.InvokingDomain)
 	if err != nil {
 		acs.SetStatus(formats.StatusErrorOnSignature)
