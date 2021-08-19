@@ -64,7 +64,7 @@ func main() {
 	logger.Infof("Port: %v", *serverPort)
 	logger.Infof("Log Level: %v", *logLevel)
 
-	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", *serverPort))
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *serverPort))
 	if err != nil {
 		logger.Fatalf("Failed to open TCP: %v", err)
 	}
