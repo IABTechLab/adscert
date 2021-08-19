@@ -55,6 +55,14 @@ Clients are available for various langauges:
 - Java - Coming soon...
 - C++ - Coming soon...
 
+## Docker
+
+The `Signatory` can be run from inside a Docker container:
+
+```
+$ make build-grpc-server-container
+$ docker run -p 3000:3000 -p 3001:3001 adscert:latest --origin publica-ssai.com --private_key "${ADSCERT_SECRET}"
+```
 
 ## Examples
 
