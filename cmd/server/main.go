@@ -123,8 +123,13 @@ func (s *adsCertSignatoryServer) Check(ctx context.Context, in *grpc_health_v1.H
 
 func (s *adsCertSignatoryServer) Watch(r *grpc_health_v1.HealthCheckRequest, ws grpc_health_v1.Health_WatchServer) error {
 	logger.Info("received health check request")
+	if signatoryApi == nil {
+		return ws.Send(&grpc_health_v1.HealthCheckResponse{
+			Status: grpc_health_v1.HealthCheckResponse_SERVICE_UNKNOWN,
+		})
+	}
 	status := grpc_health_v1.HealthCheckResponse_SERVING
-	if !signatoryApi.IsHeathy() {
+	if !signatoryApi.IsHealthy() {
 		status = grpc_health_v1.HealthCheckResponse_NOT_SERVING
 	}
 	return ws.Send(&grpc_health_v1.HealthCheckResponse{
