@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	crypto_rand "crypto/rand"
+	"errors"
 	"flag"
 	"fmt"
 	"net"
@@ -19,6 +20,7 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health/grpc_health_v1"
 )
 
 var (
@@ -29,7 +31,7 @@ var (
 	domainCheckInterval   = flag.Duration("domain_check_interval", time.Duration(utils.GetEnvVarInt("DOMAIN_CHECK_INTERVAL", 30))*time.Second, "interval for checking domain records")
 	domainRenewalInterval = flag.Duration("domain_renewal_interval", time.Duration(utils.GetEnvVarInt("DOMAIN_RENEWAL_INTERVAL", 300))*time.Second, "interval before considering domain records for renewal")
 	privateKey            = flag.String("private_key", utils.GetEnvVarString("PRIVATE_KEY", ""), "base-64 encoded private key")
-	signatoryApi          signatory.AuthenticatedConnectionsSignatory
+	signatoryApi          *signatory.LocalAuthenticatedConnectionsSignatory
 )
 
 func main() {
@@ -63,6 +65,8 @@ func main() {
 	logger.Infof("Origin: %v", *origin)
 	logger.Infof("Port: %v", *serverPort)
 	logger.Infof("Log Level: %v", *logLevel)
+
+	grpc_health_v1.RegisterHealthServer(grpcServer, &adsCertSignatoryServer{})
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *serverPort))
 	if err != nil {
@@ -99,4 +103,36 @@ func (s *adsCertSignatoryServer) SignAuthenticatedConnection(ctx context.Context
 func (s *adsCertSignatoryServer) VerifyAuthenticatedConnection(ctx context.Context, req *api.AuthenticatedConnectionVerificationRequest) (*api.AuthenticatedConnectionVerificationResponse, error) {
 	response, err := signatoryApi.VerifyAuthenticatedConnection(req)
 	return response, err
+}
+
+func (s *adsCertSignatoryServer) Check(ctx context.Context, in *grpc_health_v1.HealthCheckRequest) (*grpc_health_v1.HealthCheckResponse, error) {
+	logger.Info("received health check request")
+	if signatoryApi == nil {
+		return &grpc_health_v1.HealthCheckResponse{
+			Status: grpc_health_v1.HealthCheckResponse_SERVICE_UNKNOWN,
+		}, errors.New("signatoryApi not initialized")
+	}
+	status := grpc_health_v1.HealthCheckResponse_SERVING
+	if !signatoryApi.IsHealthy() {
+		status = grpc_health_v1.HealthCheckResponse_NOT_SERVING
+	}
+	return &grpc_health_v1.HealthCheckResponse{
+		Status: status,
+	}, nil
+}
+
+func (s *adsCertSignatoryServer) Watch(r *grpc_health_v1.HealthCheckRequest, ws grpc_health_v1.Health_WatchServer) error {
+	logger.Info("received health check request")
+	if signatoryApi == nil {
+		return ws.Send(&grpc_health_v1.HealthCheckResponse{
+			Status: grpc_health_v1.HealthCheckResponse_SERVICE_UNKNOWN,
+		})
+	}
+	status := grpc_health_v1.HealthCheckResponse_SERVING
+	if !signatoryApi.IsHealthy() {
+		status = grpc_health_v1.HealthCheckResponse_NOT_SERVING
+	}
+	return ws.Send(&grpc_health_v1.HealthCheckResponse{
+		Status: status,
+	})
 }

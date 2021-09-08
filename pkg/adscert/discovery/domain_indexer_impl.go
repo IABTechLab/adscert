@@ -3,6 +3,7 @@ package discovery
 import (
 	"context"
 	"errors"
+	"sync"
 	"time"
 
 	"github.com/IABTechLab/adscert/internal/adscerterrors"
@@ -48,6 +49,7 @@ func NewDefaultDomainIndexer(dnsResolver DNSResolver, domainStore DomainStore, d
 	}
 
 	di.startAutoUpdate()
+	di.UpdateNow()
 	return di
 }
 
@@ -57,11 +59,27 @@ type defaultDomainIndexer struct {
 	wakeUp                chan struct{}
 	domainRenewalInterval time.Duration
 
+	lastRun     time.Time
+	lastRunLock sync.RWMutex
+
 	myPrivateKeys     keyMap
 	currentPrivateKey keyAlias
 
 	dnsResolver DNSResolver
 	domainStore DomainStore
+}
+
+func (di *defaultDomainIndexer) GetLastRun() time.Time {
+	di.lastRunLock.RLock()
+	t := di.lastRun
+	di.lastRunLock.RUnlock()
+	return t
+}
+
+func (di *defaultDomainIndexer) updateLastRun() {
+	di.lastRunLock.Lock()
+	di.lastRun = time.Now()
+	di.lastRunLock.Unlock()
 }
 
 func (di *defaultDomainIndexer) LookupIdentitiesForDomain(invokingDomain string) ([]DomainInfo, error) {
@@ -117,7 +135,9 @@ func (di *defaultDomainIndexer) startAutoUpdate() {
 			case <-di.wakeUp:
 				logger.Info("manual wake-up from wake-up signal")
 			}
+
 			di.performUpdateSweep(ctx)
+			di.updateLastRun()
 		}
 	}()
 }

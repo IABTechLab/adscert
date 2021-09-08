@@ -25,9 +25,8 @@ func NewLocalAuthenticatedConnectionsSignatory(
 	domainStore discovery.DomainStore,
 	domainCheckInterval time.Duration,
 	domainRenewalInterval time.Duration,
-	base64PrivateKeys []string) AuthenticatedConnectionsSignatory {
-
-	return &localAuthenticatedConnectionsSignatory{
+	base64PrivateKeys []string) *LocalAuthenticatedConnectionsSignatory {
+	return &LocalAuthenticatedConnectionsSignatory{
 		originCallsign:      originCallsign,
 		secureRandom:        reader,
 		clock:               clock,
@@ -35,7 +34,7 @@ func NewLocalAuthenticatedConnectionsSignatory(
 	}
 }
 
-type localAuthenticatedConnectionsSignatory struct {
+type LocalAuthenticatedConnectionsSignatory struct {
 	originCallsign string
 	secureRandom   io.Reader
 	clock          clock.Clock
@@ -43,7 +42,7 @@ type localAuthenticatedConnectionsSignatory struct {
 	counterpartyManager discovery.DomainIndexer
 }
 
-func (s *localAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(request *api.AuthenticatedConnectionSignatureRequest) (*api.AuthenticatedConnectionSignatureResponse, error) {
+func (s *LocalAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(request *api.AuthenticatedConnectionSignatureRequest) (*api.AuthenticatedConnectionSignatureResponse, error) {
 
 	var err error
 	startTime := time.Now()
@@ -89,7 +88,7 @@ func (s *localAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(req
 	return response, nil
 }
 
-func (s *localAuthenticatedConnectionsSignatory) signSingleMessage(request *api.AuthenticatedConnectionSignatureRequest, domainInfo discovery.DomainInfo) (*api.SignatureInfo, error) {
+func (s *LocalAuthenticatedConnectionsSignatory) signSingleMessage(request *api.AuthenticatedConnectionSignatureRequest, domainInfo discovery.DomainInfo) (*api.SignatureInfo, error) {
 
 	sigInfo := &api.SignatureInfo{}
 	acs, err := formats.NewAuthenticatedConnectionSignature(formats.StatusOK, s.originCallsign, request.RequestInfo.InvokingDomain)
@@ -129,7 +128,7 @@ func (s *localAuthenticatedConnectionsSignatory) signSingleMessage(request *api.
 	return sigInfo, nil
 }
 
-func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(request *api.AuthenticatedConnectionVerificationRequest) (*api.AuthenticatedConnectionVerificationResponse, error) {
+func (s *LocalAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(request *api.AuthenticatedConnectionVerificationRequest) (*api.AuthenticatedConnectionVerificationResponse, error) {
 
 	startTime := time.Now()
 	response := &api.AuthenticatedConnectionVerificationResponse{}
@@ -151,7 +150,7 @@ func (s *localAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(r
 	return response, nil
 }
 
-func (s *localAuthenticatedConnectionsSignatory) checkSingleSignature(requestInfo *api.RequestInfo, signatureInfo *api.SignatureInfo) api.SignatureDecodeStatus {
+func (s *LocalAuthenticatedConnectionsSignatory) checkSingleSignature(requestInfo *api.RequestInfo, signatureInfo *api.SignatureInfo) api.SignatureDecodeStatus {
 
 	acs, err := formats.DecodeAuthenticatedConnectionSignature(signatureInfo.SignatureMessage)
 	if err != nil {
@@ -195,6 +194,10 @@ func (s *localAuthenticatedConnectionsSignatory) checkSingleSignature(requestInf
 	return api.SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_INVALID_SIGNATURE
 }
 
+func (s *LocalAuthenticatedConnectionsSignatory) IsHealthy() bool {
+	return time.Since(s.counterpartyManager.GetLastRun()) <= 5*time.Minute
+}
+
 func generateSignatures(domainInfo discovery.DomainInfo, message []byte, bodyHash []byte, urlHash []byte) ([]byte, []byte) {
 
 	sharedSecret, _ := domainInfo.GetSharedSecret()
@@ -210,7 +213,7 @@ func generateSignatures(domainInfo discovery.DomainInfo, message []byte, bodyHas
 	return bodyHMAC, urlHMAC
 }
 
-func (s *localAuthenticatedConnectionsSignatory) generateNonce() (string, error) {
+func (s *LocalAuthenticatedConnectionsSignatory) generateNonce() (string, error) {
 	var nonce [32]byte
 	n, err := io.ReadFull(s.secureRandom, nonce[:])
 	if err != nil {
