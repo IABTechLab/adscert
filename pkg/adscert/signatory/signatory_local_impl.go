@@ -194,7 +194,7 @@ func (s *LocalAuthenticatedConnectionsSignatory) checkSingleSignature(requestInf
 	return api.SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_INVALID_SIGNATURE
 }
 
-func (s *LocalAuthenticatedConnectionsSignatory) IsHeathy() bool {
+func (s *LocalAuthenticatedConnectionsSignatory) IsHealthy() bool {
 	return time.Since(s.counterpartyManager.GetLastRun()) <= 5*time.Minute
 }
 

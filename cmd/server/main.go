@@ -113,7 +113,7 @@ func (s *adsCertSignatoryServer) Check(ctx context.Context, in *grpc_health_v1.H
 		}, errors.New("signatoryApi not initialized")
 	}
 	status := grpc_health_v1.HealthCheckResponse_SERVING
-	if !signatoryApi.IsHeathy() {
+	if !signatoryApi.IsHealthy() {
 		status = grpc_health_v1.HealthCheckResponse_NOT_SERVING
 	}
 	return &grpc_health_v1.HealthCheckResponse{
