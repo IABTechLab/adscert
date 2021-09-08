@@ -6,8 +6,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/IABTechLab/adscert/internal/logger"
 	"github.com/IABTechLab/adscert/pkg/adscert/api"
+	"github.com/IABTechLab/adscert/pkg/adscert/logger"
 	"github.com/IABTechLab/adscert/pkg/adscert/signatory"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health/grpc_health_v1"

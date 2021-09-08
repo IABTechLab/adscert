@@ -10,9 +10,9 @@ import (
 
 	"github.com/IABTechLab/adscert/internal/adscerterrors"
 	"github.com/IABTechLab/adscert/internal/formats"
-	"github.com/IABTechLab/adscert/internal/logger"
 	"github.com/IABTechLab/adscert/pkg/adscert/api"
 	"github.com/IABTechLab/adscert/pkg/adscert/discovery"
+	"github.com/IABTechLab/adscert/pkg/adscert/logger"
 	"github.com/IABTechLab/adscert/pkg/adscert/metrics"
 	"github.com/benbjohnson/clock"
 )

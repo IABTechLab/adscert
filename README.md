@@ -128,7 +128,7 @@ go run examples/verifier/log-parser/verifier-parser.go --origin_callsign=ssai-se
 ```
 
 ### Use logger interface
-`./internal/logger` directory holds global logger interface along with a `standard_golang_logger` implementation which is being used as default logger. Default log level is INFO. Using the `SetLoggerImpl()` method in `./internal/logger/logger.go` interface you can implement any custom logger and set it as global logger in your application.
+`./pkg/adscert/logger` directory holds global logger interface along with a `standard_golang_logger` implementation which is being used as default logger. Default log level is INFO. Using the `SetLoggerImpl()` method in `./pkg/adscert/logger/logger.go` interface you can implement any custom logger and set it as global logger in your application.
 
 ### Modify workflows
 You can add custom workflows and github actions to `.github/workflows` folder. Currently `go.yml` includes the build and release steps including creating and pushing a new tag. A new release and tag only gets created only on main branch and push event.
