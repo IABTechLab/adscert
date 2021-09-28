@@ -1,3 +1,5 @@
+Please visit [https://iabtechlab.com/ads-cert](https://iabtechlab.com/ads-cert) for more information about the ads.cert 2.0 suite of protocols.
+
 Please review the IAB Tech Lab Open Source Initiative Governance guidelines [here](http://iabtechlab.com/opensource) for contributing to this project.
 
 # ads.cert
@@ -7,6 +9,8 @@ Please review the IAB Tech Lab Open Source Initiative Governance guidelines [her
 **This is a proof of concept and not meant for use in its current form.**
 
 This open-source library implements the Authenticated Connections protocol, published by IAB Tech Lab let advertising industry participants secure programmatic ad buying and selling using industry-standard cryptographic security protocols.
+
+
 
 
 ## Authenticated Connections Protocol
