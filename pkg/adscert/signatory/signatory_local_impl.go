@@ -61,6 +61,8 @@ func (s *LocalAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(req
 	if request.Nonce == "" {
 		if request.Nonce, err = s.generateNonce(); err != nil {
 			metrics.RecordSigning(adscerterrors.ErrSigningGenerateNonce)
+			response.SignatureOperationStatus = api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_SIGNATORY_INTERNAL_ERROR
+			return response, err
 		}
 	}
 
