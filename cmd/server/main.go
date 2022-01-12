@@ -71,6 +71,7 @@ func main() {
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *serverPort))
 	if err != nil {
 		logger.Fatalf("Failed to open TCP: %v", err)
+		os.Exit(returnExitCode())
 	}
 	go runServer(lis, grpcServer)
 
@@ -87,7 +88,8 @@ func returnExitCode() int {
 func runServer(l net.Listener, s *grpc.Server) {
 	err := s.Serve(l)
 	if err != nil {
-		logger.Fatalf("Failed to serve GRPC")
+		logger.Fatalf("Failed to serve GRPC: %v", err)
+		os.Exit(returnExitCode())
 	}
 }
 
