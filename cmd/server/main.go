@@ -21,6 +21,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/reflection"
 )
 
 var (
@@ -67,6 +68,7 @@ func main() {
 	logger.Infof("Log Level: %v", *logLevel)
 
 	grpc_health_v1.RegisterHealthServer(grpcServer, &adsCertSignatoryServer{})
+	reflection.Register(grpcServer)
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *serverPort))
 	if err != nil {
