@@ -35,7 +35,7 @@ func main() {
 
 	// Optional: performs a health check against the server before actually
 	// trying to invoke the signatory service.
-	performHealthCheck(conn)
+	performOptionalHealthCheckRPC(conn)
 
 	clientOpts := &signatory.AuthenticatedConnectionsSignatoryClientOptions{Timeout: 3 * time.Second}
 	signatoryClient := signatory.NewAuthenticatedConnectionsSignatoryClient(conn, clientOpts)
@@ -60,7 +60,7 @@ func main() {
 	}
 }
 
-func performHealthCheck(conn *grpc.ClientConn) {
+func performOptionalHealthCheckRPC(conn *grpc.ClientConn) {
 	hctx, hcancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
 	defer hcancel()
 	healthClient := grpc_health_v1.NewHealthClient(conn)
