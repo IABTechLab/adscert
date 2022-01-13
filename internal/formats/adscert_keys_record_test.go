@@ -57,6 +57,16 @@ func TestDecodeAdsCertKeysRecord(t *testing.T) {
 			wantAdsCertKeys: wantAdsCertWithOneKey,
 		},
 		{
+			desc:            "normal input (unknown fields)",
+			input:           "v=adcrtd k=x25519 h=sha256 p=Bm8J1RW3RxHp_-mx3lE7eAuYObfALvwurVjXtcaYFVA y=1 z=2",
+			wantAdsCertKeys: wantAdsCertWithOneKey,
+		},
+		{
+			desc:            "normal input (extraneous values)",
+			input:           "v=adcrtd k=x25519 h=sha256 p=Bm8J1RW3RxHp_-mx3lE7eAuYObfALvwurVjXtcaYFVA abcd",
+			wantAdsCertKeys: wantAdsCertWithOneKey,
+		},
+		{
 			desc:            "normal input (two keys)",
 			input:           "v=adcrtd k=x25519 h=sha256 p=Bm8J1RW3RxHp_-mx3lE7eAuYObfALvwurVjXtcaYFVA p=VfLEG883mudlLgxEA3RJvXm32PowzMgTZGOGCT72zWw",
 			wantAdsCertKeys: wantAdsCertWithTwoKeys,

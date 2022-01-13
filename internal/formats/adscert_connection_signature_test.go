@@ -201,6 +201,56 @@ func TestNewAuthenticatedConnectionSignature(t *testing.T) {
 	}
 }
 
+func TestDecodeAuthenticatedConnectionSignature(t *testing.T) {
+	testCases := []struct {
+		desc           string
+		inputSignature string
+
+		wantEncodedACS string
+		wantError      string
+	}{
+		{
+			desc:           "normal signature string",
+			inputSignature: "from=from.com&from_key=fromkey&invoking=invoking.com&nonce=numberusedonce&status=1&timestamp=210430T132456&to=to.com&to_key=tokey; sigb=YWJjZGVmZ2hp&sigu=QUJDREVGR0hJ",
+
+			wantEncodedACS: "from=from.com&from_key=fromkey&invoking=invoking.com&nonce=numberusedonce&status=1&timestamp=210430T132456&to=to.com&to_key=tokey",
+		},
+		{
+			desc:           "signature string with unknown parameters",
+			inputSignature: "from=from.com&from_key=fromkey&invoking=invoking.com&nonce=numberusedonce&status=1&timestamp=210430T132456&to=to.com&to_key=tokey&x=1&y=2; sigb=YWJjZGVmZ2hp&sigu=QUJDREVGR0hJ",
+
+			wantEncodedACS: "from=from.com&from_key=fromkey&invoking=invoking.com&nonce=numberusedonce&status=1&timestamp=210430T132456&to=to.com&to_key=tokey",
+		},
+		{
+			desc:           "bad signature string with invalid querystring format",
+			inputSignature: "from=from.com%&from_key=fromkey&invoking=invoking.com&nonce=numberusedonce&status=1&timestamp=210430T132456&to=to.com&to_key=tokey; sigb=YWJjZGVmZ2hp&sigu=QUJDREVGR0hJ",
+
+			wantError: "query string parse failure: invalid URL escape \"%\"",
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			parsedACS, err := formats.DecodeAuthenticatedConnectionSignature(tC.inputSignature)
+
+			gotEncodedACS := ""
+			if parsedACS != nil {
+				gotEncodedACS = parsedACS.EncodeMessage()
+			}
+			if gotEncodedACS != tC.wantEncodedACS {
+				t.Errorf("DecodeAuthenticatedConnectionSignature() %s: got %q, want %q", tC.desc, gotEncodedACS, tC.wantEncodedACS)
+			}
+
+			gotError := ""
+			if err != nil {
+				gotError = err.Error()
+			}
+			if gotError != tC.wantError {
+				t.Errorf("DecodeAuthenticatedConnectionSignature() %s error mismatch: got %v, want %q", tC.desc, err, tC.wantError)
+			}
+		})
+	}
+}
+
 func TestEncodeSignatureSuffix(t *testing.T) {
 	testCases := []struct {
 		desc string
