@@ -28,7 +28,7 @@ var (
 	serverPort            = flag.Int("server_port", 3000, "grpc server port")
 	metricsPort           = flag.Int("metrics_port", 3001, "http metrics port")
 	logLevel              = flag.String("loglevel", utils.GetEnvVarString("LOGLEVEL", ""), "minimum log verbosity")
-	origin                = flag.String("origin", utils.GetEnvVarString("ORIGIN", ""), "ads.cert hostname for the originating party")
+	origin                = flag.String("origin", utils.GetEnvVarString("ORIGIN", ""), "ads.cert Call Sign domain name for this party's Signatory service deployment")
 	domainCheckInterval   = flag.Duration("domain_check_interval", time.Duration(utils.GetEnvVarInt("DOMAIN_CHECK_INTERVAL", 30))*time.Second, "interval for checking domain records")
 	domainRenewalInterval = flag.Duration("domain_renewal_interval", time.Duration(utils.GetEnvVarInt("DOMAIN_RENEWAL_INTERVAL", 300))*time.Second, "interval before considering domain records for renewal")
 	privateKey            = flag.String("private_key", utils.GetEnvVarString("PRIVATE_KEY", ""), "base-64 encoded private key")
@@ -41,7 +41,7 @@ func main() {
 	logger.SetLevel(logger.GetLevelFromString(*logLevel))
 
 	if *origin == "" {
-		logger.Fatalf("Origin hostname is required")
+		logger.Fatalf("Origin ads.cert Call Sign domain name is required")
 		os.Exit(returnExitCode())
 	}
 
@@ -63,7 +63,7 @@ func main() {
 	grpcServer := grpc.NewServer()
 	api.RegisterAdsCertSignatoryServer(grpcServer, &adsCertSignatoryServer{})
 	logger.Infof("Starting AdsCert API server")
-	logger.Infof("Origin: %v", *origin)
+	logger.Infof("Origin ads.cert Call Sign domain: %v", *origin)
 	logger.Infof("Port: %v", *serverPort)
 	logger.Infof("Log Level: %v", *logLevel)
 
