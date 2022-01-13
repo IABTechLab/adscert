@@ -48,12 +48,11 @@ func main() {
 		&api.AuthenticatedConnectionSignatureRequest{
 			RequestInfo: reqInfo,
 		})
-
 	if err != nil {
 		logger.Warningf("unable to sign message: %v", err)
 	}
 
-	if signatureResponse != nil && signatureResponse.RequestInfo != nil {
+	if signatureResponse != nil {
 		logger.Infof("signature response:\n%s", prototext.Format(signatureResponse))
 	} else {
 		logger.Warningf("signature response is missing")
