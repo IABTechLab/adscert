@@ -28,6 +28,16 @@ func TestDecodeAdsCertPolicyRecord(t *testing.T) {
 			wantPolicy: wantAdsCertPolicyWithAlias,
 		},
 		{
+			desc:       "normal input with unknown fields",
+			input:      "v=adpf a=adscorp.com z=1",
+			wantPolicy: wantAdsCertPolicyWithAlias,
+		},
+		{
+			desc:       "normal input with extraneous values",
+			input:      "v=adpf a=adscorp.com abcd",
+			wantPolicy: wantAdsCertPolicyWithAlias,
+		},
+		{
 			desc:    "empty",
 			input:   "",
 			wantErr: formats.ErrEmptyInput,
