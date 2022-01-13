@@ -10,7 +10,9 @@ import (
 	"github.com/IABTechLab/adscert/pkg/adscert/logger"
 	"github.com/IABTechLab/adscert/pkg/adscert/signatory"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/protobuf/encoding/prototext"
 )
 
 var (
@@ -24,7 +26,7 @@ func main() {
 
 	// create grpc connection for client to use
 	// options here use insecure defaults
-	opts := []grpc.DialOption{grpc.WithInsecure()}
+	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 	conn, err := grpc.Dial(*serverAddress, opts...)
 	if err != nil {
 		log.Fatalf("Failed to dial: %v", err)
@@ -63,10 +65,8 @@ func main() {
 	}
 
 	if signatureResponse != nil && signatureResponse.RequestInfo != nil {
-		for _, si := range signatureResponse.RequestInfo.SignatureInfo {
-			logger.Infof("signature: %v", si.SignatureMessage)
-		}
+		logger.Infof("signature response: %s", prototext.Format(signatureResponse))
 	} else {
-		logger.Warningf("signature response is empty")
+		logger.Warningf("signature response is missing")
 	}
 }
