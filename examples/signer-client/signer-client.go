@@ -47,8 +47,6 @@ func main() {
 	signatureResponse, err := signatoryClient.SignAuthenticatedConnection(
 		&api.AuthenticatedConnectionSignatureRequest{
 			RequestInfo: reqInfo,
-			Timestamp:   "",
-			Nonce:       "",
 		})
 
 	if err != nil {
