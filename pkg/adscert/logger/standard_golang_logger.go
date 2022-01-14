@@ -84,13 +84,9 @@ func (l *StandardGolangLogger) Errorf(format string, args ...interface{}) {
 }
 
 func (l *StandardGolangLogger) Fatalf(format string, args ...interface{}) {
-	if l.VerbosityLevel <= FATAL {
-		log.Printf(format, args...)
-	}
+	log.Fatalf(format, args...)
 }
 
 func (l *StandardGolangLogger) Panicf(format string, args ...interface{}) {
-	if l.VerbosityLevel <= PANIC {
-		log.Printf(format, args...)
-	}
+	log.Panicf(format, args...)
 }
