@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/IABTechLab/adscert/internal/utils"
@@ -42,12 +41,10 @@ func main() {
 
 	if *origin == "" {
 		logger.Fatalf("Origin ads.cert Call Sign domain name is required")
-		os.Exit(returnExitCode())
 	}
 
 	if *privateKey == "" {
 		logger.Fatalf("Private key is required")
-		os.Exit(returnExitCode())
 	}
 
 	signatoryApi = signatory.NewLocalAuthenticatedConnectionsSignatory(
@@ -73,7 +70,6 @@ func main() {
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *serverPort))
 	if err != nil {
 		logger.Fatalf("Failed to open TCP: %v", err)
-		os.Exit(returnExitCode())
 	}
 	go runServer(lis, grpcServer)
 
@@ -83,15 +79,10 @@ func main() {
 	http.ListenAndServe(fmt.Sprintf(":%d", *metricsPort), nil)
 }
 
-func returnExitCode() int {
-	return 1
-}
-
 func runServer(l net.Listener, s *grpc.Server) {
 	err := s.Serve(l)
 	if err != nil {
 		logger.Fatalf("Failed to serve GRPC: %v", err)
-		os.Exit(returnExitCode())
 	}
 }
 

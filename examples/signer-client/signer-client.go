@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"log"
 	"time"
 
 	"github.com/IABTechLab/adscert/pkg/adscert/api"
@@ -31,7 +30,7 @@ func main() {
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 	conn, err := grpc.Dial(*serverAddress, opts...)
 	if err != nil {
-		log.Fatalf("Failed to dial: %v", err)
+		logger.Fatalf("Failed to dial: %v", err)
 	}
 	defer conn.Close()
 
@@ -76,9 +75,9 @@ func performOptionalHealthCheckRPC(conn *grpc.ClientConn) {
 	healthClient := grpc_health_v1.NewHealthClient(conn)
 	healthCheckResponse, err := healthClient.Check(hctx, &grpc_health_v1.HealthCheckRequest{})
 	if err != nil {
-		log.Fatalf("Failed to pass heath check: %v", err)
+		logger.Fatalf("Failed to pass heath check: %v", err)
 	}
 	if healthCheckResponse.Status != grpc_health_v1.HealthCheckResponse_SERVING {
-		log.Fatalf("Failed to pass heath status: %v", healthCheckResponse.Status)
+		logger.Fatalf("Failed to pass heath status: %v", healthCheckResponse.Status)
 	}
 }

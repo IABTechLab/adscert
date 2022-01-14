@@ -29,11 +29,15 @@ type Logger interface {
 
 	// Fatalf logs the message and internally will call os.Exit(1).  This log
 	// level cannot be overridden by configuration changes.
+	//
+	// Any implementation of this interface MUST call os.Exit(1) internally.
 	Fatalf(format string, args ...interface{})
 
 	// Panicf logs the message and internally will call panic() using the
 	// message as an argument.  This log level cannot be overridden by
 	// configuration changes.
+	//
+	// Any implementation of this interface MUST call panic() internally.
 	Panicf(format string, args ...interface{})
 }
 
