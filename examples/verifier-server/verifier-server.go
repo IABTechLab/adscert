@@ -2,10 +2,13 @@ package main
 
 import (
 	crypto_rand "crypto/rand"
+	"encoding/base64"
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/IABTechLab/adscert/pkg/adscert/api"
@@ -18,7 +21,8 @@ import (
 )
 
 var (
-	origin = flag.String("origin", "", "ads.cert identity domain for the receiving party")
+	origin           = flag.String("origin", "", "ads.cert Call Sign domain for the receiving party")
+	signatureLogFile = flag.String("signature_log_file", "", "(optional) write signature and hashes to file for offline verification")
 )
 
 func main() {
@@ -27,6 +31,17 @@ func main() {
 	logger.Infof("Starting demo server.")
 
 	base64PrivateKeys := signatory.GenerateFakePrivateKeysForTesting(*origin)
+
+	var signatureFileLogger *log.Logger
+	if *signatureLogFile != "" {
+		file, err := os.OpenFile(*signatureLogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+		if err != nil {
+			logger.Fatalf("Error opening signature log file %q: %v", *signatureLogFile, err)
+		}
+		defer file.Close()
+
+		signatureFileLogger = log.New(file, "" /*=prefix*/, 0 /*=flag=*/)
+	}
 
 	signatoryApi := signatory.NewLocalAuthenticatedConnectionsSignatory(
 		*origin,
@@ -40,6 +55,8 @@ func main() {
 
 	demoServer := &DemoServer{
 		Signatory: signatoryApi,
+
+		SignatureFileLogger: signatureFileLogger,
 	}
 
 	http.HandleFunc("/request", demoServer.HandleRequest)
@@ -49,6 +66,8 @@ func main() {
 
 type DemoServer struct {
 	Signatory signatory.AuthenticatedConnectionsSignatory
+
+	SignatureFileLogger *log.Logger
 }
 
 func (s *DemoServer) HandleRequest(w http.ResponseWriter, req *http.Request) {
@@ -73,6 +92,14 @@ func (s *DemoServer) HandleRequest(w http.ResponseWriter, req *http.Request) {
 	reqInfo := &api.RequestInfo{}
 	signatory.SetRequestInfo(reqInfo, reconstructedURL.String(), body)
 	signatory.SetRequestSignatures(reqInfo, signatureHeaders)
+
+	if s.SignatureFileLogger != nil {
+		s.SignatureFileLogger.Printf("%s,%s,%s,%s",
+			reqInfo.BodyHash,
+			reqInfo.SignatureInfo[0],
+			base64.StdEncoding.EncodeToString(reqInfo.BodyHash),
+			base64.StdEncoding.EncodeToString(reqInfo.UrlHash))
+	}
 
 	verificationRequest := &api.AuthenticatedConnectionVerificationRequest{RequestInfo: []*api.RequestInfo{reqInfo}}
 	verificationResponse, err := s.Signatory.VerifyAuthenticatedConnection(verificationRequest)
