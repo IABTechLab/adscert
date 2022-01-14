@@ -4,12 +4,9 @@ import (
 	"bufio"
 	"bytes"
 	crypto_rand "crypto/rand"
-	"encoding/base64"
 	"flag"
 	"fmt"
-	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/IABTechLab/adscert/pkg/adscert/api"
@@ -20,13 +17,12 @@ import (
 )
 
 var (
-	origin           = flag.String("origin", "", "ads.cert identity domain for the originating (sending) party")
-	method           = flag.String("http_method", "GET", "HTTP method, 'GET' or 'POST'")
-	destinationURL   = flag.String("url", "https://google.com/gen_204", "URL to invoke")
-	body             = flag.String("body", "", "POST request body")
-	sendRequests     = flag.Bool("send_requests", false, "Actually invoke the web server")
-	frequency        = flag.Duration("frequency", 10*time.Second, "Frequency to invoke the specified URL")
-	signatureLogFile = flag.String("signature_log_file", "", "write signature and hashes to file for offline verification")
+	origin         = flag.String("origin", "", "ads.cert Call Sign domain for the originating (sending) party")
+	method         = flag.String("http_method", "GET", "HTTP method, 'GET' or 'POST'")
+	destinationURL = flag.String("url", "https://google.com/gen_204", "URL to invoke")
+	body           = flag.String("body", "", "POST request body")
+	sendRequests   = flag.Bool("send_requests", false, "Actually invoke the web server")
+	frequency      = flag.Duration("frequency", 10*time.Second, "Frequency to invoke the specified URL")
 )
 
 func main() {
@@ -35,17 +31,6 @@ func main() {
 	logger.Infof("Starting demo client.")
 
 	base64PrivateKeys := signatory.GenerateFakePrivateKeysForTesting(*origin)
-
-	var signatureFileLogger *log.Logger
-	if *signatureLogFile != "" {
-		file, err := os.OpenFile(*signatureLogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
-		if err != nil {
-			logger.Fatalf(err.Error())
-		}
-		defer file.Close()
-
-		signatureFileLogger = log.New(file, "" /*=prefix*/, 0 /*=flag=*/)
-	}
 
 	signatoryApi := signatory.NewLocalAuthenticatedConnectionsSignatory(
 		*origin,
@@ -66,8 +51,6 @@ func main() {
 
 		ActuallySendRequest: *sendRequests,
 		Ticker:              time.NewTicker(*frequency),
-
-		SignatureFileLogger: signatureFileLogger,
 	}
 	demoClient.StartRequestLoop()
 }
@@ -81,8 +64,6 @@ type DemoClient struct {
 
 	ActuallySendRequest bool
 	Ticker              *time.Ticker
-
-	SignatureFileLogger *log.Logger
 }
 
 func (c *DemoClient) StartRequestLoop() {
@@ -120,14 +101,6 @@ func (c *DemoClient) initiateRequest() error {
 	req.Header["X-Ads-Cert-Auth"] = signatory.GetSignatures(signatureResponse)
 
 	logger.Infof("Requesting URL %s %s with signature %s", req.Method, req.URL, signatureResponse)
-
-	if c.SignatureFileLogger != nil {
-		c.SignatureFileLogger.Printf("%s,%s,%s,%s",
-			reqInfo.BodyHash,
-			signatureResponse.RequestInfo.SignatureInfo[0],
-			base64.StdEncoding.EncodeToString(reqInfo.BodyHash),
-			base64.StdEncoding.EncodeToString(reqInfo.UrlHash))
-	}
 
 	if c.ActuallySendRequest {
 		resp, err := http.DefaultClient.Do(req)
