@@ -36,11 +36,13 @@ func (ds *defaultDomainStore) LookupDomainInfo(ctx context.Context, domain strin
 	return domainInfo, ok, nil
 }
 
-// StoreDomainInfo stores the invoking or identity details for a domain
+// StoreDomainInfo stores the invoking or identity details for a domain.
 func (ds *defaultDomainStore) StoreDomainInfo(ctx context.Context, domainInfo DomainInfo) error {
 	ds.mutex.Lock()
 	defer ds.mutex.Unlock()
 
+	// Perform a copy and swap operation to replace the current value with a new
+	// one using an atomic pointer swap.
 	currentMap := ds.domainMap.Load().(domainMap)
 	newMap := make(domainMap)
 	for k, v := range currentMap {
