@@ -58,12 +58,11 @@ func parseURLComponents(destinationURL string) (*url.URL, string, error) {
 // helper function to set message and fields from the diagnostic array printed by formats.AuthenticatedConnectionSignature
 // this avoids having to manuallly set every field when returning a response
 func setSignatureInfoFromAuthenticatedConnection(sigInfo *api.SignatureInfo, acs *formats.AuthenticatedConnectionSignature) {
-	diag := acs.GetAttributeArray()
-	sigInfo.FromDomain = diag[0]
-	sigInfo.FromKey = diag[1]
-	sigInfo.InvokingDomain = diag[2]
-	sigInfo.ToDomain = diag[3]
-	sigInfo.ToKey = diag[4]
-	sigInfo.SigningStatus = diag[7]
+	sigInfo.FromDomain = acs.GetAttributeFrom()
+	sigInfo.FromKey = acs.GetAttributeFromKey()
+	sigInfo.InvokingDomain = acs.GetAttributeInvoking()
+	sigInfo.ToDomain = acs.GetAttributeTo()
+	sigInfo.ToKey = acs.GetAttributeToKey()
+	sigInfo.SigningStatus = acs.GetAttributeStatusAsString()
 	sigInfo.SignatureMessage = acs.EncodeMessage()
 }

@@ -49,16 +49,28 @@ type AuthenticatedConnectionSignature struct {
 	signatureForURL  string
 }
 
-func (s *AuthenticatedConnectionSignature) GetAttributeArray() []string {
-	return []string{s.from, s.fromKey, s.invoking, s.to, s.toKey, s.timestamp, s.nonce, StatusToString(s.status)}
-}
-
 func (s *AuthenticatedConnectionSignature) GetAttributeInvoking() string {
 	return s.invoking
 }
 
 func (s *AuthenticatedConnectionSignature) GetAttributeFrom() string {
 	return s.from
+}
+
+func (s *AuthenticatedConnectionSignature) GetAttributeFromKey() string {
+	return s.fromKey
+}
+
+func (s *AuthenticatedConnectionSignature) GetAttributeTo() string {
+	return s.to
+}
+
+func (s *AuthenticatedConnectionSignature) GetAttributeToKey() string {
+	return s.toKey
+}
+
+func (s *AuthenticatedConnectionSignature) GetAttributeStatusAsString() string {
+	return StatusToString(s.status)
 }
 
 func (s *AuthenticatedConnectionSignature) EncodeMessage() string {
