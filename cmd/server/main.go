@@ -1,25 +1,13 @@
 package main
 
 import (
-	crypto_rand "crypto/rand"
 	"flag"
-	"fmt"
-	"net"
-	"net/http"
 	"time"
 
+	"github.com/IABTechLab/adscert/internal/server"
 	"github.com/IABTechLab/adscert/internal/utils"
-	"github.com/IABTechLab/adscert/pkg/adscert/api"
-	"github.com/IABTechLab/adscert/pkg/adscert/discovery"
 	"github.com/IABTechLab/adscert/pkg/adscert/logger"
-	"github.com/IABTechLab/adscert/pkg/adscert/metrics"
-	"github.com/IABTechLab/adscert/pkg/adscert/server"
-	"github.com/IABTechLab/adscert/pkg/adscert/signatory"
-	"github.com/benbjohnson/clock"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/health/grpc_health_v1"
-	"google.golang.org/grpc/reflection"
 )
 
 var (
@@ -45,44 +33,22 @@ func main() {
 		logger.Fatalf("Private key is required")
 	}
 
-	signatoryApi := signatory.NewLocalAuthenticatedConnectionsSignatory(
-		*origin,
-		crypto_rand.Reader,
-		clock.New(),
-		discovery.NewDefaultDnsResolver(),
-		discovery.NewDefaultDomainStore(),
-		*domainCheckInterval,
-		*domainRenewalInterval,
-		[]string{*privateKey})
-
-	grpcServer := grpc.NewServer()
-	handler := &server.AdsCertSignatoryServer{
-		SignatoryAPI: signatoryApi,
-	}
-	api.RegisterAdsCertSignatoryServer(grpcServer, handler)
-	grpc_health_v1.RegisterHealthServer(grpcServer, handler)
-	reflection.Register(grpcServer)
+	logger.Info("Starting Metrics server")
+	logger.Infof("Port: %v", *metricsPort)
+	go func() {
+		if err := server.StartMetricsServer(*metricsPort); err != nil {
+			logger.Fatalf("Error trying to run metrics server: %v", err)
+		}
+	}()
 
 	logger.Infof("Starting AdsCert API server")
 	logger.Infof("Origin ads.cert Call Sign domain: %v", *origin)
 	logger.Infof("Port: %v", *serverPort)
 	logger.Infof("Log Level: %v", *logLevel)
 
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *serverPort))
-	if err != nil {
-		logger.Fatalf("Failed to open TCP: %v", err)
-	}
-	go runServer(lis, grpcServer)
-
-	logger.Info("Starting Metrics server")
-	logger.Infof("Port: %v", *metricsPort)
-	http.Handle("/metrics", promhttp.HandlerFor(metrics.GetAdscertMetricsRegistry(), promhttp.HandlerOpts{}))
-	http.ListenAndServe(fmt.Sprintf(":%d", *metricsPort), nil)
-}
-
-func runServer(l net.Listener, s *grpc.Server) {
-	err := s.Serve(l)
-	if err != nil {
-		logger.Fatalf("Failed to serve GRPC: %v", err)
+	grpcServer := grpc.NewServer()
+	server.SetUpAdsCertSignatoryServer(grpcServer, *origin, *domainCheckInterval, *domainRenewalInterval, []string{*privateKey})
+	if err := server.StartServingRequests(grpcServer, *serverPort); err != nil {
+		logger.Fatalf("gRPC server failure: %v", err)
 	}
 }
