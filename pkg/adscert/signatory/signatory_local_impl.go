@@ -19,7 +19,7 @@ import (
 
 func NewLocalAuthenticatedConnectionsSignatory(
 	originCallsign string,
-	reader io.Reader,
+	secureRandom io.Reader,
 	clock clock.Clock,
 	dnsResolver discovery.DNSResolver,
 	domainStore discovery.DomainStore,
@@ -28,7 +28,7 @@ func NewLocalAuthenticatedConnectionsSignatory(
 	base64PrivateKeys []string) *LocalAuthenticatedConnectionsSignatory {
 	return &LocalAuthenticatedConnectionsSignatory{
 		originCallsign:      originCallsign,
-		secureRandom:        reader,
+		secureRandom:        secureRandom,
 		clock:               clock,
 		counterpartyManager: discovery.NewDefaultDomainIndexer(dnsResolver, domainStore, domainCheckInterval, domainRenewalInterval, base64PrivateKeys),
 	}
