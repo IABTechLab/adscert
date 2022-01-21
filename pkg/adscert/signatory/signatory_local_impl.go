@@ -45,7 +45,7 @@ type LocalAuthenticatedConnectionsSignatory struct {
 func (s *LocalAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(request *api.AuthenticatedConnectionSignatureRequest) (*api.AuthenticatedConnectionSignatureResponse, error) {
 
 	var err error
-	startTime := time.Now()
+	startTime := s.clock.Now()
 	response := &api.AuthenticatedConnectionSignatureResponse{RequestInfo: request.RequestInfo}
 
 	if request.RequestInfo == nil || request.RequestInfo.InvokingDomain == "" || len(request.RequestInfo.UrlHash) == 0 {
@@ -132,7 +132,7 @@ func (s *LocalAuthenticatedConnectionsSignatory) signSingleMessage(request *api.
 
 func (s *LocalAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(request *api.AuthenticatedConnectionVerificationRequest) (*api.AuthenticatedConnectionVerificationResponse, error) {
 
-	startTime := time.Now()
+	startTime := s.clock.Now()
 	response := &api.AuthenticatedConnectionVerificationResponse{}
 
 	for _, requestInfo := range request.RequestInfo {
