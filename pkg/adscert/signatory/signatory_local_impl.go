@@ -19,7 +19,7 @@ import (
 
 func NewLocalAuthenticatedConnectionsSignatory(
 	originCallsign string,
-	reader io.Reader,
+	secureRandom io.Reader,
 	clock clock.Clock,
 	dnsResolver discovery.DNSResolver,
 	domainStore discovery.DomainStore,
@@ -28,7 +28,7 @@ func NewLocalAuthenticatedConnectionsSignatory(
 	base64PrivateKeys []string) *LocalAuthenticatedConnectionsSignatory {
 	return &LocalAuthenticatedConnectionsSignatory{
 		originCallsign:      originCallsign,
-		secureRandom:        reader,
+		secureRandom:        secureRandom,
 		clock:               clock,
 		counterpartyManager: discovery.NewDefaultDomainIndexer(dnsResolver, domainStore, domainCheckInterval, domainRenewalInterval, base64PrivateKeys),
 	}
@@ -45,7 +45,7 @@ type LocalAuthenticatedConnectionsSignatory struct {
 func (s *LocalAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(request *api.AuthenticatedConnectionSignatureRequest) (*api.AuthenticatedConnectionSignatureResponse, error) {
 
 	var err error
-	startTime := time.Now()
+	startTime := s.clock.Now()
 	response := &api.AuthenticatedConnectionSignatureResponse{RequestInfo: request.RequestInfo}
 
 	if request.RequestInfo == nil || request.RequestInfo.InvokingDomain == "" || len(request.RequestInfo.UrlHash) == 0 {
@@ -132,7 +132,7 @@ func (s *LocalAuthenticatedConnectionsSignatory) signSingleMessage(request *api.
 
 func (s *LocalAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(request *api.AuthenticatedConnectionVerificationRequest) (*api.AuthenticatedConnectionVerificationResponse, error) {
 
-	startTime := time.Now()
+	startTime := s.clock.Now()
 	response := &api.AuthenticatedConnectionVerificationResponse{}
 
 	for _, requestInfo := range request.RequestInfo {
