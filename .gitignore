@@ -1,7 +1,7 @@
 .vscode/
 .idea/
+adscert
 examples/signer/signer
 examples/verifier/verifier
-cmd/keygen/keygen
 cmd/server/server
 **/*.exe
