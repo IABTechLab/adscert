@@ -11,6 +11,8 @@ message RequestInfo {
     bytes url_hash = 2;
     bytes body_hash = 3;
     repeated SignatureInfo signature_info = 4;
+    // useful if 1 signatory is managing multiple origin domains such as in resellers case.
+    string origin_domain = 5;
 }
 
 // SignatureInfo captures the signature generated for the signing request.  It

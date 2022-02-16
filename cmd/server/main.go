@@ -28,10 +28,6 @@ func main() {
 	logger.SetLevel(parsedLogLevel)
 	logger.Infof("Log Level: %s, parsed as iota %v", *logLevel, parsedLogLevel)
 
-	if *origin == "" {
-		logger.Fatalf("Origin ads.cert Call Sign domain name is required")
-	}
-
 	if *privateKey == "" {
 		logger.Fatalf("Private key is required")
 	}

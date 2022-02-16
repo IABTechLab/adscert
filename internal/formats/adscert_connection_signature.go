@@ -132,21 +132,20 @@ func EncodeSignatureSuffix(
 }
 
 func NewAuthenticatedConnectionSignature(status AuthenticatedConnectionProtocolStatus, from string, invoking string) (*AuthenticatedConnectionSignature, error) {
-
-	if status == StatusUnspecified {
-		return nil, ErrParamMissingStatus
-	}
-	if from == "" {
-		return nil, ErrParamMissingFrom
-	}
-	if invoking == "" {
-		return nil, ErrParamMissingInvoking
-	}
-
 	s := &AuthenticatedConnectionSignature{}
 	s.status = status
 	s.from = from
 	s.invoking = invoking
+
+	if status == StatusUnspecified {
+		return s, ErrParamMissingStatus
+	}
+	if from == "" {
+		return s, ErrParamMissingFrom
+	}
+	if invoking == "" {
+		return s, ErrParamMissingInvoking
+	}
 
 	return s, nil
 }

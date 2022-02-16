@@ -1,7 +1,9 @@
 package discovery
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/IABTechLab/adscert/internal/formats"
 	"github.com/IABTechLab/adscert/pkg/adscert/logger"
@@ -76,11 +78,14 @@ func calculateSharedSecret(originPrivateKey *x25519Key, remotePublicKey *x25519K
 	return result, err
 }
 
-func privateKeysToKeyMap(privateKeys []string) (keyMap, error) {
-	result := keyMap{}
-
+func privateKeysToKeyMap(privateKeys []string) (map[string]keyMap, error) {
+	results := map[string]keyMap{}
 	for _, privateKeyBase64 := range privateKeys {
-		privateKey, err := parseKeyFromString(privateKeyBase64)
+		sp := strings.SplitN(privateKeyBase64, "|", 2)
+		if len(sp) < 2 {
+			return nil, errors.New("missing origin callsign")
+		}
+		privateKey, err := parseKeyFromString(sp[1])
 		if err != nil {
 			return nil, err
 		}
@@ -90,10 +95,16 @@ func privateKeysToKeyMap(privateKeys []string) (keyMap, error) {
 
 		keyAlias := keyAlias(formats.ExtractKeyAliasFromPublicKeyBase64(formats.EncodeKeyBase64(publicBytes[:])))
 		privateKey.alias = keyAlias
-		result[keyAlias] = privateKey
+
+		km := results[sp[0]]
+		if km == nil {
+			km = keyMap{}
+		}
+		km[keyAlias] = privateKey
+		results[sp[0]] = km
 	}
 
-	return result, nil
+	return results, nil
 }
 
 func parseKeyFromString(base64EncodedKey string) (*x25519Key, error) {

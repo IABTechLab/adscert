@@ -28,6 +28,11 @@ func NewLocalAuthenticatedConnectionsSignatory(
 	domainRenewalInterval time.Duration,
 	base64PrivateKeys []string) *LocalAuthenticatedConnectionsSignatory {
 	logger.SetLevel(logger.GetLevelFromString(logLevel))
+	if originCallsign != "" {
+		for i := range base64PrivateKeys {
+			base64PrivateKeys[i] = originCallsign + "|" + base64PrivateKeys[i]
+		}
+	}
 	return &LocalAuthenticatedConnectionsSignatory{
 		originCallsign:      originCallsign,
 		secureRandom:        secureRandom,
@@ -93,9 +98,15 @@ func (s *LocalAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(req
 }
 
 func (s *LocalAuthenticatedConnectionsSignatory) signSingleMessage(request *api.AuthenticatedConnectionSignatureRequest, domainInfo discovery.DomainInfo) (*api.SignatureInfo, error) {
-
 	sigInfo := &api.SignatureInfo{}
-	acs, err := formats.NewAuthenticatedConnectionSignature(formats.StatusOK, s.originCallsign, request.RequestInfo.InvokingDomain)
+
+	var originCallsign string
+	if request.RequestInfo.OriginDomain != "" {
+		originCallsign = request.RequestInfo.OriginDomain
+	} else {
+		originCallsign = s.originCallsign
+	}
+	acs, err := formats.NewAuthenticatedConnectionSignature(formats.StatusOK, originCallsign, request.RequestInfo.InvokingDomain)
 	if err != nil {
 		acs.SetStatus(formats.StatusErrorOnSignature)
 		setSignatureInfoFromAuthenticatedConnection(sigInfo, acs)
