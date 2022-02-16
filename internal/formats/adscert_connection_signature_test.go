@@ -29,7 +29,6 @@ func TestNewAuthenticatedConnectionSignature(t *testing.T) {
 		nonce     string
 
 		wantNewACSErr                error
-		wantNilACS                   bool
 		wantAddParamsForSignatureErr error
 		wantUnsignedBaseMessage      string
 		wantUnsignedExtendedMessage  string
@@ -58,7 +57,6 @@ func TestNewAuthenticatedConnectionSignature(t *testing.T) {
 			invoking: "invoking.com",
 
 			wantNewACSErr: formats.ErrParamMissingStatus,
-			wantNilACS:    true,
 		},
 		{
 			desc:     "check ErrParamMissingFrom",
@@ -67,7 +65,6 @@ func TestNewAuthenticatedConnectionSignature(t *testing.T) {
 			invoking: "invoking.com",
 
 			wantNewACSErr: formats.ErrParamMissingFrom,
-			wantNilACS:    true,
 		},
 		{
 			desc:     "check ErrParamMissingInvoking",
@@ -76,7 +73,6 @@ func TestNewAuthenticatedConnectionSignature(t *testing.T) {
 			invoking: "",
 
 			wantNewACSErr: formats.ErrParamMissingInvoking,
-			wantNilACS:    true,
 		},
 
 		{
@@ -167,12 +163,12 @@ func TestNewAuthenticatedConnectionSignature(t *testing.T) {
 				t.Errorf("NewAuthenticatedConnectionSignature() %s error check: got %v, want %v", tC.desc, gotErr, tC.wantNewACSErr)
 			}
 
-			gotNilACS := (acs == nil)
-			if tC.wantNilACS != gotNilACS {
-				t.Fatalf("NewAuthenticatedConnectionSignature() %s nil check: got (acs == nil) %v, want %v", tC.desc, gotNilACS, tC.wantNilACS)
+			if acs == nil {
+				t.Fatalf("NewAuthenticatedConnectionSignature() %s nil check: got (acs == nil), should not be nil", tC.desc)
 			}
 
-			if gotNilACS {
+			// skip rest of tests if an error was returned
+			if gotErr != nil {
 				return
 			}
 
