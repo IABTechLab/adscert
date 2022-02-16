@@ -22,7 +22,6 @@ import (
 
 func SetUpAdsCertSignatoryServer(grpcServer *grpc.Server, adscertCallSign string, domainCheckInterval time.Duration, domainRenewalInterval time.Duration, privateKeys []string) {
 	signatoryApi := signatory.NewLocalAuthenticatedConnectionsSignatory(
-		"info",
 		adscertCallSign,
 		crypto_rand.Reader,
 		clock.New(),

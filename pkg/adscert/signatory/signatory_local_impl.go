@@ -18,7 +18,6 @@ import (
 )
 
 func NewLocalAuthenticatedConnectionsSignatory(
-	logLevel string,
 	originCallsign string,
 	secureRandom io.Reader,
 	clock clock.Clock,
@@ -27,7 +26,6 @@ func NewLocalAuthenticatedConnectionsSignatory(
 	domainCheckInterval time.Duration,
 	domainRenewalInterval time.Duration,
 	base64PrivateKeys []string) *LocalAuthenticatedConnectionsSignatory {
-	logger.SetLevel(logger.GetLevelFromString(logLevel))
 	if originCallsign != "" {
 		for i := range base64PrivateKeys {
 			base64PrivateKeys[i] = originCallsign + "|" + base64PrivateKeys[i]

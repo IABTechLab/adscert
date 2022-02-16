@@ -33,7 +33,6 @@ func main() {
 	base64PrivateKeys := signatory.GenerateFakePrivateKeysForTesting(*origin)
 
 	signatoryApi := signatory.NewLocalAuthenticatedConnectionsSignatory(
-		"info",
 		*origin,
 		crypto_rand.Reader,
 		clock.New(),
