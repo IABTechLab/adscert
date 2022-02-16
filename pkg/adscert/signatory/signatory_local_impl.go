@@ -18,6 +18,7 @@ import (
 )
 
 func NewLocalAuthenticatedConnectionsSignatory(
+	logLevel string,
 	originCallsign string,
 	secureRandom io.Reader,
 	clock clock.Clock,
@@ -26,6 +27,7 @@ func NewLocalAuthenticatedConnectionsSignatory(
 	domainCheckInterval time.Duration,
 	domainRenewalInterval time.Duration,
 	base64PrivateKeys []string) *LocalAuthenticatedConnectionsSignatory {
+	logger.SetLevel(logger.GetLevelFromString(logLevel))
 	return &LocalAuthenticatedConnectionsSignatory{
 		originCallsign:      originCallsign,
 		secureRandom:        secureRandom,

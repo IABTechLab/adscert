@@ -44,6 +44,7 @@ func main() {
 	}
 
 	signatoryApi := signatory.NewLocalAuthenticatedConnectionsSignatory(
+		"info",
 		*origin,
 		crypto_rand.Reader,
 		clock.New(),
