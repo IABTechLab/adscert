@@ -108,8 +108,6 @@ func (s *LocalAuthenticatedConnectionsSignatory) signSingleMessage(request *api.
 	}
 	acs, err := formats.NewAuthenticatedConnectionSignature(formats.StatusOK, originCallsign, request.RequestInfo.InvokingDomain)
 	if err != nil {
-		acs.SetStatus(formats.StatusErrorOnSignature)
-		setSignatureInfoFromAuthenticatedConnection(sigInfo, acs)
 		return sigInfo, fmt.Errorf("error constructing authenticated connection signature format: %v", err)
 	}
 
