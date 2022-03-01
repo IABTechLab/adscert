@@ -132,7 +132,7 @@ func (s *LocalAuthenticatedConnectionsSignatory) signSingleMessage(request *api.
 		return sigInfo, fmt.Errorf("domain info is not available: %v", err)
 	}
 
-	sharedSecret, hasSecret := domainInfo.GetSharedSecret()
+	sharedSecret, hasSecret := domainInfo.GetSharedSecret(originCallsign)
 	if hasSecret {
 		err = acs.AddParametersForSignature(sharedSecret.LocalKeyID(), domainInfo.GetAdsCertIdentityDomain(), sharedSecret.RemoteKeyID(), request.Timestamp, request.Nonce)
 		if err != nil {
@@ -150,7 +150,7 @@ func (s *LocalAuthenticatedConnectionsSignatory) signSingleMessage(request *api.
 	acs.SetStatus(formats.StatusOK)
 	setSignatureInfoFromAuthenticatedConnection(sigInfo, acs)
 	message := acs.EncodeMessage()
-	bodyHMAC, urlHMAC := generateSignatures(domainInfo, []byte(message), request.RequestInfo.BodyHash[:], request.RequestInfo.UrlHash[:])
+	bodyHMAC, urlHMAC := generateSignatures(originCallsign, domainInfo, []byte(message), request.RequestInfo.BodyHash[:], request.RequestInfo.UrlHash[:])
 	sigInfo.SignatureMessage = message + formats.EncodeSignatureSuffix(bodyHMAC, urlHMAC)
 
 	return sigInfo, nil
@@ -201,13 +201,13 @@ func (s *LocalAuthenticatedConnectionsSignatory) checkSingleSignature(requestInf
 	}
 
 	for _, domainInfo := range domainInfos {
-		if _, hasSecret := domainInfo.GetSharedSecret(); !hasSecret {
+		if _, hasSecret := domainInfo.GetSharedSecret(requestInfo.OriginDomain); !hasSecret {
 			logger.Infof("no shared secret")
 			metrics.RecordVerify(adscerterrors.ErrVerifyMissingSharedSecret)
 			return api.SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_NO_SHARED_SECRET_AVAILABLE
 		}
 
-		bodyHMAC, urlHMAC := generateSignatures(domainInfo, []byte(acs.EncodeMessage()), requestInfo.BodyHash[:], requestInfo.UrlHash[:])
+		bodyHMAC, urlHMAC := generateSignatures(requestInfo.OriginDomain, domainInfo, []byte(acs.EncodeMessage()), requestInfo.BodyHash[:], requestInfo.UrlHash[:])
 		bodyValid, urlValid := acs.CompareSignatures(bodyHMAC, urlHMAC)
 		if bodyValid && urlValid {
 			metrics.RecordVerify(nil)
@@ -226,9 +226,9 @@ func (s *LocalAuthenticatedConnectionsSignatory) IsHealthy() bool {
 	return time.Since(s.counterpartyManager.GetLastRun()) <= 5*time.Minute
 }
 
-func generateSignatures(domainInfo discovery.DomainInfo, message []byte, bodyHash []byte, urlHash []byte) ([]byte, []byte) {
+func generateSignatures(originDomain string, domainInfo discovery.DomainInfo, message []byte, bodyHash []byte, urlHash []byte) ([]byte, []byte) {
 
-	sharedSecret, _ := domainInfo.GetSharedSecret()
+	sharedSecret, _ := domainInfo.GetSharedSecret(originDomain)
 	h := hmac.New(sha256.New, sharedSecret.Secret()[:])
 
 	h.Write([]byte(message))

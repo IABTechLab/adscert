@@ -239,10 +239,6 @@ func (di *defaultDomainIndexer) checkDomainForKeyRecords(ctx context.Context, cu
 
 	// create shared secrets for each private key + public key combination
 	for originCallsign := range di.myPrivateKeys {
-		if originCallsign != currentDomainInfo.Domain {
-			continue
-		}
-
 		for _, myKey := range di.myPrivateKeys[originCallsign] {
 			for _, theirKey := range currentDomainInfo.allPublicKeys {
 				keyPairAlias := newKeyPairAlias(myKey.alias, theirKey.alias)
@@ -255,10 +251,9 @@ func (di *defaultDomainIndexer) checkDomainForKeyRecords(ctx context.Context, cu
 				}
 			}
 		}
-
-		currentDomainInfo.currentSharedSecretId = newKeyPairAlias(di.currentPrivateKey[originCallsign], currentDomainInfo.currentPublicKeyId)
-		currentDomainInfo.lastUpdateTime = time.Now()
+		currentDomainInfo.currentSharedSecretId[originCallsign] = newKeyPairAlias(di.currentPrivateKey[originCallsign], currentDomainInfo.currentPublicKeyId)
 	}
+	currentDomainInfo.lastUpdateTime = time.Now()
 }
 
 func parsePolicyRecords(baseSubdomain string, baseSubdomainRecords []string) (foundDomains []string, parseError bool) {
@@ -329,7 +324,7 @@ func initializeDomainInfo(domain string) DomainInfo {
 		Domain:                domain,
 		IdentityDomains:       []string{},
 		currentPublicKeyId:    "",
-		currentSharedSecretId: keyPairAlias{},
+		currentSharedSecretId: map[string]keyPairAlias{},
 		allPublicKeys:         map[keyAlias]*x25519Key{},
 		allSharedSecrets:      keyPairMap{},
 		domainStatus:          DomainStatusNotYetChecked,
