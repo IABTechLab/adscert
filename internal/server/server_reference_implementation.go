@@ -31,6 +31,8 @@ func SetUpAdsCertSignatoryServer(grpcServer *grpc.Server, adscertCallSign string
 		domainRenewalInterval,
 		privateKeys)
 
+	logger.Debugf("Origin ads.cert Call Sign domains: %v", strings.Join(signatoryApi.GetOriginCallsigns(), ","))
+
 	handler := &server.AdsCertSignatoryServer{
 		SignatoryAPI: signatoryApi,
 	}

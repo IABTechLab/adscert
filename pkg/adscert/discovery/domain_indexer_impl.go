@@ -72,6 +72,14 @@ type defaultDomainIndexer struct {
 	domainStore DomainStore
 }
 
+func (di *defaultDomainIndexer) GetOriginCallsigns() []string {
+	var originCallsigns []string
+	for oc := range di.myPrivateKeys {
+		originCallsigns = append(originCallsigns, oc)
+	}
+	return originCallsigns
+}
+
 func (di *defaultDomainIndexer) GetLastRun() time.Time {
 	di.lastRunLock.RLock()
 	t := di.lastRun
