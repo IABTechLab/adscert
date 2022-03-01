@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/IABTechLab/adscert/internal/adscerterrors"
@@ -28,15 +29,29 @@ func NewLocalAuthenticatedConnectionsSignatory(
 	base64PrivateKeys []string) *LocalAuthenticatedConnectionsSignatory {
 	if originCallsign != "" {
 		for i := range base64PrivateKeys {
-			base64PrivateKeys[i] = originCallsign + "|" + base64PrivateKeys[i]
+			if !strings.Contains(strings.TrimRight(base64PrivateKeys[i], "="), "=") {
+				base64PrivateKeys[i] = originCallsign + "=" + base64PrivateKeys[i]
+			}
 		}
 	}
 	return &LocalAuthenticatedConnectionsSignatory{
 		originCallsign:      originCallsign,
 		secureRandom:        secureRandom,
 		clock:               clock,
-		counterpartyManager: discovery.NewDefaultDomainIndexer(dnsResolver, domainStore, domainCheckInterval, domainRenewalInterval, base64PrivateKeys),
+		counterpartyManager: discovery.NewDefaultDomainIndexer(dnsResolver, domainStore, domainCheckInterval, domainRenewalInterval, dedupKeys(base64PrivateKeys)),
 	}
+}
+
+func dedupKeys(privateKeys []string) []string {
+	m := make(map[string]bool)
+	for _, k := range privateKeys {
+		m[k] = true
+	}
+	var dedup []string
+	for k := range m {
+		dedup = append(dedup, k)
+	}
+	return dedup
 }
 
 type LocalAuthenticatedConnectionsSignatory struct {
@@ -236,4 +251,8 @@ func (s *LocalAuthenticatedConnectionsSignatory) generateNonce() (string, error)
 		return "", fmt.Errorf("unexpected number of random values: %d", n)
 	}
 	return formats.B64truncate(nonce[:], 12), nil
+}
+
+func (s *LocalAuthenticatedConnectionsSignatory) GetOriginCallsigns() []string {
+	return s.counterpartyManager.GetOriginCallsigns()
 }

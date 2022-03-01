@@ -81,7 +81,7 @@ func calculateSharedSecret(originPrivateKey *x25519Key, remotePublicKey *x25519K
 func privateKeysToKeyMap(privateKeys []string) (map[string]keyMap, error) {
 	results := map[string]keyMap{}
 	for _, privateKeyBase64 := range privateKeys {
-		sp := strings.SplitN(privateKeyBase64, "|", 2)
+		sp := strings.SplitN(privateKeyBase64, "=", 2)
 		if len(sp) < 2 {
 			return nil, errors.New("missing origin callsign")
 		}
