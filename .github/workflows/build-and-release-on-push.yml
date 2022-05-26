@@ -1,11 +1,8 @@
-name: CI
+name: Build and Release on Push
 
 # https://docs.github.com/en/actions/reference/events-that-trigger-workflows
 on:
   push:
-    branches:
-      - main
-  pull_request:
     branches:
       - main
 
@@ -41,7 +38,6 @@ jobs:
   Release:
     name: Create Release
     runs-on: ubuntu-latest
-    if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }} # Only run if on main branch on push event
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
