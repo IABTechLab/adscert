@@ -1,0 +1,36 @@
+name: Build on Pull Request
+
+# https://docs.github.com/en/actions/reference/events-that-trigger-workflows
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.16
+
+    # Install all the dependencies
+    - name: Install dependencies
+      run: |
+        go version
+        go get -u golang.org/x/lint/golint
+
+    - name: Build
+      run: go build -v ./...
+
+    # Run vet & lint on the code
+    - name: Run vet & lint
+      run: |
+        go vet ./...
+        golint ./...
+
+    - name: Test
+      run: go test -v ./...
