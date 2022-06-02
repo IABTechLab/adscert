@@ -44,7 +44,6 @@ jobs:
       username: ${{ secrets.GHCR_USERNAME }}
       password: ${{ secrets.GHCR_TOKEN }}
   
-
   Release:
     name: Create Release
     runs-on: ubuntu-latest
