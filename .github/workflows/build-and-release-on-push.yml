@@ -36,12 +36,12 @@ jobs:
       run: go test -v ./...
 
     - name: Build and Push Docker Image
-    uses: mr-smithers-excellent/docker-build-push@v5
-    with:
-      image: ads-cert-app
-      registry: ghcr.io
-      username: ${{ secrets.GHCR_USERNAME }}
-      password: ${{ secrets.GHCR_TOKEN }}
+      uses: mr-smithers-excellent/docker-build-push@v5
+      with:
+        image: ads-cert-app
+        registry: ghcr.io
+        username: ${{ secrets.GHCR_USERNAME }}
+        password: ${{ secrets.GHCR_TOKEN }}
   Release:
     name: Create Release
     runs-on: ubuntu-latest
