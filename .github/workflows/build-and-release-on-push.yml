@@ -36,12 +36,12 @@ jobs:
       run: go test -v ./...
 
     - name: Build and Push Docker Image
-      uses: mr-smithers-excellent/docker-build-push@v5
+      uses: mr-smithers-excellent/docker-build-push@v5.6
       with:
         image: adscert
         registry: ghcr.io
         username: ${{ secrets.GHCR_USERNAME }}
-
+        password: ${{ secrets.GITHUB_TOKEN }}
 
   Release:
     name: Create Release
