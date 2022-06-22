@@ -36,7 +36,7 @@ var (
 
 	testsignCmd = &cobra.Command{
 		Use:   "testsign",
-		Short: " Given a URL to invoke, generate a signature. Optionally, actually invoke the URL",
+		Short: "Given a URL to invoke, generate a signature. Optionally, actually invoke the URL",
 		Run: func(cmd *cobra.Command, args []string) {
 			// fmt.Printf("generated signature: %d\n", signUrl((*testsignParams).url))
 			signRequest(testsignParams)
@@ -55,7 +55,7 @@ type testsignParameters struct {
 func init() {
 	rootCmd.AddCommand(testsignCmd)
 
-	testsignCmd.Flags().StringVar(&testsignParams.destinationURL, "url", "https://google.com/", "URL to invoke")
+	testsignCmd.Flags().StringVar(&testsignParams.destinationURL, "url", "https://google.com/gen_204", "URL to invoke")
 	testsignCmd.Flags().StringVar(&testsignParams.serverAddress, "server_address", "localhost:3000", "address of grpc server")
 	testsignCmd.Flags().StringVar(&testsignParams.body, "body", "", "POST request body")
 	testsignCmd.Flags().DurationVar(&testsignParams.signingTimeout, "signing_timeout", 5*time.Millisecond, "Specifies how long this client will wait for signing to finish before abandoning.")
