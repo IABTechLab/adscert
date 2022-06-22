@@ -16,7 +16,7 @@ limitations under the License.
 package cmd
 
 import (
-	"context"
+	// "context"
 	"github.com/spf13/cobra"
 	"time"
 	// "fmt"
@@ -26,13 +26,13 @@ import (
 	"github.com/IABTechLab/adscert/pkg/adscert/signatory"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/health/grpc_health_v1"
+	// "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/protobuf/encoding/prototext"
 )
 
 // signatoryCmd represents the signatory command
 var (
-	testsignParams = &testsignParameters{url: "google.com"}
+	testsignParams = &testsignParameters{url: "https://moatads.com/gen_204"}
 
 	testsignCmd = &cobra.Command{
 		Use:   "testsign",
@@ -55,7 +55,7 @@ type testsignParameters struct {
 func init() {
 	rootCmd.AddCommand(testsignCmd)
 
-	testsignCmd.Flags().StringVar(&testsignParams.destinationURL, "url", "https://google.com/gen_204", "URL to invoke")
+	testsignCmd.Flags().StringVar(&testsignParams.destinationURL, "url", "https://moatads.com/gen_204", "URL to invoke")
 	testsignCmd.Flags().StringVar(&testsignParams.serverAddress, "server_address", "localhost:3000", "address of grpc server")
 	testsignCmd.Flags().StringVar(&testsignParams.body, "body", "", "POST request body")
 	testsignCmd.Flags().DurationVar(&testsignParams.signingTimeout, "signing_timeout", 5*time.Millisecond, "Specifies how long this client will wait for signing to finish before abandoning.")
@@ -81,7 +81,7 @@ func signRequest(testsignParams *testsignParameters) {
 	// Optional: performs a health check against the server before actually
 	// trying to invoke the signatory service.
 
-	performOptionalHealthCheckRPC(conn)
+	// performOptionalHealthCheckRPC(conn)
 
 	// Create a reusable Signatory Client that provides a lightweight wrapper
 	// around the RPC client stub.  This code performs some basic request
@@ -114,15 +114,15 @@ func signRequest(testsignParams *testsignParameters) {
 	}
 }
 
-func performOptionalHealthCheckRPC(conn *grpc.ClientConn) {
-	hctx, hcancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
-	defer hcancel()
-	healthClient := grpc_health_v1.NewHealthClient(conn)
-	healthCheckResponse, err := healthClient.Check(hctx, &grpc_health_v1.HealthCheckRequest{})
-	if err != nil {
-		logger.Fatalf("Failed to pass heath check: %v", err)
-	}
-	if healthCheckResponse.Status != grpc_health_v1.HealthCheckResponse_SERVING {
-		logger.Fatalf("Failed to pass heath status: %v", healthCheckResponse.Status)
-	}
-}
+// func performOptionalHealthCheckRPC(conn *grpc.ClientConn) {
+// 	hctx, hcancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
+// 	defer hcancel()
+// 	healthClient := grpc_health_v1.NewHealthClient(conn)
+// 	healthCheckResponse, err := healthClient.Check(hctx, &grpc_health_v1.HealthCheckRequest{})
+// 	if err != nil {
+// 		logger.Fatalf("Failed to pass heath check: %v", err)
+// 	}
+// 	if healthCheckResponse.Status != grpc_health_v1.HealthCheckResponse_SERVING {
+// 		logger.Fatalf("Failed to pass heath status: %v", healthCheckResponse.Status)
+// 	}
+// }
