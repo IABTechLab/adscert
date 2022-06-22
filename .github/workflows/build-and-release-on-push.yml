@@ -36,7 +36,7 @@ jobs:
       run: go test -v ./...
 
     - name: Build and Push Docker Image
-      uses: mr-smithers-excellent/docker-build-push@v5.6
+      uses: mr-smithers-excellent/docker-build-push@v5
       with:
         image: adscert
         registry: ghcr.io
