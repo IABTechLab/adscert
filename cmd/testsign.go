@@ -32,20 +32,18 @@ import (
 
 // signatoryCmd represents the signatory command
 var (
-	testsignParams = &testsignParameters{url: "https://moatads.com/gen_204"}
+	testsignParams = &testsignParameters{}
 
 	testsignCmd = &cobra.Command{
 		Use:   "testsign",
 		Short: "Given a URL to invoke, generate a signature. Optionally, actually invoke the URL",
 		Run: func(cmd *cobra.Command, args []string) {
-			// fmt.Printf("generated signature: %d\n", signUrl((*testsignParams).url))
 			signRequest(testsignParams)
 		},
 	}
 )
 
 type testsignParameters struct {
-	url            string
 	serverAddress  string
 	destinationURL string
 	body           string
@@ -60,11 +58,6 @@ func init() {
 	testsignCmd.Flags().StringVar(&testsignParams.body, "body", "", "POST request body")
 	testsignCmd.Flags().DurationVar(&testsignParams.signingTimeout, "signing_timeout", 5*time.Millisecond, "Specifies how long this client will wait for signing to finish before abandoning.")
 }
-
-// func signURL(testsignParams *testsignParameters) {
-// 	// todo: implement
-// 	fmt.Printf("url to sign: %s\n", testsignParams.url)
-// }
 
 func signRequest(testsignParams *testsignParameters) {
 
