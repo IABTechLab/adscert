@@ -53,7 +53,7 @@ type testsignParameters struct {
 func init() {
 	rootCmd.AddCommand(testsignCmd)
 
-	testsignCmd.Flags().StringVar(&testsignParams.destinationURL, "url", "https://moatads.com/gen_204", "URL to invoke")
+	testsignCmd.Flags().StringVar(&testsignParams.destinationURL, "url", "", "URL to invoke")
 	testsignCmd.Flags().StringVar(&testsignParams.serverAddress, "server_address", "localhost:3000", "address of grpc server")
 	testsignCmd.Flags().StringVar(&testsignParams.body, "body", "", "POST request body")
 	testsignCmd.Flags().DurationVar(&testsignParams.signingTimeout, "signing_timeout", 5*time.Millisecond, "Specifies how long this client will wait for signing to finish before abandoning.")
