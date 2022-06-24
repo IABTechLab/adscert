@@ -16,22 +16,18 @@ limitations under the License.
 package cmd
 
 import (
-	crypto_rand "crypto/rand"
-	"encoding/base64"
-	"fmt"
+	// "context"
 	"github.com/spf13/cobra"
-	"io/ioutil"
-	"log"
-	"net/http"
 	"time"
+	// "fmt"
 
 	"github.com/IABTechLab/adscert/pkg/adscert/api"
-	"github.com/IABTechLab/adscert/pkg/adscert/discovery"
 	"github.com/IABTechLab/adscert/pkg/adscert/logger"
-	"github.com/IABTechLab/adscert/pkg/adscert/metrics"
 	"github.com/IABTechLab/adscert/pkg/adscert/signatory"
-	"github.com/benbjohnson/clock"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	// "google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/protobuf/encoding/prototext"
 )
 
 // testverifyCmd represents the signatory command
@@ -49,7 +45,7 @@ var (
 )
 
 type testverifyParameters struct {
-	origin string
+	// origin string
 	// signatureLogFile string
 	destinationURL   string
 	serverAddress    string
@@ -82,27 +78,27 @@ func verifyRequest(testverifyParams *testverifyParameters) {
 			logger.Fatalf("Failed to dial: %v", err)
 		}
 		defer conn.Close()
-	
+
 		// Optional: performs a health check against the server before actually
 		// trying to invoke the signatory service.
-	
+
 		// performOptionalHealthCheckRPC(conn)
-	
+
 		// Create a reusable Signatory Client that provides a lightweight wrapper
 		// around the RPC client stub.  This code performs some basic request
 		// timeout and error handling logic.
 		clientOpts := &signatory.AuthenticatedConnectionsSignatoryClientOptions{Timeout: testsignParams.signingTimeout}
 		signatoryClient := signatory.NewAuthenticatedConnectionsSignatoryClient(conn, clientOpts)
-	
+
 		// The RequestInfo proto contains details about the individual ad request
 		// being signed.  A SetRequestInfo helper function derives a hash of the
 		// destination URL and body, setting these value on the RequestInfo message.
-		signatureHeaders := testverifyParams.signatureMessage
+		signatureHeaders := []string{testverifyParams.signatureMessage}
 
-		reqInfo := &api.RequestInfo{}
-		signatory.SetRequestInfo(reqInfo, testverifyParams.destinationURL, body)
-		signatory.SetRequestSignatures(reqInfo, signatureHeaders)
-	
+		reqInfo := []*api.RequestInfo{}
+		signatory.SetRequestInfo(reqInfo[0], testverifyParams.destinationURL, []byte(testverifyParams.body))
+		signatory.SetRequestSignatures(reqInfo[0], signatureHeaders)
+
 		// Request the signature.
 		logger.Infof("verifying request for url: %v", testsignParams.destinationURL)
 		verificationResponse, err := signatoryClient.VerifyAuthenticatedConnection(
@@ -112,7 +108,7 @@ func verifyRequest(testverifyParams *testverifyParameters) {
 		if err != nil {
 			logger.Warningf("unable to verify message: %v", err)
 		}
-	
+
 		// In most circumstances a verificationResponse will be returned which includes
 		// detals about the successful or failed signature attempt.
 		if verificationResponse != nil {
@@ -121,3 +117,4 @@ func verifyRequest(testverifyParams *testverifyParameters) {
 			logger.Warningf("verification response is missing")
 		}
 	}
+}
