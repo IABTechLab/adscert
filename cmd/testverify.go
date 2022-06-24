@@ -95,15 +95,15 @@ func verifyRequest(testverifyParams *testverifyParameters) {
 		// destination URL and body, setting these value on the RequestInfo message.
 		signatureHeaders := []string{testverifyParams.signatureMessage}
 
-		reqInfo := []*api.RequestInfo{}
-		signatory.SetRequestInfo(reqInfo[0], testverifyParams.destinationURL, []byte(testverifyParams.body))
-		signatory.SetRequestSignatures(reqInfo[0], signatureHeaders)
+		reqInfo := &api.RequestInfo{}
+		signatory.SetRequestInfo(reqInfo, testverifyParams.destinationURL, []byte(testverifyParams.body))
+		signatory.SetRequestSignatures(reqInfo, signatureHeaders)
 
 		// Request the signature.
 		logger.Infof("verifying request for url: %v", testsignParams.destinationURL)
 		verificationResponse, err := signatoryClient.VerifyAuthenticatedConnection(
 			&api.AuthenticatedConnectionVerificationRequest{
-				RequestInfo: reqInfo,
+				RequestInfo: []*api.RequestInfo{reqInfo},
 			})
 		if err != nil {
 			logger.Warningf("unable to verify message: %v", err)
