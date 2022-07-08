@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"strings"
 	"time"
 
 	"github.com/IABTechLab/adscert/internal/server"
@@ -17,10 +18,32 @@ var (
 	origin                = flag.String("origin", utils.GetEnvVarString("ORIGIN", ""), "ads.cert Call Sign domain name for this party's Signatory service deployment")
 	domainCheckInterval   = flag.Duration("domain_check_interval", time.Duration(utils.GetEnvVarInt("DOMAIN_CHECK_INTERVAL", 30))*time.Second, "interval for checking domain records")
 	domainRenewalInterval = flag.Duration("domain_renewal_interval", time.Duration(utils.GetEnvVarInt("DOMAIN_RENEWAL_INTERVAL", 300))*time.Second, "interval before considering domain records for renewal")
-	privateKey            = flag.String("private_key", utils.GetEnvVarString("PRIVATE_KEY", ""), "base-64 encoded private key")
 )
 
+type privateKeyFlags []string
+
+func (i *privateKeyFlags) String() string {
+	return strings.Join(*i, ",")
+}
+
+func (i *privateKeyFlags) Set(value string) error {
+	if value != "" {
+		for _, v := range strings.Split(value, ",") {
+			*i = append(*i, v)
+		}
+	}
+	return nil
+}
+
 func main() {
+	var privateKeys privateKeyFlags
+	flag.Var(&privateKeys, "private_key", "base-64 encoded private key")
+
+	if value := utils.GetEnvVarString("PRIVATE_KEY", ""); value != "" {
+		for _, k := range strings.Split(value, ",") {
+			privateKeys = append(privateKeys, k)
+		}
+	}
 
 	flag.Parse()
 
@@ -28,11 +51,7 @@ func main() {
 	logger.SetLevel(parsedLogLevel)
 	logger.Infof("Log Level: %s, parsed as iota %v", *logLevel, parsedLogLevel)
 
-	if *origin == "" {
-		logger.Fatalf("Origin ads.cert Call Sign domain name is required")
-	}
-
-	if *privateKey == "" {
+	if len(privateKeys) == 0 {
 		logger.Fatalf("Private key is required")
 	}
 
@@ -45,11 +64,10 @@ func main() {
 	}()
 
 	logger.Infof("Starting AdsCert API server")
-	logger.Infof("Origin ads.cert Call Sign domain: %v", *origin)
 	logger.Infof("Port: %v", *serverPort)
 
 	grpcServer := grpc.NewServer()
-	server.SetUpAdsCertSignatoryServer(grpcServer, *origin, *domainCheckInterval, *domainRenewalInterval, []string{*privateKey})
+	server.SetUpAdsCertSignatoryServer(grpcServer, *origin, *domainCheckInterval, *domainRenewalInterval, privateKeys)
 	if err := server.StartServingRequests(grpcServer, *serverPort); err != nil {
 		logger.Fatalf("gRPC server failure: %v", err)
 	}

@@ -31,6 +31,7 @@ func NewDefaultDomainIndexer(dnsResolver DNSResolver, domainStore DomainStore, d
 		domainRenewalInterval: domainRenewalInterval,
 		dnsResolver:           dnsResolver,
 		domainStore:           domainStore,
+		currentPrivateKey:     make(map[string]keyAlias),
 	}
 
 	myPrivateKeys, err := privateKeysToKeyMap(base64PrivateKeys)
@@ -39,12 +40,14 @@ func NewDefaultDomainIndexer(dnsResolver DNSResolver, domainStore DomainStore, d
 	}
 	di.myPrivateKeys = myPrivateKeys
 
-	for _, privateKey := range di.myPrivateKeys {
-		// since iterating over a map is non-deterministic, we can make sure to set the key
-		// either if it is not already set or it is alphabetically less than current key at the index when
-		// iterating over the private keys map.
-		if di.currentPrivateKey == "" || di.currentPrivateKey < privateKey.alias {
-			di.currentPrivateKey = privateKey.alias
+	for originCallsign := range di.myPrivateKeys {
+		for _, privateKey := range di.myPrivateKeys[originCallsign] {
+			// since iterating over a map is non-deterministic, we can make sure to set the key
+			// either if it is not already set or it is alphabetically less than current key at the index when
+			// iterating over the private keys map.
+			if di.currentPrivateKey[originCallsign] == "" || di.currentPrivateKey[originCallsign] < privateKey.alias {
+				di.currentPrivateKey[originCallsign] = privateKey.alias
+			}
 		}
 	}
 
@@ -62,11 +65,19 @@ type defaultDomainIndexer struct {
 	lastRun     time.Time
 	lastRunLock sync.RWMutex
 
-	myPrivateKeys     keyMap
-	currentPrivateKey keyAlias
+	myPrivateKeys     map[string]keyMap
+	currentPrivateKey map[string]keyAlias
 
 	dnsResolver DNSResolver
 	domainStore DomainStore
+}
+
+func (di *defaultDomainIndexer) GetOriginCallsigns() []string {
+	var originCallsigns []string
+	for oc := range di.myPrivateKeys {
+		originCallsigns = append(originCallsigns, oc)
+	}
+	return originCallsigns
 }
 
 func (di *defaultDomainIndexer) GetLastRun() time.Time {
@@ -227,20 +238,21 @@ func (di *defaultDomainIndexer) checkDomainForKeyRecords(ctx context.Context, cu
 	}
 
 	// create shared secrets for each private key + public key combination
-	for _, myKey := range di.myPrivateKeys {
-		for _, theirKey := range currentDomainInfo.allPublicKeys {
-			keyPairAlias := newKeyPairAlias(myKey.alias, theirKey.alias)
-			if currentDomainInfo.allSharedSecrets[keyPairAlias] == nil {
-				currentDomainInfo.allSharedSecrets[keyPairAlias], err = calculateSharedSecret(myKey, theirKey)
-				if err != nil {
-					logger.Warningf("error calculating shared secret for record %s: %v", currentDomainInfo.Domain, err)
-					currentDomainInfo.domainStatus = DomainStatusErrorOnSharedSecretCalculation
+	for originCallsign := range di.myPrivateKeys {
+		for _, myKey := range di.myPrivateKeys[originCallsign] {
+			for _, theirKey := range currentDomainInfo.allPublicKeys {
+				keyPairAlias := newKeyPairAlias(myKey.alias, theirKey.alias)
+				if currentDomainInfo.allSharedSecrets[keyPairAlias] == nil {
+					currentDomainInfo.allSharedSecrets[keyPairAlias], err = calculateSharedSecret(myKey, theirKey)
+					if err != nil {
+						logger.Warningf("error calculating shared secret for record %s: %v", currentDomainInfo.Domain, err)
+						currentDomainInfo.domainStatus = DomainStatusErrorOnSharedSecretCalculation
+					}
 				}
 			}
 		}
+		currentDomainInfo.currentSharedSecretId[originCallsign] = newKeyPairAlias(di.currentPrivateKey[originCallsign], currentDomainInfo.currentPublicKeyId)
 	}
-
-	currentDomainInfo.currentSharedSecretId = newKeyPairAlias(di.currentPrivateKey, currentDomainInfo.currentPublicKeyId)
 	currentDomainInfo.lastUpdateTime = time.Now()
 }
 
@@ -312,7 +324,7 @@ func initializeDomainInfo(domain string) DomainInfo {
 		Domain:                domain,
 		IdentityDomains:       []string{},
 		currentPublicKeyId:    "",
-		currentSharedSecretId: keyPairAlias{},
+		currentSharedSecretId: map[string]keyPairAlias{},
 		allPublicKeys:         map[keyAlias]*x25519Key{},
 		allSharedSecrets:      keyPairMap{},
 		domainStatus:          DomainStatusNotYetChecked,

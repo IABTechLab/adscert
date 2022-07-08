@@ -8,7 +8,7 @@ type DomainInfo struct {
 	Domain                string   // root domain for this record, can be invoking or identity domain
 	IdentityDomains       []string // used to map from invoking domain to parent identity domains
 	currentPublicKeyId    keyAlias
-	currentSharedSecretId keyPairAlias
+	currentSharedSecretId map[string]keyPairAlias
 	allPublicKeys         keyMap
 	allSharedSecrets      keyPairMap
 
@@ -30,7 +30,7 @@ func (c *DomainInfo) GetStatus() DomainStatus {
 	return c.domainStatus
 }
 
-func (c *DomainInfo) GetSharedSecret() (SharedSecret, bool) {
-	sharedSecret, ok := c.allSharedSecrets[c.currentSharedSecretId]
+func (c *DomainInfo) GetSharedSecret(originDomain string) (SharedSecret, bool) {
+	sharedSecret, ok := c.allSharedSecrets[c.currentSharedSecretId[originDomain]]
 	return sharedSecret, ok
 }
