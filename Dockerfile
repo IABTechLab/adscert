@@ -10,9 +10,8 @@ RUN CGO_ENABLED=0 GOOS=linux go build .
 FROM alpine
 WORKDIR /app
 RUN apk --no-cache add ca-certificates
-COPY --from=builder /src .
+COPY --from=builder /src adscert
 COPY --from=builder /bin/grpc_health_probe /bin/grpc_health_probe
-EXPOSE 3000
 
 ENV LOGLEVEL=""
 ENV ORIGIN=""
