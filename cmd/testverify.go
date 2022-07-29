@@ -16,21 +16,18 @@ limitations under the License.
 package cmd
 
 import (
-	// "context"
 	"github.com/spf13/cobra"
 	"time"
-	// "fmt"
 
 	"github.com/IABTechLab/adscert/pkg/adscert/api"
 	"github.com/IABTechLab/adscert/pkg/adscert/logger"
 	"github.com/IABTechLab/adscert/pkg/adscert/signatory"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	// "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/protobuf/encoding/prototext"
 )
 
-// testverifyCmd represents the signatory command
+// testverifyCmd represents the test verify command
 var (
 	testverifyParams = &testverifyParameters{}
 
@@ -38,15 +35,12 @@ var (
 		Use:   "testverify",
 		Short: "Given a URL (via same flags as the testsign command) and some signature received (via a flag), validate the signature",
 		Run: func(cmd *cobra.Command, args []string) {
-			// fmt.Printf("generated signature: %d\n", signUrl((*testverifyParams).url))
 			verifyRequest(testverifyParams)
 		},
 	}
 )
 
 type testverifyParameters struct {
-	// origin string
-	// signatureLogFile string
 	destinationURL   string
 	serverAddress    string
 	body             string
@@ -57,13 +51,11 @@ type testverifyParameters struct {
 func init() {
 	rootCmd.AddCommand(testverifyCmd)
 
-	// testverifyCmd.Flags().StringVar(&testverifyParams.origin, "origin", "", "ads.cert Call Sign domain for the sending party")
-	// testverifyCmd.Flags().StringVar(&testverifyParams.signatureLogFile, "signature_log_file", "", "(optional) write signature and hashes to file for offline verification")
 	testverifyCmd.Flags().StringVar(&testverifyParams.signatureMessage, "signatureMessage", "", "signature message to verify")
-	testverifyCmd.Flags().StringVar(&testverifyParams.destinationURL, "url", "", "URL to invoke")
+	testverifyCmd.Flags().StringVar(&testverifyParams.destinationURL, "url", "", "URL to verify")
 	testverifyCmd.Flags().StringVar(&testverifyParams.serverAddress, "server_address", "localhost:3000", "address of grpc server")
 	testverifyCmd.Flags().StringVar(&testverifyParams.body, "body", "", "POST request body")
-	testverifyCmd.Flags().DurationVar(&testverifyParams.verifyingTimeout, "verifying_timeout", 5*time.Millisecond, "Specifies how long this client will wait for signing to finish before abandoning.")
+	testverifyCmd.Flags().DurationVar(&testverifyParams.verifyingTimeout, "verifying_timeout", 5*time.Millisecond, "Specifies how long this client will wait for verification to finish before abandoning.")
 }
 
 func verifyRequest(testverifyParams *testverifyParameters) {
@@ -73,33 +65,28 @@ func verifyRequest(testverifyParams *testverifyParameters) {
 		// signatory server.  This basic example uses unauthenticated connections
 		// which should not be used in a production environment.
 		opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
-		conn, err := grpc.Dial(testsignParams.serverAddress, opts...)
+		conn, err := grpc.Dial(testverifyParams.serverAddress, opts...)
 		if err != nil {
 			logger.Fatalf("Failed to dial: %v", err)
 		}
 		defer conn.Close()
 
-		// Optional: performs a health check against the server before actually
-		// trying to invoke the signatory service.
-
-		// performOptionalHealthCheckRPC(conn)
-
 		// Create a reusable Signatory Client that provides a lightweight wrapper
 		// around the RPC client stub.  This code performs some basic request
 		// timeout and error handling logic.
-		clientOpts := &signatory.AuthenticatedConnectionsSignatoryClientOptions{Timeout: testsignParams.signingTimeout}
+		clientOpts := &signatory.AuthenticatedConnectionsSignatoryClientOptions{Timeout: testverifyParams.verifyingTimeout}
 		signatoryClient := signatory.NewAuthenticatedConnectionsSignatoryClient(conn, clientOpts)
 
 		// The RequestInfo proto contains details about the individual ad request
-		// being signed.  A SetRequestInfo helper function derives a hash of the
-		// destination URL and body, setting these value on the RequestInfo message.
+		// being verified.  A SetRequestInfo helper function derives a hash of the
+		// destination URL and body, and sets the hash and the signature message on the RequestInfo message.
 		signatureHeaders := []string{testverifyParams.signatureMessage}
 
 		reqInfo := &api.RequestInfo{}
 		signatory.SetRequestInfo(reqInfo, testverifyParams.destinationURL, []byte(testverifyParams.body))
 		signatory.SetRequestSignatures(reqInfo, signatureHeaders)
 
-		// Request the signature.
+		// Request the verification.
 		logger.Infof("verifying request for url: %v", testverifyParams.destinationURL)
 		verificationResponse, err := signatoryClient.VerifyAuthenticatedConnection(
 			&api.AuthenticatedConnectionVerificationRequest{
