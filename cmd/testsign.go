@@ -19,7 +19,6 @@ import (
 	"context"
 	"github.com/spf13/cobra"
 	"time"
-	// "fmt"
 
 	"github.com/IABTechLab/adscert/pkg/adscert/api"
 	"github.com/IABTechLab/adscert/pkg/adscert/logger"
@@ -30,15 +29,14 @@ import (
 	"google.golang.org/protobuf/encoding/prototext"
 )
 
-// signatoryCmd represents the signatory command
+// testsignCmd represents the test sign command
 var (
 	testsignParams = &testsignParameters{url: "google.com"}
 
 	testsignCmd = &cobra.Command{
 		Use:   "testsign",
-		Short: " Given a URL to invoke, generate a signature. Optionally, actually invoke the URL",
+		Short: " Given a URL to invoke, generate a signature.",
 		Run: func(cmd *cobra.Command, args []string) {
-			// fmt.Printf("generated signature: %d\n", signUrl((*testsignParams).url))
 			signRequest(testsignParams)
 		},
 	}
@@ -60,11 +58,6 @@ func init() {
 	testsignCmd.Flags().StringVar(&testsignParams.body, "body", "", "POST request body")
 	testsignCmd.Flags().DurationVar(&testsignParams.signingTimeout, "signing_timeout", 5*time.Millisecond, "Specifies how long this client will wait for signing to finish before abandoning.")
 }
-
-// func signURL(testsignParams *testsignParameters) {
-// 	// todo: implement
-// 	fmt.Printf("url to sign: %s\n", testsignParams.url)
-// }
 
 func signRequest(testsignParams *testsignParameters) {
 
