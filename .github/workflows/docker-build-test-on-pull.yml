@@ -1,4 +1,4 @@
-name: Build on Pull Request
+name: Build docker image on Pull Request
 
 # https://docs.github.com/en/actions/reference/events-that-trigger-workflows
 on:
