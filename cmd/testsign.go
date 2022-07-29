@@ -51,6 +51,7 @@ type testsignParameters struct {
 func init() {
 	rootCmd.AddCommand(testsignCmd)
 
+
 	testsignCmd.Flags().StringVar(&testsignParams.url, "url", "", "URL to invoke")
 	testsignCmd.Flags().StringVar(&testsignParams.serverAddress, "server_address", "localhost:3000", "address of grpc server")
 	testsignCmd.Flags().StringVar(&testsignParams.body, "body", "", "POST request body")
