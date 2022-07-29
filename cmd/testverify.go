@@ -100,7 +100,7 @@ func verifyRequest(testverifyParams *testverifyParameters) {
 		signatory.SetRequestSignatures(reqInfo, signatureHeaders)
 
 		// Request the signature.
-		logger.Infof("verifying request for url: %v", testsignParams.destinationURL)
+		logger.Infof("verifying request for url: %v", testverifyParams.destinationURL)
 		verificationResponse, err := signatoryClient.VerifyAuthenticatedConnection(
 			&api.AuthenticatedConnectionVerificationRequest{
 				RequestInfo: []*api.RequestInfo{reqInfo},
