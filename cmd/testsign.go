@@ -16,27 +16,25 @@ limitations under the License.
 package cmd
 
 import (
-	// "context"
-	"github.com/spf13/cobra"
 	"time"
-	// "fmt"
+
+	"github.com/spf13/cobra"
 
 	"github.com/IABTechLab/adscert/pkg/adscert/api"
 	"github.com/IABTechLab/adscert/pkg/adscert/logger"
 	"github.com/IABTechLab/adscert/pkg/adscert/signatory"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	// "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/protobuf/encoding/prototext"
 )
 
-// signatoryCmd represents the signatory command
+// testsignCmd represents the test sign command
 var (
 	testsignParams = &testsignParameters{}
 
 	testsignCmd = &cobra.Command{
 		Use:   "testsign",
-		Short: "Given a URL to invoke, generate a signature. Optionally, actually invoke the URL",
+		Short: "Given a URL to invoke (and optionally, a request body) generate a signature.",
 		Run: func(cmd *cobra.Command, args []string) {
 			signRequest(testsignParams)
 		},
@@ -44,8 +42,8 @@ var (
 )
 
 type testsignParameters struct {
+	url            string
 	serverAddress  string
-	destinationURL string
 	body           string
 	signingTimeout time.Duration
 }
@@ -53,7 +51,8 @@ type testsignParameters struct {
 func init() {
 	rootCmd.AddCommand(testsignCmd)
 
-	testsignCmd.Flags().StringVar(&testsignParams.destinationURL, "url", "", "URL to invoke")
+
+	testsignCmd.Flags().StringVar(&testsignParams.url, "url", "", "URL to invoke")
 	testsignCmd.Flags().StringVar(&testsignParams.serverAddress, "server_address", "localhost:3000", "address of grpc server")
 	testsignCmd.Flags().StringVar(&testsignParams.body, "body", "", "POST request body")
 	testsignCmd.Flags().DurationVar(&testsignParams.signingTimeout, "signing_timeout", 5*time.Millisecond, "Specifies how long this client will wait for signing to finish before abandoning.")
@@ -71,11 +70,6 @@ func signRequest(testsignParams *testsignParameters) {
 	}
 	defer conn.Close()
 
-	// Optional: performs a health check against the server before actually
-	// trying to invoke the signatory service.
-
-	// performOptionalHealthCheckRPC(conn)
-
 	// Create a reusable Signatory Client that provides a lightweight wrapper
 	// around the RPC client stub.  This code performs some basic request
 	// timeout and error handling logic.
@@ -86,10 +80,10 @@ func signRequest(testsignParams *testsignParameters) {
 	// being signed.  A SetRequestInfo helper function derives a hash of the
 	// destination URL and body, setting these value on the RequestInfo message.
 	reqInfo := &api.RequestInfo{}
-	signatory.SetRequestInfo(reqInfo, testsignParams.destinationURL, []byte(testsignParams.body))
+	signatory.SetRequestInfo(reqInfo, testsignParams.url, []byte(testsignParams.body))
 
 	// Request the signature.
-	logger.Infof("signing request for url: %v", testsignParams.destinationURL)
+	logger.Infof("signing request for url: %v", testsignParams.url)
 	signatureResponse, err := signatoryClient.SignAuthenticatedConnection(
 		&api.AuthenticatedConnectionSignatureRequest{
 			RequestInfo: reqInfo,
@@ -106,16 +100,3 @@ func signRequest(testsignParams *testsignParameters) {
 		logger.Warningf("signature response is missing")
 	}
 }
-
-// func performOptionalHealthCheckRPC(conn *grpc.ClientConn) {
-// 	hctx, hcancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
-// 	defer hcancel()
-// 	healthClient := grpc_health_v1.NewHealthClient(conn)
-// 	healthCheckResponse, err := healthClient.Check(hctx, &grpc_health_v1.HealthCheckRequest{})
-// 	if err != nil {
-// 		logger.Fatalf("Failed to pass heath check: %v", err)
-// 	}
-// 	if healthCheckResponse.Status != grpc_health_v1.HealthCheckResponse_SERVING {
-// 		logger.Fatalf("Failed to pass heath status: %v", healthCheckResponse.Status)
-// 	}
-// }
