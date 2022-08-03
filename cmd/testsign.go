@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -57,7 +58,7 @@ func init() {
 	testsignCmd.Flags().DurationVar(&testsignParams.signingTimeout, "signing_timeout", 5*time.Millisecond, "Specifies how long this client will wait for signing to finish before abandoning.")
 }
 
-func signRequest(testsignParams *testsignParameters) {
+func signRequest(testsignParams *testsignParameters) error {
 
 	// Establish the gRPC connection that the client will use to connect to the
 	// signatory server.  This basic example uses unauthenticated connections
@@ -65,7 +66,8 @@ func signRequest(testsignParams *testsignParameters) {
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 	conn, err := grpc.Dial(testsignParams.serverAddress, opts...)
 	if err != nil {
-		logger.Fatalf("Failed to dial: %v", err)
+		logger.Warningf("Failed to dial: %v", err)
+		return fmt.Errorf("failed to dial: %v", err)
 	}
 	defer conn.Close()
 
@@ -97,5 +99,7 @@ func signRequest(testsignParams *testsignParameters) {
 		logger.Infof("signature response:\n%s", prototext.Format(signatureResponse))
 	} else {
 		logger.Warningf("signature response is missing")
+		return fmt.Errorf("failed to dial: %v", err)
 	}
+	return nil
 }
