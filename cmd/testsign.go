@@ -16,7 +16,6 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -58,7 +57,7 @@ func init() {
 	testsignCmd.Flags().DurationVar(&testsignParams.signingTimeout, "signing_timeout", 5*time.Millisecond, "Specifies how long this client will wait for signing to finish before abandoning.")
 }
 
-func signRequest(testsignParams *testsignParameters) error {
+func signRequest(testsignParams *testsignParameters) *api.AuthenticatedConnectionSignatureResponse {
 
 	// Establish the gRPC connection that the client will use to connect to the
 	// signatory server.  This basic example uses unauthenticated connections
@@ -66,8 +65,7 @@ func signRequest(testsignParams *testsignParameters) error {
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 	conn, err := grpc.Dial(testsignParams.serverAddress, opts...)
 	if err != nil {
-		logger.Warningf("Failed to dial: %v", err)
-		return fmt.Errorf("failed to dial: %v", err)
+		logger.Fatalf("Failed to dial: %v", err)
 	}
 	defer conn.Close()
 
@@ -97,13 +95,8 @@ func signRequest(testsignParams *testsignParameters) error {
 	// detals about the successful or failed signature attempt.
 	if signatureResponse != nil {
 		logger.Infof("signature response:\n%s", prototext.Format(signatureResponse))
-		if signatureResponse.SignatureOperationStatus ==
-			api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_SIGNATORY_INTERNAL_ERROR {
-			return fmt.Errorf("no records for invoked url")
-		}
 	} else {
 		logger.Warningf("signature response is missing")
-		return fmt.Errorf("signature response is missing")
 	}
-	return nil
+	return signatureResponse
 }

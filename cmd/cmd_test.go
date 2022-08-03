@@ -4,9 +4,10 @@
 package cmd
 
 import (
-	"fmt"
 	"testing"
 	"time"
+
+	"github.com/IABTechLab/adscert/pkg/adscert/api"
 )
 
 //
@@ -17,7 +18,7 @@ func TestSigningRequest(t *testing.T) {
 	testsignParams.body = ""
 	testsignParams.signingTimeout = 5 * time.Millisecond
 	// fails on the first run since no records yet
-	if signRequest(testsignParams) != fmt.Errorf("no records for invoked url") {
+	if signRequest(testsignParams).GetSignatureOperationStatus() != api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK {
 		t.Fail()
 	}
 }
