@@ -18,6 +18,10 @@ func TestSigningRequest(t *testing.T) {
 	testsignParams.body = ""
 	testsignParams.signingTimeout = 5 * time.Millisecond
 	// fails on the first run since no records yet
+	if signRequest(testsignParams).GetSignatureOperationStatus() != api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_SIGNATORY_INTERNAL_ERROR {
+		t.Fail()
+	}
+	// succeeds on second run
 	if signRequest(testsignParams).GetSignatureOperationStatus() != api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK {
 		t.Fail()
 	}
