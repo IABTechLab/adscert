@@ -20,10 +20,6 @@ func TestSigningRequest(t *testing.T) {
 	if signRequest(testsignParams) != fmt.Errorf("no records for invoked url") {
 		t.Fail()
 	}
-	// succeeds on the second run after records added
-	if signRequest(testsignParams) != nil {
-		t.Fail()
-	}
 }
 
 // func example(t *testing.T) {
