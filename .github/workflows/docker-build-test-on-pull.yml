@@ -25,19 +25,13 @@ jobs:
         docker version
 
     # Build docker image
-    - name: Build Docker Image
+    - name: Build & Run Docker Image
       run: |
-
         docker build -t adscert-image .
         docker run -d -p 3000:3000 --name aci-container adscert-image ./adscert signatory --private_key "0p4pHiZdiRglOU9ChWcnYQQN4tySE1-wmR6sQliprg4" --origin "moatads.com"
+
+    # # Run integration tests against docker container
+    - name: Run Docker Integration Tests
+      run: |
         cd cmd
         go test -v . -tags integration 
-
-    # # Run vet & lint on the code
-    # - name: Run vet & lint
-    #   run: |
-    #     go vet ./...
-    #     golint ./...
-
-    # - name: Test
-    #   run: go test -v ./...

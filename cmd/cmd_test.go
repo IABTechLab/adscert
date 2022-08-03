@@ -28,9 +28,3 @@ func TestSigningRequest(t *testing.T) {
 		}
 	}
 }
-
-// func example(t *testing.T) {
-// 	if a.func("user1", "pass1") == "" {
-// 		t.Fail()
-// 	}
-// }
