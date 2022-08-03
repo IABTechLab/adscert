@@ -21,6 +21,7 @@ func TestSigningRequest(t *testing.T) {
 	if signRequest(testsignParams).GetSignatureOperationStatus() != api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_SIGNATORY_INTERNAL_ERROR {
 		t.Fail()
 	} else {
+		time.Sleep(5 * time.Second)
 		// succeeds on second run
 		if signRequest(testsignParams).GetSignatureOperationStatus() != api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK {
 			t.Fail()
