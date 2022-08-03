@@ -97,9 +97,13 @@ func signRequest(testsignParams *testsignParameters) error {
 	// detals about the successful or failed signature attempt.
 	if signatureResponse != nil {
 		logger.Infof("signature response:\n%s", prototext.Format(signatureResponse))
+		if signatureResponse.SignatureOperationStatus ==
+			api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_SIGNATORY_INTERNAL_ERROR {
+			return fmt.Errorf("no records for invoked url")
+		}
 	} else {
 		logger.Warningf("signature response is missing")
-		return fmt.Errorf("failed to dial: %v", err)
+		return fmt.Errorf("signature response is missing")
 	}
 	return nil
 }

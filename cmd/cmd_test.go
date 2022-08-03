@@ -4,6 +4,7 @@
 package cmd
 
 import (
+	"fmt"
 	"testing"
 	"time"
 )
@@ -15,6 +16,11 @@ func TestSigningRequest(t *testing.T) {
 	testsignParams.serverAddress = "localhost:3000"
 	testsignParams.body = ""
 	testsignParams.signingTimeout = 5 * time.Millisecond
+	// fails on the first run since no records yet
+	if signRequest(testsignParams) != fmt.Errorf("no records for invoked url") {
+		t.Fail()
+	}
+	// succeeds on the second run after records added
 	if signRequest(testsignParams) != nil {
 		t.Fail()
 	}
