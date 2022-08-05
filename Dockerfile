@@ -6,11 +6,13 @@ RUN GRPC_HEALTH_PROBE_VERSION=v0.3.1 && \
     chmod +x /bin/grpc_health_probe
 RUN go mod download
 RUN CGO_ENABLED=0 GOOS=linux go build .
+RUN CGO_ENABLED=0 GOOS=linux go build ./cmd/server
 
 FROM alpine
 WORKDIR /app
 RUN apk --no-cache add ca-certificates
 COPY --from=builder /src/adscert .
+COPY --from=builder /src/server .
 COPY --from=builder /bin/grpc_health_probe /bin/grpc_health_probe
 
 ENV LOGLEVEL=""
