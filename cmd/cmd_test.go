@@ -13,7 +13,7 @@ import (
 //
 func TestSigningRequest(t *testing.T) {
 	testsignParams := &testsignParameters{}
-	testsignParams.url = "https://moatads.com"
+	testsignParams.url = "https://adscerttestverifier.dev"
 	testsignParams.serverAddress = "localhost:3000"
 	testsignParams.body = ""
 	testsignParams.signingTimeout = 5 * time.Millisecond
