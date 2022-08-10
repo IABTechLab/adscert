@@ -1,0 +1,40 @@
+name: Build and test docker image on Pull and Push to main
+
+# https://docs.github.com/en/actions/reference/events-that-trigger-workflows
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.17
+
+    # Install all the dependencies
+    - name: Install dependencies
+      run: |
+        go version
+        go get -u golang.org/x/lint/golint
+        docker version
+
+    # Build docker image
+    - name: Build & Run Docker Image
+      run: |
+        docker build -t adscert-image .
+        docker run -d -p 3000:3000 --name aci-container adscert-image ./adscert signatory --private_key "Ys83NKuuYxCVDUbmA671x3zAFsQ-EnNxmC2JLuBlGAU" --origin "adscerttestsigner.dev"
+
+    # # Run integration tests against docker container
+    - name: Run Docker Integration Tests
+      run: |
+        cd cmd
+        go test -v . -tags integration 

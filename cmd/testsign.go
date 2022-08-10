@@ -57,7 +57,7 @@ func init() {
 	testsignCmd.Flags().DurationVar(&testsignParams.signingTimeout, "signing_timeout", 5*time.Millisecond, "Specifies how long this client will wait for signing to finish before abandoning.")
 }
 
-func signRequest(testsignParams *testsignParameters) {
+func signRequest(testsignParams *testsignParameters) *api.AuthenticatedConnectionSignatureResponse {
 
 	// Establish the gRPC connection that the client will use to connect to the
 	// signatory server.  This basic example uses unauthenticated connections
@@ -98,4 +98,5 @@ func signRequest(testsignParams *testsignParameters) {
 	} else {
 		logger.Warningf("signature response is missing")
 	}
+	return signatureResponse
 }
