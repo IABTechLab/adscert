@@ -40,7 +40,7 @@ jobs:
     # Run signer signatory
     - name: Run Verifier Signatory
       run: |
-        docker run -d -p 4000:4000 --name verifier-container adscert-image ./adscert signatory --server_port=4000 --metrics_port=4001 --private_key "6mkLbsTBKs0UwYLkBdw5ttJHzjpSZxof0A2rako-0qs" --origin "adscerttestverifier.dev"
+        docker run -d -p 4000:4000 --name verifier-container adscert-image ./adscert signatory --server_port 4000 --metrics_port 4001 --private_key "6mkLbsTBKs0UwYLkBdw5ttJHzjpSZxof0A2rako-0qs" --origin "adscerttestverifier.dev"
 
     # # Run integration tests against docker container
     - name: Run Docker Integration Tests
