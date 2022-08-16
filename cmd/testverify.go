@@ -58,50 +58,49 @@ func init() {
 	testverifyCmd.Flags().DurationVar(&testverifyParams.verifyingTimeout, "verifying_timeout", 5*time.Millisecond, "Specifies how long this client will wait for verification to finish before abandoning.")
 }
 
-func verifyRequest(testverifyParams *testverifyParameters) {
-	{
+func verifyRequest(testverifyParams *testverifyParameters) *api.AuthenticatedConnectionVerificationResponse {
 
-		// Establish the gRPC connection that the client will use to connect to the
-		// signatory server.  This basic example uses unauthenticated connections
-		// which should not be used in a production environment.
-		opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
-		conn, err := grpc.Dial(testverifyParams.serverAddress, opts...)
-		if err != nil {
-			logger.Fatalf("Failed to dial: %v", err)
-		}
-		defer conn.Close()
-
-		// Create a reusable Signatory Client that provides a lightweight wrapper
-		// around the RPC client stub.  This code performs some basic request
-		// timeout and error handling logic.
-		clientOpts := &signatory.AuthenticatedConnectionsSignatoryClientOptions{Timeout: testverifyParams.verifyingTimeout}
-		signatoryClient := signatory.NewAuthenticatedConnectionsSignatoryClient(conn, clientOpts)
-
-		// The RequestInfo proto contains details about the individual ad request
-		// being verified.  A SetRequestInfo helper function derives a hash of the
-		// destination URL and body, and sets the hash and the signature message on the RequestInfo message.
-		signatureHeaders := []string{testverifyParams.signatureMessage}
-
-		reqInfo := &api.RequestInfo{}
-		signatory.SetRequestInfo(reqInfo, testverifyParams.destinationURL, []byte(testverifyParams.body))
-		signatory.SetRequestSignatures(reqInfo, signatureHeaders)
-
-		// Request the verification.
-		logger.Infof("verifying request for url: %v", testverifyParams.destinationURL)
-		verificationResponse, err := signatoryClient.VerifyAuthenticatedConnection(
-			&api.AuthenticatedConnectionVerificationRequest{
-				RequestInfo: []*api.RequestInfo{reqInfo},
-			})
-		if err != nil {
-			logger.Warningf("unable to verify message: %v", err)
-		}
-
-		// In most circumstances a verificationResponse will be returned which includes
-		// detals about the successful or failed signature attempt.
-		if verificationResponse != nil {
-			logger.Infof("verification response:\n%s", prototext.Format(verificationResponse))
-		} else {
-			logger.Warningf("verification response is missing")
-		}
+	// Establish the gRPC connection that the client will use to connect to the
+	// signatory server.  This basic example uses unauthenticated connections
+	// which should not be used in a production environment.
+	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+	conn, err := grpc.Dial(testverifyParams.serverAddress, opts...)
+	if err != nil {
+		logger.Fatalf("Failed to dial: %v", err)
 	}
+	defer conn.Close()
+
+	// Create a reusable Signatory Client that provides a lightweight wrapper
+	// around the RPC client stub.  This code performs some basic request
+	// timeout and error handling logic.
+	clientOpts := &signatory.AuthenticatedConnectionsSignatoryClientOptions{Timeout: testverifyParams.verifyingTimeout}
+	signatoryClient := signatory.NewAuthenticatedConnectionsSignatoryClient(conn, clientOpts)
+
+	// The RequestInfo proto contains details about the individual ad request
+	// being verified.  A SetRequestInfo helper function derives a hash of the
+	// destination URL and body, and sets the hash and the signature message on the RequestInfo message.
+	signatureHeaders := []string{testverifyParams.signatureMessage}
+
+	reqInfo := &api.RequestInfo{}
+	signatory.SetRequestInfo(reqInfo, testverifyParams.destinationURL, []byte(testverifyParams.body))
+	signatory.SetRequestSignatures(reqInfo, signatureHeaders)
+
+	// Request the verification.
+	logger.Infof("verifying request for url: %v", testverifyParams.destinationURL)
+	verificationResponse, err := signatoryClient.VerifyAuthenticatedConnection(
+		&api.AuthenticatedConnectionVerificationRequest{
+			RequestInfo: []*api.RequestInfo{reqInfo},
+		})
+	if err != nil {
+		logger.Warningf("unable to verify message: %v", err)
+	}
+
+	// In most circumstances a verificationResponse will be returned which includes
+	// detals about the successful or failed signature attempt.
+	if verificationResponse != nil {
+		logger.Infof("verification response:\n%s", prototext.Format(verificationResponse))
+	} else {
+		logger.Warningf("verification response is missing")
+	}
+	return verificationResponse
 }
