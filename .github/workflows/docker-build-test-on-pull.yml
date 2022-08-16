@@ -27,11 +27,20 @@ jobs:
         go get -u golang.org/x/lint/golint
         docker version
 
-    # Build docker image
+    # Build and run docker image
     - name: Build & Run Docker Image
       run: |
         docker build -t adscert-image .
-        docker run -d -p 3000:3000 --name aci-container adscert-image ./adscert signatory --private_key "Ys83NKuuYxCVDUbmA671x3zAFsQ-EnNxmC2JLuBlGAU" --origin "adscerttestsigner.dev"
+
+     # Run signer signatory
+     - name: Run Signer Signatory
+       run: |
+         docker run -d -p 3000:3000 --name signer-container adscert-image ./adscert signatory --private_key "Ys83NKuuYxCVDUbmA671x3zAFsQ-EnNxmC2JLuBlGAU" --origin "adscerttestsigner.dev"
+
+    # Run signer signatory
+    - name: Run Verifier Signatory
+      run: |
+        docker run -d -p 4000:4000 --name verifier-container adscert-image ./adscert signatory --private_key "6mkLbsTBKs0UwYLkBdw5ttJHzjpSZxof0A2rako-0qs" --origin "adscerttestverifier.dev"
 
     # # Run integration tests against docker container
     - name: Run Docker Integration Tests
