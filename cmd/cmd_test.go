@@ -34,7 +34,7 @@ func TestVerificationRequest(t *testing.T) {
 	testverifyParams.destinationURL = "https://adscerttestverifier.dev"
 	testverifyParams.serverAddress = "localhost:4000"
 	testverifyParams.body = ""
-	testverifyParams.signingTimeout = 5 * time.Millisecond
+	testverifyParams.verifyingTimeout = 5 * time.Millisecond
 	testverifyParams.signatureMessage = "from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=WjDf1dKgdvW1&status=1&timestamp=220816T200636&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=UtzmQKT1M-4P&sigu=TUjCU24KC6Xz"
 	if verifyRequest(testverifyParams).GetVerificationOperationStatus() != api.VerificationOperationStatus_VERIFICATION_OPERATION_STATUS_OK {
 		t.Fail()
