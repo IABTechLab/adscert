@@ -35,12 +35,13 @@ func TestVerificationRequest(t *testing.T) {
 	testverifyParams.body = ""
 	testverifyParams.verifyingTimeout = 5 * time.Millisecond
 	testverifyParams.signatureMessage = "from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=jsLwC53YySqG&status=1&timestamp=220816T221250&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=NfCC9zQeS3og&sigu=1tkmSdEe-5D7"
-	if verifyRequest(testverifyParams).GetVerificationOperationStatus() != api.VerificationOperationStatus_VERIFICATION_OPERATION_STATUS_OK {
+	if verifyRequest(testverifyParams).GetVerificationInfo().GetSignatureDecodeStatus() != api.SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_COUNTERPARTY_LOOKUP_ERROR {
 		t.Fail()
 	} else {
 		time.Sleep(5 * time.Second)
 		// succeeds on second run
-		if verifyRequest(testverifyParams).GetVerificationOperationStatus() != api.VerificationOperationStatus_VERIFICATION_OPERATION_STATUS_OK {
+		if verifyRequest(testverifyParams).GetVerificationInfo().GetSignatureDecodeStatus() != api.SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID
+		{
 			t.Fail()
 		}
 	}
