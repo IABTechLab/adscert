@@ -10,7 +10,6 @@ import (
 	"github.com/IABTechLab/adscert/pkg/adscert/api"
 )
 
-
 func TestSigningRequest(t *testing.T) {
 	testsignParams := &testsignParameters{}
 	testsignParams.url = "https://adscerttestverifier.dev"
@@ -38,11 +37,11 @@ func TestVerificationRequest(t *testing.T) {
 	testverifyParams.signatureMessage = "from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=jsLwC53YySqG&status=1&timestamp=220816T221250&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=NfCC9zQeS3og&sigu=1tkmSdEe-5D7"
 	if verifyRequest(testverifyParams).GetVerificationOperationStatus() != api.VerificationOperationStatus_VERIFICATION_OPERATION_STATUS_OK {
 		t.Fail()
-	}
-	else {
+	} else {
 		time.Sleep(5 * time.Second)
-		// succeeds on second run 
+		// succeeds on second run
 		if verifyRequest(testverifyParams).GetVerificationOperationStatus() != api.VerificationOperationStatus_VERIFICATION_OPERATION_STATUS_OK {
 			t.Fail()
 		}
+	}
 }
