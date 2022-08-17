@@ -40,8 +40,7 @@ func TestVerificationRequest(t *testing.T) {
 	} else {
 		time.Sleep(5 * time.Second)
 		// succeeds on second run
-		if verifyRequest(testverifyParams).GetVerificationInfo().GetSignatureDecodeStatus() != api.SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID
-		{
+		if verifyRequest(testverifyParams).GetVerificationInfo().GetSignatureDecodeStatus() != api.SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID {
 			t.Fail()
 		}
 	}
