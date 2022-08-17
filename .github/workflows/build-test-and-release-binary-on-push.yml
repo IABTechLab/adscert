@@ -36,6 +36,7 @@ jobs:
       run: go test -v ./...
 
   release:
+    needs: build_and_test
     name: Create Release
     runs-on: ubuntu-latest
     steps:

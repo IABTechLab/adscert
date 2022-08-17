@@ -46,10 +46,11 @@ jobs:
         go test -v . -tags integration 
         
   release:
+    needs: build_and_test
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    
+
     - name: Build and Release Docker Image
       uses: mr-smithers-excellent/docker-build-push@v5
       with:
