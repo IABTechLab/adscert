@@ -1,0 +1,21 @@
+name: Build and Release Docker Image on Push
+
+# https://docs.github.com/en/actions/reference/events-that-trigger-workflows
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_release:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Build and Release Docker Image
+      uses: mr-smithers-excellent/docker-build-push@v5
+      with:
+        image: adscert
+        registry: ghcr.io
+        username: ${{ secrets.GHCR_USERNAME }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+ 
