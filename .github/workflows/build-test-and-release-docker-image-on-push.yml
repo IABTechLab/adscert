@@ -1,10 +1,7 @@
-name: Build and Test Docker Image on Pull and Push
+name: Build Test and Release Docker Image on Push
 
 # https://docs.github.com/en/actions/reference/events-that-trigger-workflows
 on:
-  pull_request:
-    branches:
-      - main
   push:
     branches:
       - main
@@ -47,3 +44,16 @@ jobs:
       run: |
         cd cmd
         go test -v . -tags integration 
+        
+  release:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Build and Release Docker Image
+      uses: mr-smithers-excellent/docker-build-push@v5
+      with:
+        image: adscert
+        registry: ghcr.io
+        username: ${{ secrets.GHCR_USERNAME }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+ 
