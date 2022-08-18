@@ -5,7 +5,7 @@ on:
     branches:
       - main
   # run on pull for testing, *** remove before merge ***
-  pull:
+  pull_request:
     branches:
       - main
 
