@@ -11,7 +11,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: adscert-image
+  IMAGE_NAME: adscert
 
 jobs:
   build_and_test:
