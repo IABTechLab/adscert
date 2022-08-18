@@ -11,7 +11,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: adscert_image
+  IMAGE_NAME: adscert-image
 
 jobs:
   build_and_test:
@@ -54,7 +54,7 @@ jobs:
         
 # Actions are pinned to a commit SHA.
 # To get a newer version, update the SHA.
-  push-image:
+  push_image:
     needs: build_and_test
     runs-on: ubuntu-latest
     permissions:
