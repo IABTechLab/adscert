@@ -4,10 +4,6 @@ on:
   push:
     branches:
       - main
-  # run on pull for testing, *** remove before merge ***
-  pull_request:
-    branches:
-      - main
 
 env:
   REGISTRY: ghcr.io
