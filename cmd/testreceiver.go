@@ -18,6 +18,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	"google.golang.org/protobuf/encoding/prototext"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -58,11 +59,11 @@ func startServer() {
 		testverifyParams.serverAddress = "localhost:3000"
 		testverifyParams.body = ""
 		testverifyParams.verifyingTimeout = 5 * time.Millisecond
-		verifyRequest(testverifyParams)
+
+		fmt.Fprint(w, prototext.Format(verifyRequest(testverifyParams)))
 	})
 
 	port := ":5000"
-	fmt.Println("Server running on port" + port)
-
+	fmt.Println("Server is running on port" + port)
 	log.Fatal(http.ListenAndServe(port, nil))
 }
