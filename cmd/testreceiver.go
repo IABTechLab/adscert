@@ -17,9 +17,11 @@ package cmd
 
 import (
 	"io/ioutil"
+	"time"
 
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/encoding/prototext"
+
 	// "time"
 	// "github.com/IABTechLab/adscert/pkg/adscert/api"
 	// "github.com/IABTechLab/adscert/pkg/adscert/logger"
@@ -83,6 +85,9 @@ func startServer(testreceiverParams *testreceiverParameters) {
 		testverifyParams = &testverifyParameters{}
 		testverifyParams.destinationURL = bodyString
 		testverifyParams.signatureMessage = signatureMessage
+		testverifyParams.serverAddress = "localhost:3000"
+		testverifyParams.body = ""
+		testverifyParams.verifyingTimeout = 5 * time.Millisecond
 		fmt.Fprint(w, prototext.Format(verifyRequest(testverifyParams)))
 	})
 
