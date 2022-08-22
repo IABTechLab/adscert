@@ -16,7 +16,10 @@ limitations under the License.
 package cmd
 
 import (
+	"io/ioutil"
+
 	"github.com/spf13/cobra"
+	"google.golang.org/protobuf/encoding/prototext"
 	// "time"
 	// "github.com/IABTechLab/adscert/pkg/adscert/api"
 	// "github.com/IABTechLab/adscert/pkg/adscert/logger"
@@ -44,22 +47,45 @@ var (
 )
 
 type testreceiverParameters struct {
-	url string
 }
 
 func init() {
 	rootCmd.AddCommand(testreceiverCmd)
-
-	testreceiverCmd.Flags().StringVar(&testreceiverParams.url, "url", "", "URL to invoke")
 }
 
 func startServer(testreceiverParams *testreceiverParameters) {
-	print(testreceiverParams.url)
 
 	// API routes
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello world from adscert")
+	http.HandleFunc("/", func(w http.ResponseWriter, resp *http.Request) {
+		// fmt.Fprintf(w, "Hello world from adscert")
+		defer resp.Body.Close()
+
+		bodyBytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		bodyString := string(bodyBytes)
+		signatureMessage := resp.Header["X-Ads-Cert-Auth"][0]
+
+		// Print Statements
+		// Note if you try to access a key in the map that doesn't exist you will get an error
+		// a check on the key should be made to prevent this
+		// this code isn't meant for production
+		fmt.Fprint(w, "\n")
+		fmt.Fprint(w, signatureMessage)
+		fmt.Fprint(w, "\n")
+		fmt.Fprint(w, "\n")
+		fmt.Fprint(w, bodyString)
+		fmt.Fprint(w, "\n")
+		fmt.Fprint(w, "\n")
+
+		testverifyParams = &testverifyParameters{}
+		testverifyParams.destinationURL = bodyString
+		testverifyParams.signatureMessage = signatureMessage
+		fmt.Fprint(w, prototext.Format(verifyRequest(testverifyParams)))
 	})
+
 	http.HandleFunc("/hi", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hi")
 	})
