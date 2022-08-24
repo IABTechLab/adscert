@@ -1,4 +1,4 @@
-name: Build on Pull Request
+name: Build and Test Binary on Pull Request
 
 # https://docs.github.com/en/actions/reference/events-that-trigger-workflows
 on:
@@ -7,7 +7,7 @@ on:
       - main
 
 jobs:
-  Build:
+  build_and_test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -25,7 +25,7 @@ jobs:
 
     - name: Build
       run: go build -v ./...
-
+  
     # Run vet & lint on the code
     - name: Run vet & lint
       run: |
