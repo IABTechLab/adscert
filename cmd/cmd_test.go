@@ -52,11 +52,11 @@ func TestVerificationRequest(t *testing.T) {
 }
 
 func TestWebReciever(t *testing.T) {
-	testreceiverParams := &testreceiverParameters{}
-	testreceiverParams.serverPort = "5000"
-	testreceiverParams.verifierAddress = "localhost:4000"
-	testreceiverParams.verifyingTimeout = 10 * time.Millisecond
-	startServer(testreceiverParams)
+	// testreceiverParams := &testreceiverParameters{}
+	// testreceiverParams.serverPort = "5000"
+	// testreceiverParams.verifierAddress = "localhost:4000"
+	// testreceiverParams.verifyingTimeout = 10 * time.Millisecond
+	// startServer(testreceiverParams)
 
 	urlValue := "https://adscerttestverifier.dev"
 	urlData, err := json.Marshal(urlValue)
