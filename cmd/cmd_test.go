@@ -45,3 +45,37 @@ func TestVerificationRequest(t *testing.T) {
 		}
 	}
 }
+
+func TestWebReciever(t *testing.T) {
+	testreceiverParams := &testreceiverParameters{}
+	testreceiverParams.serverPort = "5000"
+	testreceiverParams.verifierAddress = "localhost:4000"
+	testreceiverParams.verifyingTimeout = 10 * time.Millisecond
+	startServer(testreceiverParams)
+
+	urlValue := string{"https://adscerttestverifier.dev"}
+	urlData, err := json.Marshal(values)
+
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("localhost:%s", testreceiverParams.serverPort), bytes.NewBuffer(urlData))
+	if err != nil {
+		t.Fail()
+	}
+
+	req.Header.Set("X-Ads-Cert-Auth", "from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=mBJo7EYj9XF9&status=1&timestamp=220810T142237&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=ugN9tqMd6h0p&sigu=pxQd8BV20lHg")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Errored when sending request to the server")
+		t.Fail()
+	}
+
+	defer resp.Body.Close()
+	responseBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Fail()
+	}
+
+	fmt.Println(resp.Status)
+	fmt.Println(string(responseBody))
+}
