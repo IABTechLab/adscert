@@ -43,8 +43,12 @@ jobs:
     - name: Run Receiver Server
       run: |
         go run . testreceiver --server_port 5000 --verifier_address localhost:4000 &
+       
+    # Run and test local receiver web server
+    - name: Ping Receiver Server
+      needs: Run Receiver Server
+      run: |
         curl http://localhost:5000 -d "https://adscerttestverifier.dev" -H "X-Ads-Cert-Auth: from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=mBJo7EYj9XF9&status=1&timestamp=220810T142237&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=ugN9tqMd6h0p&sigu=pxQd8BV20lHg"
-        
 
     # # Run integration tests against docker container
     - name: Run Docker Integration Tests
