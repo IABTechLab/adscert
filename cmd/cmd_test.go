@@ -1,6 +1,3 @@
-//go:build integration
-// +build integration
-
 package cmd
 
 import (
@@ -55,7 +52,7 @@ func TestWebReciever(t *testing.T) {
 	urlValue := "https://adscerttestverifier.dev"
 	urlData, err := json.Marshal(urlValue)
 
-	req, err := http.NewRequest(http.MethodPost, "localhost:5000", bytes.NewBuffer(urlData))
+	req, err := http.NewRequest(http.MethodPost, "http://localhost:5000", bytes.NewBuffer(urlData))
 	if err != nil {
 		t.Fail()
 	}
@@ -77,4 +74,5 @@ func TestWebReciever(t *testing.T) {
 
 	fmt.Println(resp.Status)
 	fmt.Println(string(responseBody))
+
 }

@@ -64,6 +64,7 @@ func startServer(testreceiverParams *testreceiverParameters) {
 
 		bodyString := string(bodyBytes)
 		signatureMessage := resp.Header["X-Ads-Cert-Auth"][0]
+		fmt.Println(signatureMessage)
 
 		testverifyParams = &testverifyParameters{}
 		testverifyParams.destinationURL = bodyString
