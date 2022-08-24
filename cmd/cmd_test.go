@@ -4,6 +4,11 @@
 package cmd
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
 	"testing"
 	"time"
 
@@ -53,8 +58,8 @@ func TestWebReciever(t *testing.T) {
 	testreceiverParams.verifyingTimeout = 10 * time.Millisecond
 	startServer(testreceiverParams)
 
-	urlValue := string{"https://adscerttestverifier.dev"}
-	urlData, err := json.Marshal(values)
+	urlValue := "https://adscerttestverifier.dev"
+	urlData, err := json.Marshal(urlValue)
 
 	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("localhost:%s", testreceiverParams.serverPort), bytes.NewBuffer(urlData))
 	if err != nil {
