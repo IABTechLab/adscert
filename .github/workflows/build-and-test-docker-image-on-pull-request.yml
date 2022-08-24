@@ -42,7 +42,7 @@ jobs:
     # Run local receiver web server
     - name: Run Receiver Server
       run: |
-        go run . testreceiver --server_port 5000 --verifier_address localhost:4000
+        go run . testreceiver --server_port 5000 --verifier_address localhost:4000 &
         
 
     # # Run integration tests against docker container
