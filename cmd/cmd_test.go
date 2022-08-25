@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -31,32 +29,34 @@ func TestSigningRequest(t *testing.T) {
 }
 
 func TestVerificationRequest(t *testing.T) {
+	retries := 0
+	retryLimit := 10
 	testverifyParams := &testverifyParameters{}
 	testverifyParams.destinationURL = "https://adscerttestverifier.dev"
 	testverifyParams.serverAddress = "localhost:4000"
 	testverifyParams.body = ""
 	testverifyParams.verifyingTimeout = 10 * time.Millisecond
 	testverifyParams.signatureMessage = "from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=jsLwC53YySqG&status=1&timestamp=220816T221250&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=NfCC9zQeS3og&sigu=1tkmSdEe-5D7"
-	if verifyRequest(testverifyParams).GetVerificationInfo()[0].GetSignatureDecodeStatus()[0] != api.SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_COUNTERPARTY_LOOKUP_ERROR {
-		t.Fail()
-	} else {
+	signatureStatus := verifyRequest(testverifyParams).GetVerificationInfo()[0].GetSignatureDecodeStatus()[0]
+	for signatureStatus != api.SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID && retries < retryLimit {
 		time.Sleep(5 * time.Second)
-		// succeeds on second run
-		if verifyRequest(testverifyParams).GetVerificationInfo()[0].GetSignatureDecodeStatus()[0] != api.SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID {
-			t.Fail()
-		}
+		signatureStatus = verifyRequest(testverifyParams).GetVerificationInfo()[0].GetSignatureDecodeStatus()[0]
+		retries += 1
 	}
+	if retries == retryLimit {
+		t.Fail()
+	}
+
 }
 
 func TestWebReciever(t *testing.T) {
-	urlValue := "https://adscerttestverifier.dev"
-	urlData, err := json.Marshal(urlValue)
-
-	req, err := http.NewRequest(http.MethodPost, "http://localhost:5000", bytes.NewBuffer(urlData))
+	req, err := http.NewRequest("GET", "http://localhost:5000", nil)
 	if err != nil {
+		fmt.Println("Errored when creating request")
 		t.Fail()
 	}
 
+	req.Header.Set("Invoked-Url", "https://adscerttestverifier.dev")
 	req.Header.Set("X-Ads-Cert-Auth", "from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=mBJo7EYj9XF9&status=1&timestamp=220810T142237&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=ugN9tqMd6h0p&sigu=pxQd8BV20lHg")
 
 	client := &http.Client{}
@@ -69,6 +69,7 @@ func TestWebReciever(t *testing.T) {
 	defer resp.Body.Close()
 	responseBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		fmt.Println("Errored on body read")
 		t.Fail()
 	}
 
