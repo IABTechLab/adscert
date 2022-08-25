@@ -32,8 +32,7 @@ func TestSigningRequest(t *testing.T) {
 }
 
 func TestVerificationRequest(t *testing.T) {
-	retries := 0
-	retryLimit := 10
+	retries := 10
 	testverifyParams := &testverifyParameters{}
 	testverifyParams.destinationURL = "https://adscerttestverifier.dev"
 	testverifyParams.serverAddress = "localhost:4000"
@@ -41,12 +40,12 @@ func TestVerificationRequest(t *testing.T) {
 	testverifyParams.verifyingTimeout = 10 * time.Millisecond
 	testverifyParams.signatureMessage = "from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=jsLwC53YySqG&status=1&timestamp=220816T221250&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=NfCC9zQeS3og&sigu=1tkmSdEe-5D7"
 	signatureStatus := verifyRequest(testverifyParams).GetVerificationInfo()[0].GetSignatureDecodeStatus()[0]
-	for signatureStatus != api.SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID && retries < retryLimit {
+	for signatureStatus != api.SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID && retries > 0 {
 		time.Sleep(5 * time.Second)
 		signatureStatus = verifyRequest(testverifyParams).GetVerificationInfo()[0].GetSignatureDecodeStatus()[0]
-		retries += 1
+		retries -= 1
 	}
-	if retries == retryLimit {
+	if retries == 0 {
 		t.Fail()
 	}
 
