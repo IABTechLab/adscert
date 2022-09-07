@@ -15,7 +15,7 @@ func TestSigningRequest(t *testing.T) {
 	testsignParams.url = "https://adscerttestverifier.dev"
 	testsignParams.serverAddress = "localhost:3000"
 	testsignParams.body = ""
-	testsignParams.signingTimeout = 5 * time.Millisecond
+	testsignParams.signingTimeout = 10 * time.Millisecond
 	// fails on the first run since no records yet
 	if signRequest(testsignParams).GetSignatureOperationStatus() != api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_SIGNATORY_INTERNAL_ERROR {
 		t.Fail()
@@ -33,7 +33,7 @@ func TestVerificationRequest(t *testing.T) {
 	testverifyParams.destinationURL = "https://adscerttestverifier.dev"
 	testverifyParams.serverAddress = "localhost:4000"
 	testverifyParams.body = ""
-	testverifyParams.verifyingTimeout = 5 * time.Millisecond
+	testverifyParams.verifyingTimeout = 10 * time.Millisecond
 	testverifyParams.signatureMessage = "from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=jsLwC53YySqG&status=1&timestamp=220816T221250&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=NfCC9zQeS3og&sigu=1tkmSdEe-5D7"
 	if verifyRequest(testverifyParams).GetVerificationInfo()[0].GetSignatureDecodeStatus()[0] != api.SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_COUNTERPARTY_LOOKUP_ERROR {
 		t.Fail()
