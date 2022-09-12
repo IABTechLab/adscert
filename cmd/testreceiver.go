@@ -53,10 +53,10 @@ func init() {
 
 func startServer(testreceiverParams *testreceiverParameters) {
 	// API routes
-	http.HandleFunc("/", func(w http.ResponseWriter, resp *http.Request) {
+	http.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 
-		bodyString := resp.Header["Invoked-Url"][0]
-		signatureMessage := resp.Header["X-Ads-Cert-Auth"][0]
+		bodyString := req.Host
+		signatureMessage := req.Header["X-Ads-Cert-Auth"][0]
 
 		testverifyParams = &testverifyParameters{}
 		testverifyParams.destinationURL = bodyString

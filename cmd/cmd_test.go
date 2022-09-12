@@ -52,13 +52,12 @@ func TestVerificationRequest(t *testing.T) {
 }
 
 func TestWebReciever(t *testing.T) {
-	req, err := http.NewRequest("GET", "http://localhost:5000", nil)
+	req, err := http.NewRequest("GET", "http://adscerttestverifier:5000", nil)
 	if err != nil {
 		fmt.Println("Errored when creating request")
 		t.Fail()
 	}
 
-	req.Header.Set("Invoked-Url", "https://adscerttestverifier.dev")
 	req.Header.Set("X-Ads-Cert-Auth", "from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=mBJo7EYj9XF9&status=1&timestamp=220810T142237&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=ugN9tqMd6h0p&sigu=pxQd8BV20lHg")
 
 	client := &http.Client{}
