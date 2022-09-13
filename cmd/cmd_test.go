@@ -22,7 +22,7 @@ func TestSigningRequest(t *testing.T) {
 	testsignParams.signingTimeout = 10 * time.Millisecond
 	signatureStatus := signRequest(testsignParams).GetSignatureOperationStatus()
 	for signatureStatus != api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK && retries > 0 {
-		time.Sleep(5 * time.Seconds)
+		time.Sleep(5 * time.Second)
 		signatureStatus = signRequest(testsignParams).GetSignatureOperationStatus()
 	}
 	if retries == 0 {
@@ -93,7 +93,7 @@ func TestSignSendAndVerify(t *testing.T) {
 	testsignParams.signingTimeout = 10 * time.Millisecond
 	signatureResponse := signRequest(testsignParams)
 	for signatureResponse.GetSignatureOperationStatus() != api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK && retries > 0 {
-		time.Sleep(5 * time.Seconds)
+		time.Sleep(5 * time.Second)
 		signatureResponse = signRequest(testsignParams)
 	}
 	if retries == 0 {
