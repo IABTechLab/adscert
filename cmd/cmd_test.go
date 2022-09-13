@@ -82,9 +82,9 @@ func TestWebReciever(t *testing.T) {
 
 // End to End integration test
 func TestSignSendAndVerify(t *testing.T) {
-	testURL = "http://adscerttestverifier.dev:5000"
+	testURL := "http://adscerttestverifier.dev:5000"
 
-	// Sign Request	
+	// Sign Request
 	testsignParams := &testsignParameters{}
 	testsignParams.url = testURL
 	testsignParams.serverAddress = "localhost:3000"
