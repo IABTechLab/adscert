@@ -90,15 +90,16 @@ func TestSignSendAndVerify(t *testing.T) {
 	testsignParams.serverAddress = "localhost:3000"
 	testsignParams.body = ""
 	testsignParams.signingTimeout = 10 * time.Millisecond
-	resp := signRequest(testsignParams).GetSignatureOperationStatus()
+	resp := signRequest(testsignParams)
+
 	// fails on the first run since no records yet
-	if resp != api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_SIGNATORY_INTERNAL_ERROR {
+	if resp.GetSignatureOperationStatus() != api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_SIGNATORY_INTERNAL_ERROR {
 		t.Fail()
 	} else {
 		time.Sleep(5 * time.Second)
 		resp = signRequest(testsignParams).GetSignatureOperationStatus()
 		// succeeds on second run
-		if signRequest(testsignParams).GetSignatureOperationStatus() != api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK {
+		if resp.GetSignatureOperationStatus() != api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK {
 			t.Fail()
 		}
 	}
