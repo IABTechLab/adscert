@@ -67,12 +67,12 @@ func TestWebReciever(t *testing.T) {
 		t.Fail()
 	}
 
-	defer resp.Body.Close()
 	responseBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("Errored on body read")
 		t.Fail()
 	}
+	defer resp.Body.Close()
 
 	fmt.Println(resp.Status)
 	fmt.Println(string(responseBody))
