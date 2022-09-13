@@ -14,21 +14,21 @@ import (
 )
 
 func TestSigningRequest(t *testing.T) {
+	retries := 10
 	testsignParams := &testsignParameters{}
 	testsignParams.url = "https://adscerttestverifier.dev"
 	testsignParams.serverAddress = "localhost:3000"
 	testsignParams.body = ""
 	testsignParams.signingTimeout = 10 * time.Millisecond
-	// fails on the first run since no records yet
-	if signRequest(testsignParams).GetSignatureOperationStatus() != api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_SIGNATORY_INTERNAL_ERROR {
-		t.Fail()
-	} else {
-		time.Sleep(5 * time.Second)
-		// succeeds on second run
-		if signRequest(testsignParams).GetSignatureOperationStatus() != api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK {
-			t.Fail()
-		}
+	signatureStatus := signRequest(testsignParams).GetSignatureOperationStatus()
+	for signatureStatus != api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK && retries > 0 {
+		time.Sleep(5 * time.Seconds)
+		signatureStatus = signRequest(testsignParams).GetSignatureOperationStatus()
 	}
+	if retries == 0 {
+		t.Fail()
+	}
+
 }
 
 func TestVerificationRequest(t *testing.T) {
@@ -85,23 +85,19 @@ func TestSignSendAndVerify(t *testing.T) {
 	testURL := "http://adscerttestverifier.dev:5000"
 
 	// Sign Request
+	retries := 10
 	testsignParams := &testsignParameters{}
 	testsignParams.url = testURL
 	testsignParams.serverAddress = "localhost:3000"
 	testsignParams.body = ""
 	testsignParams.signingTimeout = 10 * time.Millisecond
 	signatureResponse := signRequest(testsignParams)
-
-	// fails on the first run since no records yet
-	if signatureResponse.GetSignatureOperationStatus() != api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_SIGNATORY_INTERNAL_ERROR {
-		t.Fail()
-	} else {
-		time.Sleep(5 * time.Second)
+	for signatureResponse.GetSignatureOperationStatus() != api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK && retries > 0 {
+		time.Sleep(5 * time.Seconds)
 		signatureResponse = signRequest(testsignParams)
-		// succeeds on second run
-		if signatureResponse.GetSignatureOperationStatus() != api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK {
-			t.Fail()
-		}
+	}
+	if retries == 0 {
+		t.Fail()
 	}
 	signatureMessage := signatureResponse.GetRequestInfo().SignatureInfo[0].SignatureMessage
 
