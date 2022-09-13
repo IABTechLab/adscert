@@ -132,7 +132,7 @@ func TestSignSendAndVerify(t *testing.T) {
 	// Print verification response
 	fmt.Println(resp.Status)
 	fmt.Println(string(responseBody))
-	if if resp.body.verification_info.signature_decode_status != SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID {
+	if resp.body.verification_info.signature_decode_status != SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID {
 		fmt.Println("Verification Failed")
 		t.Fail()
 	}
