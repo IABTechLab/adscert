@@ -79,3 +79,57 @@ func TestWebReciever(t *testing.T) {
 	fmt.Println(string(responseBody))
 
 }
+
+// End to End integration test
+func TestSignSendAndVerify(t *testing.T) {
+	testURL = "http://adscerttestverifier.dev:5000"
+
+	// Sign Request	
+	testsignParams := &testsignParameters{}
+	testsignParams.url = testURL
+	testsignParams.serverAddress = "localhost:3000"
+	testsignParams.body = ""
+	testsignParams.signingTimeout = 10 * time.Millisecond
+	resp := signRequest(testsignParams).GetSignatureOperationStatus()
+	// fails on the first run since no records yet
+	if resp != api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_SIGNATORY_INTERNAL_ERROR {
+		t.Fail()
+	} else {
+		time.Sleep(5 * time.Second)
+		resp = signRequest(testsignParams).GetSignatureOperationStatus()
+		// succeeds on second run
+		if signRequest(testsignParams).GetSignatureOperationStatus() != api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK {
+			t.Fail()
+		}
+	}
+	signatureMessage := resp.GetRequestInfo().SignatureInfo.SignatureMessage
+
+	// Send Request to Web Server
+	req, err := http.NewRequest("GET", testURL, nil)
+	if err != nil {
+		fmt.Println("Errored when creating request")
+		t.Fail()
+	}
+
+	req.Header.Add("X-Ads-Cert-Auth", signatureMessage)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		fmt.Println("Errored when sending request to the server")
+		t.Fail()
+	}
+
+	defer resp.Body.Close()
+	responseBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Errored on body read")
+		t.Fail()
+	}
+
+	// Print verification response
+	fmt.Println(resp.Status)
+	fmt.Println(string(responseBody))
+
+}
