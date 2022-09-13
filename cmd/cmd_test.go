@@ -63,6 +63,7 @@ func TestWebReciever(t *testing.T) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
+		fmt.Println(err)
 		fmt.Println("Errored when sending request to the server")
 		t.Fail()
 	}
