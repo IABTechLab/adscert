@@ -58,7 +58,7 @@ func TestWebReciever(t *testing.T) {
 		t.Fail()
 	}
 
-	req.Header.Set("X-Ads-Cert-Auth", "from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=mBJo7EYj9XF9&status=1&timestamp=220810T142237&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=ugN9tqMd6h0p&sigu=pxQd8BV20lHg")
+	req.Header.Add("X-Ads-Cert-Auth", "from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=mBJo7EYj9XF9&status=1&timestamp=220810T142237&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=ugN9tqMd6h0p&sigu=pxQd8BV20lHg")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -67,12 +67,12 @@ func TestWebReciever(t *testing.T) {
 		t.Fail()
 	}
 
+	defer resp.Body.Close()
 	responseBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("Errored on body read")
 		t.Fail()
 	}
-	defer resp.Body.Close()
 
 	fmt.Println(resp.Status)
 	fmt.Println(string(responseBody))
