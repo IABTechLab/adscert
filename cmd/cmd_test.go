@@ -77,8 +77,8 @@ func TestWebReciever(t *testing.T) {
 	}
 
 	responseBodyString := string(responseBody)
-	// fmt.Println(resp.Status)
-	// fmt.Println(responseBodyString)
+	fmt.Println(resp.Status)
+	fmt.Println(responseBodyString)
 
 	if !strings.Contains(responseBodyString, "SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID") {
 		fmt.Println("Failed, signature invalid")
@@ -134,8 +134,8 @@ func TestSignSendAndVerify(t *testing.T) {
 
 	// Print verification response
 	responseBodyString := string(responseBody)
-	// fmt.Println(resp.Status)
-	// fmt.Println(responseBodyString)
+	fmt.Println(resp.Status)
+	fmt.Println(responseBodyString)
 
 	if !strings.Contains(responseBodyString, "SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID") {
 		fmt.Println("Failed, signature invalid")
