@@ -53,7 +53,7 @@ func init() {
 
 	testverifyCmd.Flags().StringVar(&testverifyParams.signatureMessage, "signatureMessage", "", "signature message to verify")
 	testverifyCmd.Flags().StringVar(&testverifyParams.destinationURL, "url", "", "URL to verify")
-	testverifyCmd.Flags().StringVar(&testverifyParams.serverAddress, "server_address", "localhost:3000", "address of grpc server")
+	testverifyCmd.Flags().StringVar(&testverifyParams.serverAddress, "server_address", "localhost:4000", "address of grpc server")
 	testverifyCmd.Flags().StringVar(&testverifyParams.body, "body", "", "POST request body")
 	testverifyCmd.Flags().DurationVar(&testverifyParams.verifyingTimeout, "verifying_timeout", 5*time.Millisecond, "Specifies how long this client will wait for verification to finish before abandoning.")
 }

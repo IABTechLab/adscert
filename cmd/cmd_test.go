@@ -4,6 +4,10 @@
 package cmd
 
 import (
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -11,37 +15,130 @@ import (
 )
 
 func TestSigningRequest(t *testing.T) {
+	retries := 10
 	testsignParams := &testsignParameters{}
 	testsignParams.url = "https://adscerttestverifier.dev"
 	testsignParams.serverAddress = "localhost:3000"
 	testsignParams.body = ""
 	testsignParams.signingTimeout = 10 * time.Millisecond
-	// fails on the first run since no records yet
-	if signRequest(testsignParams).GetSignatureOperationStatus() != api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_SIGNATORY_INTERNAL_ERROR {
-		t.Fail()
-	} else {
+	signatureStatus := signRequest(testsignParams).GetSignatureOperationStatus()
+	for signatureStatus != api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK && retries > 0 {
 		time.Sleep(5 * time.Second)
-		// succeeds on second run
-		if signRequest(testsignParams).GetSignatureOperationStatus() != api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK {
-			t.Fail()
-		}
+		signatureStatus = signRequest(testsignParams).GetSignatureOperationStatus()
 	}
+	if retries == 0 {
+		t.Fail()
+	}
+
 }
 
 func TestVerificationRequest(t *testing.T) {
+	retries := 10
 	testverifyParams := &testverifyParameters{}
 	testverifyParams.destinationURL = "https://adscerttestverifier.dev"
 	testverifyParams.serverAddress = "localhost:4000"
 	testverifyParams.body = ""
 	testverifyParams.verifyingTimeout = 10 * time.Millisecond
 	testverifyParams.signatureMessage = "from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=jsLwC53YySqG&status=1&timestamp=220816T221250&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=NfCC9zQeS3og&sigu=1tkmSdEe-5D7"
-	if verifyRequest(testverifyParams).GetVerificationInfo()[0].GetSignatureDecodeStatus()[0] != api.SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_COUNTERPARTY_LOOKUP_ERROR {
-		t.Fail()
-	} else {
+	signatureStatus := verifyRequest(testverifyParams).GetVerificationInfo()[0].GetSignatureDecodeStatus()[0]
+	for signatureStatus != api.SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID && retries > 0 {
 		time.Sleep(5 * time.Second)
-		// succeeds on second run
-		if verifyRequest(testverifyParams).GetVerificationInfo()[0].GetSignatureDecodeStatus()[0] != api.SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID {
-			t.Fail()
-		}
+		signatureStatus = verifyRequest(testverifyParams).GetVerificationInfo()[0].GetSignatureDecodeStatus()[0]
+		retries -= 1
+	}
+	if retries == 0 {
+		t.Fail()
+	}
+
+}
+
+func TestWebReciever(t *testing.T) {
+	req, err := http.NewRequest("GET", "http://adscerttestverifier.dev:5000", nil)
+	if err != nil {
+		fmt.Println("Errored when creating request")
+		t.Fail()
+	}
+
+	req.Header.Add("X-Ads-Cert-Auth", "from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=Ppq82bU_LjD-&status=1&timestamp=220914T143647&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=uKm1qVmfrMeT&sigu=jkKZoB9TKzd_")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		fmt.Println("Errored when sending request to the server")
+		t.Fail()
+	}
+
+	defer resp.Body.Close()
+	responseBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Errored on body read")
+		t.Fail()
+	}
+
+	responseBodyString := string(responseBody)
+	fmt.Println(resp.Status)
+	fmt.Println(responseBodyString)
+
+	if !strings.Contains(responseBodyString, "SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID") {
+		fmt.Println("Failed, signature invalid")
+		t.Fail()
+	}
+
+}
+
+// End to End integration test
+func TestSignSendAndVerify(t *testing.T) {
+	testURL := "http://adscerttestverifier.dev:5000"
+
+	// Sign Request
+	retries := 10
+	testsignParams := &testsignParameters{}
+	testsignParams.url = testURL
+	testsignParams.serverAddress = "localhost:3000"
+	testsignParams.body = ""
+	testsignParams.signingTimeout = 10 * time.Millisecond
+	signatureResponse := signRequest(testsignParams)
+	for signatureResponse.GetSignatureOperationStatus() != api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK && retries > 0 {
+		time.Sleep(5 * time.Second)
+		signatureResponse = signRequest(testsignParams)
+	}
+	if retries == 0 {
+		t.Fail()
+	}
+	signatureMessage := signatureResponse.GetRequestInfo().SignatureInfo[0].SignatureMessage
+
+	// Send Request to Web Server
+	req, err := http.NewRequest("GET", testURL, nil)
+	if err != nil {
+		fmt.Println("Errored when creating request")
+		t.Fail()
+	}
+
+	req.Header.Add("X-Ads-Cert-Auth", signatureMessage)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		fmt.Println("Errored when sending request to the server")
+		t.Fail()
+	}
+
+	defer resp.Body.Close()
+	responseBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Errored on body read")
+		t.Fail()
+	}
+
+	// Print verification response
+	responseBodyString := string(responseBody)
+	fmt.Println(resp.Status)
+	fmt.Println(responseBodyString)
+
+	if !strings.Contains(responseBodyString, "SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID") {
+		fmt.Println("Failed, signature invalid")
+		t.Fail()
 	}
 }

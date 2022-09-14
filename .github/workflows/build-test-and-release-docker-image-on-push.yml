@@ -1,6 +1,5 @@
 name: Build Test and Release Docker Image on Push
 
-# https://docs.github.com/en/actions/reference/events-that-trigger-workflows
 on:
   push:
     branches:
