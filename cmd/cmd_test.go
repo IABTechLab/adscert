@@ -75,21 +75,17 @@ func TestWebReciever(t *testing.T) {
 		t.Fail()
 	}
 
+	responseBodyString := string(responseBody)
 	fmt.Println(resp.Status)
-	fmt.Println(string(responseBody))
+	fmt.Println(responseBodyString)
 
-	respBytes := []byte(resp)
-	var jsonResp map[string]interface{}
-	err := json.Unmarshal(respBytes, &jsonResp)
-	if err != nil {
-		fmt.Println("Errored on json unmarshal")
-		t.Fail()
-	}
-	docodeStatus := jsonResp["verification_info"]["signature_decode_status"].(string)
-	fmt.Println(decodeStatus)
-	if decodeStatus != "SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID" {
-		fmt.Println("Failed, Invalid Signature")
-		t.Fail()
+	if responseBodyString != 
+		"verification_info:  {
+			signature_decode_status:  SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID
+		  }" 
+	{
+		  fmt.Println("Failed, signature invalid")
+		  t.Fail()
 	}
 
 }
@@ -140,22 +136,16 @@ func TestSignSendAndVerify(t *testing.T) {
 	}
 
 	// Print verification response
+	responseBodyString := string(responseBody)
 	fmt.Println(resp.Status)
-	fmt.Println(string(responseBody))
+	fmt.Println(responseBodyString)
 
-	fmt.Println(resp.Status)
-	fmt.Println(string(responseBody))
-	respBytes := []byte(resp)
-	var jsonResp map[string]interface{}
-	err := json.Unmarshal(respBytes, &jsonResp)
-	if err != nil {
-		fmt.Println("Errored on json unmarshal")
-		t.Fail()
-	}
-	docodeStatus := jsonResp["verification_info"]["signature_decode_status"].(string)
-	fmt.Println(decodeStatus)
-	if decodeStatus != "SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID" {
-		fmt.Println("Failed, Invalid Signature")
-		t.Fail()
+	if responseBodyString != 
+		"verification_info:  {
+			signature_decode_status:  SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID
+		  }" 
+	{
+		  fmt.Println("Failed, signature invalid")
+		  t.Fail()
 	}
 }
