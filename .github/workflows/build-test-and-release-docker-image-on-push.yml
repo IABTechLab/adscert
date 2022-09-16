@@ -35,12 +35,17 @@ jobs:
     # Run signer signatory
     - name: Run Signer Signatory Container
       run: |
-        docker run -d -p 3000:3000 --name signer-container adscert-image ./adscert signatory --private_key "Ys83NKuuYxCVDUbmA671x3zAFsQ-EnNxmC2JLuBlGAU" --origin "adscerttestsigner.dev"
+        docker run -d -p 3000:3000 --name signer-container adscert-image ./adscert signatory --server_port 3000 --metrics_port 3001 --private_key "Ys83NKuuYxCVDUbmA671x3zAFsQ-EnNxmC2JLuBlGAU" --origin "adscerttestsigner.dev"
 
     # Run verifier signatory
     - name: Run Verifier Signatory Container
       run: |
-        docker run -d -p 4000:4000 --name verifier-container adscert-image ./adscert signatory --server_port 4000 --metrics_port 4001 --private_key "6mkLbsTBKs0UwYLkBdw5ttJHzjpSZxof0A2rako-0qs" --origin "adscerttestverifier.dev"
+        docker run -d -p 4000:4000 -p 5000:5000 --name verifier-container adscert-image ./adscert signatory --server_port 4000 --metrics_port 4001 --private_key "6mkLbsTBKs0UwYLkBdw5ttJHzjpSZxof0A2rako-0qs" --origin "adscerttestverifier.dev" &
+
+    # Run receiver web server in verifier-container
+    - name: Run Receiver Server
+      run: |
+        docker exec verifier-container ./adscert testreceiver --server_port 5000 --verifier_address localhost:4000 &
 
     # # Run integration tests against docker container
     - name: Run Docker Integration Tests
