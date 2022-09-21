@@ -15,10 +15,10 @@ import (
 func BenchmarkSigningRequest(b *testing.B) {
 	testsignParams = &testsignParameters{}
 
-	testsignParams.url = "url"
+	testsignParams.url = "https://adscerttestverifier.dev"
 	testsignParams.serverAddress = "localhost:3000"
 	testsignParams.body = ""
-	testsignParams.signingTimeout = 5 * time.Millisecond
+	testsignParams.signingTimeout = 10 * time.Millisecond
 
 	for i := 0; i < b.N; i++ {
 		// Establish the gRPC connection that the client will use to connect to the
