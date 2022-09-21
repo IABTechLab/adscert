@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	// "fmt"
-	// "net/http"
+	"fmt"
+	"net/http"
 	"testing"
 	"time"
 )
@@ -30,16 +30,16 @@ func BenchmarkVerifyingRequest(b *testing.B) {
 	}
 }
 
-// func BenchmarkWebReceiver(b *testing.B) {
-// 	for i := 0; i < b.N; i++ {
-// 		req, err := http.NewRequest("GET", "http://adscerttestverifier.dev:5000", nil)
-// 		if err != nil {
-// 			fmt.Println("Errored when creating request")
-// 			b.Fail()
-// 		}
+func BenchmarkWebReceiver(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		req, err := http.NewRequest("GET", "http://adscerttestverifier.dev:5000", nil)
+		if err != nil {
+			fmt.Println("Errored when creating request")
+			b.Fail()
+		}
 
-// 		req.Header.Add("X-Ads-Cert-Auth", "from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=Ppq82bU_LjD-&status=1&timestamp=220914T143647&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=uKm1qVmfrMeT&sigu=jkKZoB9TKzd_")
-// 		client := &http.Client{}
-// 		client.Do(req)
-// 	}
-// }
+		req.Header.Add("X-Ads-Cert-Auth", "from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=Ppq82bU_LjD-&status=1&timestamp=220914T143647&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=uKm1qVmfrMeT&sigu=jkKZoB9TKzd_")
+		client := &http.Client{}
+		client.Do(req)
+	}
+}
