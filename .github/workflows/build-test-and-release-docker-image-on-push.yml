@@ -54,7 +54,7 @@ jobs:
         go test -v . -tags integration 
 
     # Run benchmarking against docker container
-    - name: Run Docker Integration Tests
+    - name: Run Docker Container Benchmarking
       run: |
         cd cmd
         go test -v -bench=.
