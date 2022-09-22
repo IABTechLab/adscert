@@ -54,4 +54,4 @@ jobs:
     - name: Run Docker Container Benchmarking
       run: |
         cd cmd
-        go test -v -bench=. 
+        go test -v -bench=. -benchmem

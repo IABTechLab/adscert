@@ -57,7 +57,7 @@ jobs:
     - name: Run Docker Container Benchmarking
       run: |
         cd cmd
-        go test -v -bench=.
+        go test -v -bench=. -benchmem
         
 # Actions are pinned to a commit SHA.
 # To get a newer version, update the SHA.
