@@ -47,11 +47,17 @@ jobs:
       run: |
         docker exec verifier-container ./adscert testreceiver --server_port 5000 --verifier_address localhost:4000 &
 
-    # # Run integration tests against docker container
+    # Run integration tests against docker container
     - name: Run Docker Integration Tests
       run: |
         cd cmd
         go test -v . -tags integration 
+
+    # Run benchmarking against docker container
+    - name: Run Docker Integration Tests
+      run: |
+        cd cmd
+        go test -v -bench=.
         
 # Actions are pinned to a commit SHA.
 # To get a newer version, update the SHA.
