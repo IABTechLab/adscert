@@ -23,7 +23,7 @@ func TestLoadSigningRequest(t *testing.T) {
 	c := make(chan api.SignatureOperationStatus)
 
 	for i := 0; i < 10; i++ {
-		signToChannel(testsignParams, c)
+		go signToChannel(testsignParams, c)
 	}
 	var res []api.SignatureOperationStatus
 	for i := 0; i < 10; i++ {
