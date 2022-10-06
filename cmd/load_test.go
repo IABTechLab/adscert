@@ -13,7 +13,7 @@ func signToChannel(testsignParams *testsignParameters, c chan api.SignatureOpera
 	c <- signatureStatus.GetSignatureOperationStatus() // send status to c
 }
 
-func TestLoadSigningRequest(t *testing.T) {
+func TestLoad10SigningRequest(t *testing.T) {
 	testsignParams := &testsignParameters{}
 	testsignParams.url = "https://adscerttestverifier.dev"
 	testsignParams.serverAddress = "localhost:3000"
@@ -29,7 +29,26 @@ func TestLoadSigningRequest(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		res = append(res, <-c) // receive from c
 	}
-	print(res)
+	// print(res)
+}
+
+func TestLoad1000SigningRequest(t *testing.T) {
+	testsignParams := &testsignParameters{}
+	testsignParams.url = "https://adscerttestverifier.dev"
+	testsignParams.serverAddress = "localhost:3000"
+	testsignParams.body = ""
+	testsignParams.signingTimeout = 10 * time.Millisecond
+
+	c := make(chan api.SignatureOperationStatus)
+
+	for i := 0; i < 1000; i++ {
+		go signToChannel(testsignParams, c)
+	}
+	var res []api.SignatureOperationStatus
+	for i := 0; i < 1000; i++ {
+		res = append(res, <-c) // receive from c
+	}
+	// print(res)
 }
 
 // func LoadTestVerifyingRequest(b *testing.B) {
