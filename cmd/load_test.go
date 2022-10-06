@@ -13,7 +13,7 @@ func signToChannel(testsignParams *testsignParameters, c chan api.SignatureOpera
 	c <- signatureStatus.GetSignatureOperationStatus() // send status to c
 }
 
-func LoadTestSigningRequest(t *testing.T) {
+func TestLoadSigningRequest(t *testing.T) {
 	testsignParams := &testsignParameters{}
 	testsignParams.url = "https://adscerttestverifier.dev"
 	testsignParams.serverAddress = "localhost:3000"
