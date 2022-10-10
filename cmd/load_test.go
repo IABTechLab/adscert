@@ -25,19 +25,19 @@ func TestLoad10SigningRequest(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		go signToChannel(testsignParams, c)
 	}
-	var res []api.SignatureOperationStatus
-	for i := 0; i < 10; i++ {
-		res = append(res, <-c) // receive from c
-	}
 
+	var res []api.SignatureOperationStatus
 	successfulSignatureAttempts := 0
-	for _, v := range res {
-		if v == api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK {
+	for i := 0; i < 10; i++ {
+		operationStatus := <-c
+		if operationStatus == api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK {
 			successfulSignatureAttempts += 1
 		}
+		res = append(res, operationStatus)
 	}
+
 	print("Successfull Signature Attempts: " + fmt.Sprint(successfulSignatureAttempts))
-	print("Total Signature Attempts: " + fmt.Sprint(successfulSignatureAttempts))
+	print("Total Signature Attempts: " + fmt.Sprint(len(res)))
 
 }
 
