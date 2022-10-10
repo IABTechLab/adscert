@@ -8,65 +8,47 @@ import (
 	"time"
 )
 
+func TestLoad10To1000SigningRequest(t *testing.T) {
+	testsignParams := &testsignParameters{}
+	testsignParams.url = "https://adscerttestverifier.dev"
+	testsignParams.serverAddress = "localhost:3000"
+	testsignParams.body = ""
+	testsignParams.signingTimeout = 10 * time.Millisecond
+
+	c := make(chan api.SignatureOperationStatus)
+	iterationResults := map[int]int{}
+	for numOfRequests := 10; numOfRequests < 1000; numOfRequests *= 10 {
+		iterationResult := sendSignatureRequests(numOfRequests, testsignParams, c)
+		iterationResults[iterationResult[0]] = iterationResult[1]
+	}
+
+	for key, value := range iterationResults {
+		fmt.Printf("%v Signing Attempts: %v succeeded\n", key, value)
+	}
+}
+
+func sendSignatureRequests(numOfRequests int, testsignParams *testsignParameters, c chan api.SignatureOperationStatus) []int {
+	for i := 0; i < numOfRequests; i++ {
+		go signToChannel(testsignParams, c)
+	}
+
+	var res []api.SignatureOperationStatus
+	successfulSignatureAttempts := 0
+	for i := 0; i < numOfRequests; i++ {
+		operationStatus := <-c
+		if operationStatus == api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK {
+			successfulSignatureAttempts += 1
+		}
+		res = append(res, operationStatus)
+	}
+
+	iterationResult := []int{len(res), successfulSignatureAttempts}
+	return iterationResult
+}
+
 func signToChannel(testsignParams *testsignParameters, c chan api.SignatureOperationStatus) {
 	signatureStatus := signRequest(testsignParams)
 	c <- signatureStatus.GetSignatureOperationStatus() // send status to c
-}
-
-func TestLoad10SigningRequest(t *testing.T) {
-	testsignParams := &testsignParameters{}
-	testsignParams.url = "https://adscerttestverifier.dev"
-	testsignParams.serverAddress = "localhost:3000"
-	testsignParams.body = ""
-	testsignParams.signingTimeout = 10 * time.Millisecond
-
-	c := make(chan api.SignatureOperationStatus)
-
-	for i := 0; i < 10; i++ {
-		go signToChannel(testsignParams, c)
-	}
-
-	var res []api.SignatureOperationStatus
-	successfulSignatureAttempts := 0
-	for i := 0; i < 10; i++ {
-		operationStatus := <-c
-		if operationStatus == api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK {
-			successfulSignatureAttempts += 1
-		}
-		res = append(res, operationStatus)
-	}
-
-	println("Successfull Signature Attempts: " + fmt.Sprint(successfulSignatureAttempts))
-	println("Total Signature Attempts: " + fmt.Sprint(len(res)))
-
-}
-
-func TestLoad1000SigningRequest(t *testing.T) {
-	testsignParams := &testsignParameters{}
-	testsignParams.url = "https://adscerttestverifier.dev"
-	testsignParams.serverAddress = "localhost:3000"
-	testsignParams.body = ""
-	testsignParams.signingTimeout = 10 * time.Millisecond
-
-	c := make(chan api.SignatureOperationStatus)
-
-	for i := 0; i < 10; i++ {
-		go signToChannel(testsignParams, c)
-	}
-
-	var res []api.SignatureOperationStatus
-	successfulSignatureAttempts := 0
-	for i := 0; i < 10; i++ {
-		operationStatus := <-c
-		if operationStatus == api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK {
-			successfulSignatureAttempts += 1
-		}
-		res = append(res, operationStatus)
-	}
-
-	println("Successfull Signature Attempts: " + fmt.Sprint(successfulSignatureAttempts))
-	println("Total Signature Attempts: " + fmt.Sprint(len(res)))
-
 }
 
 // func LoadTestWebReceiver(b *testing.B) {
