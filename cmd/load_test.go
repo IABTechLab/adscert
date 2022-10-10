@@ -17,7 +17,7 @@ func TestLoad10To1000SigningRequest(t *testing.T) {
 
 	c := make(chan api.SignatureOperationStatus)
 	iterationResults := map[int]int{}
-	for numOfRequests := 10; numOfRequests < 1000; numOfRequests *= 10 {
+	for numOfRequests := 10; numOfRequests <= 1000; numOfRequests *= 10 {
 		iterationResult := sendSignatureRequests(numOfRequests, testsignParams, c)
 		iterationResults[iterationResult[0]] = iterationResult[1]
 	}
