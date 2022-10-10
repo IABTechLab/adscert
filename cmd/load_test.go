@@ -36,41 +36,38 @@ func TestLoad10SigningRequest(t *testing.T) {
 		res = append(res, operationStatus)
 	}
 
-	print("Successfull Signature Attempts: " + fmt.Sprint(successfulSignatureAttempts))
-	print("Total Signature Attempts: " + fmt.Sprint(len(res)))
+	println("Successfull Signature Attempts: " + fmt.Sprint(successfulSignatureAttempts))
+	println("Total Signature Attempts: " + fmt.Sprint(len(res)))
 
 }
 
-// func TestLoad1000SigningRequest(t *testing.T) {
-// 	testsignParams := &testsignParameters{}
-// 	testsignParams.url = "https://adscerttestverifier.dev"
-// 	testsignParams.serverAddress = "localhost:3000"
-// 	testsignParams.body = ""
-// 	testsignParams.signingTimeout = 10 * time.Millisecond
+func TestLoad1000SigningRequest(t *testing.T) {
+	testsignParams := &testsignParameters{}
+	testsignParams.url = "https://adscerttestverifier.dev"
+	testsignParams.serverAddress = "localhost:3000"
+	testsignParams.body = ""
+	testsignParams.signingTimeout = 10 * time.Millisecond
 
-// 	c := make(chan api.SignatureOperationStatus)
+	c := make(chan api.SignatureOperationStatus)
 
-// 	for i := 0; i < 1000; i++ {
-// 		go signToChannel(testsignParams, c)
-// 	}
-// 	var res []api.SignatureOperationStatus
-// 	for i := 0; i < 1000; i++ {
-// 		res = append(res, <-c) // receive from c
-// 	}
-// 	// print(res)
-// }
+	for i := 0; i < 10; i++ {
+		go signToChannel(testsignParams, c)
+	}
 
-// func LoadTestVerifyingRequest(b *testing.B) {
-// 	for i := 0; i < b.N; i++ {
-// 		testverifyParams := &testverifyParameters{}
-// 		testverifyParams.destinationURL = "https://adscerttestverifier.dev"
-// 		testverifyParams.serverAddress = "localhost:4000"
-// 		testverifyParams.body = ""
-// 		testverifyParams.verifyingTimeout = 10 * time.Millisecond
-// 		testverifyParams.signatureMessage = "from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=jsLwC53YySqG&status=1&timestamp=220816T221250&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=NfCC9zQeS3og&sigu=1tkmSdEe-5D7"
-// 		verifyRequest(testverifyParams)
-// 	}
-// }
+	var res []api.SignatureOperationStatus
+	successfulSignatureAttempts := 0
+	for i := 0; i < 10; i++ {
+		operationStatus := <-c
+		if operationStatus == api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK {
+			successfulSignatureAttempts += 1
+		}
+		res = append(res, operationStatus)
+	}
+
+	println("Successfull Signature Attempts: " + fmt.Sprint(successfulSignatureAttempts))
+	println("Total Signature Attempts: " + fmt.Sprint(len(res)))
+
+}
 
 // func LoadTestWebReceiver(b *testing.B) {
 // 	for i := 0; i < b.N; i++ {
