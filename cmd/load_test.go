@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	// "fmt"
 	// "net/http"
+	"fmt"
 	"github.com/IABTechLab/adscert/pkg/adscert/api"
 	"testing"
 	"time"
@@ -29,27 +29,36 @@ func TestLoad10SigningRequest(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		res = append(res, <-c) // receive from c
 	}
-	// print(res)
+
+	successfulSignatureAttempts := 0
+	for _, v := range res {
+		if v == api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK {
+			successfulSignatureAttempts += 1
+		}
+	}
+	print("Successfull Signature Attempts: " + fmt.Sprint(successfulSignatureAttempts))
+	print("Total Signature Attempts: " + fmt.Sprint(successfulSignatureAttempts))
+
 }
 
-func TestLoad1000SigningRequest(t *testing.T) {
-	testsignParams := &testsignParameters{}
-	testsignParams.url = "https://adscerttestverifier.dev"
-	testsignParams.serverAddress = "localhost:3000"
-	testsignParams.body = ""
-	testsignParams.signingTimeout = 10 * time.Millisecond
+// func TestLoad1000SigningRequest(t *testing.T) {
+// 	testsignParams := &testsignParameters{}
+// 	testsignParams.url = "https://adscerttestverifier.dev"
+// 	testsignParams.serverAddress = "localhost:3000"
+// 	testsignParams.body = ""
+// 	testsignParams.signingTimeout = 10 * time.Millisecond
 
-	c := make(chan api.SignatureOperationStatus)
+// 	c := make(chan api.SignatureOperationStatus)
 
-	for i := 0; i < 1000; i++ {
-		go signToChannel(testsignParams, c)
-	}
-	var res []api.SignatureOperationStatus
-	for i := 0; i < 1000; i++ {
-		res = append(res, <-c) // receive from c
-	}
-	// print(res)
-}
+// 	for i := 0; i < 1000; i++ {
+// 		go signToChannel(testsignParams, c)
+// 	}
+// 	var res []api.SignatureOperationStatus
+// 	for i := 0; i < 1000; i++ {
+// 		res = append(res, <-c) // receive from c
+// 	}
+// 	// print(res)
+// }
 
 // func LoadTestVerifyingRequest(b *testing.B) {
 // 	for i := 0; i < b.N; i++ {
