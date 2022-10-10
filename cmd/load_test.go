@@ -13,7 +13,7 @@ func TestLoad10To1000SigningRequest(t *testing.T) {
 	testsignParams.url = "https://adscerttestverifier.dev"
 	testsignParams.serverAddress = "localhost:3000"
 	testsignParams.body = ""
-	testsignParams.signingTimeout = 10 * time.Second
+	testsignParams.signingTimeout = 1 * time.Second
 
 	c := make(chan api.SignatureOperationStatus)
 	iterationResults := map[int][]int{}
