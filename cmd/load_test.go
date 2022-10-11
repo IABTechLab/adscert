@@ -72,7 +72,7 @@ func plotResults(iterationResults map[int][]float64, maxNumOfRequests int) {
 	p.Title.Text = "Percent of messages successfully signing during 2^X concurrent requests."
 	p.Y.Label.Text = "Percent Successful Signing Attemps"
 
-	w := vg.Points(10)
+	w := vg.Points(2)
 
 	bars1, err := plotter.NewBarChart(group1, w)
 	if err != nil {
