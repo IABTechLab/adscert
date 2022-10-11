@@ -62,8 +62,6 @@ func plotResults(iterationResults map[int][]float64) {
 	for i := 10; i <= 10000; i *= 10 {
 		for j, group := range groups {
 			group = append(group, iterationResults[i][j])
-			println("result!!")
-			println(int(iterationResults[i][j]))
 		}
 	}
 
@@ -74,22 +72,33 @@ func plotResults(iterationResults map[int][]float64) {
 
 	w := vg.Points(2)
 
-	bars := []*plotter.BarChart{}
-	for _, group := range groups {
-		aBar, err := plotter.NewBarChart(group, w)
-		if err != nil {
-			panic(err)
-		}
-		aBar.LineStyle.Width = vg.Length(0)
-		aBar.Color = plotutil.Color(0)
-		aBar.Offset = -w
-		bars = append(bars, aBar)
+	barsA, err := plotter.NewBarChart(group1, w)
+	if err != nil {
+		panic(err)
+	}
+	barsA.LineStyle.Width = vg.Length(0)
+	barsA.Color = plotutil.Color(0)
+	barsA.Offset = -w
 
-	}
-	for i, bar := range bars {
-		p.Add(bar)
-		p.Legend.Add("iteration: "+fmt.Sprint(i), bar)
-	}
+	p.Add(barsA)
+	p.Legend.Add("Group 1", barsA)
+
+	// bars := []*plotter.BarChart{}
+	// for _, group := range groups {
+	// 	aBar, err := plotter.NewBarChart(group, w)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// 	aBar.LineStyle.Width = vg.Length(0)
+	// 	aBar.Color = plotutil.Color(0)
+	// 	aBar.Offset = -w
+	// 	bars = append(bars, aBar)
+
+	// }
+	// for i, bar := range bars {
+	// 	p.Add(bar)
+	// 	p.Legend.Add("iteration: "+fmt.Sprint(i), bar)
+	// }
 	p.Legend.Top = true
 	p.NominalX("10", "100", "1000", "10000")
 
