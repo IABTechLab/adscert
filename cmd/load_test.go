@@ -36,6 +36,17 @@ func TestLoadSigningRequest(t *testing.T) {
 }
 
 func plotResults(iterationResults map[int][]float64) {
+	backdrop1 := plotter.Values{100, 100, 100, 100, 100, 100, 100, 100, 100, 100}
+	backdrop2 := plotter.Values{100, 100, 100, 100, 100, 100, 100, 100, 100, 100}
+	backdrop3 := plotter.Values{100, 100, 100, 100, 100, 100, 100, 100, 100, 100}
+	backdrop4 := plotter.Values{100, 100, 100, 100, 100, 100, 100, 100, 100, 100}
+	backdrop5 := plotter.Values{100, 100, 100, 100, 100, 100, 100, 100, 100, 100}
+	backdrop6 := plotter.Values{100, 100, 100, 100, 100, 100, 100, 100, 100, 100}
+	backdrop7 := plotter.Values{100, 100, 100, 100, 100, 100, 100, 100, 100, 100}
+	backdrop8 := plotter.Values{100, 100, 100, 100, 100, 100, 100, 100, 100, 100}
+	backdrop9 := plotter.Values{100, 100, 100, 100, 100, 100, 100, 100, 100, 100}
+	backdrop10 := plotter.Values{100, 100, 100, 100, 100, 100, 100, 100, 100, 100}
+
 	group1 := plotter.Values{}
 	group2 := plotter.Values{}
 	group3 := plotter.Values{}
@@ -72,7 +83,7 @@ func plotResults(iterationResults map[int][]float64) {
 		panic(err)
 	}
 	bars1.LineStyle.Width = vg.Length(0)
-	bars1.Color = plotutil.Color(0)
+	bars1.Color = plotutil.Color(1)
 	bars1.Offset = -4.5 * w
 
 	bars2, err := plotter.NewBarChart(group2, w)
@@ -88,7 +99,7 @@ func plotResults(iterationResults map[int][]float64) {
 		panic(err)
 	}
 	bars3.LineStyle.Width = vg.Length(0)
-	bars3.Color = plotutil.Color(2)
+	bars3.Color = plotutil.Color(1)
 	bars3.Offset = -2.5 * w
 
 	bars4, err := plotter.NewBarChart(group4, w)
@@ -96,7 +107,7 @@ func plotResults(iterationResults map[int][]float64) {
 		panic(err)
 	}
 	bars4.LineStyle.Width = vg.Length(0)
-	bars4.Color = plotutil.Color(3)
+	bars4.Color = plotutil.Color(1)
 	bars4.Offset = -1.5 * w
 
 	bars5, err := plotter.NewBarChart(group5, w)
@@ -104,7 +115,7 @@ func plotResults(iterationResults map[int][]float64) {
 		panic(err)
 	}
 	bars5.LineStyle.Width = vg.Length(0)
-	bars5.Color = plotutil.Color(4)
+	bars5.Color = plotutil.Color(1)
 	bars5.Offset = -0.5 * w
 
 	bars6, err := plotter.NewBarChart(group6, w)
@@ -112,7 +123,7 @@ func plotResults(iterationResults map[int][]float64) {
 		panic(err)
 	}
 	bars6.LineStyle.Width = vg.Length(0)
-	bars6.Color = plotutil.Color(5)
+	bars6.Color = plotutil.Color(1)
 	bars6.Offset = 0.5 * w
 
 	bars7, err := plotter.NewBarChart(group7, w)
@@ -120,7 +131,7 @@ func plotResults(iterationResults map[int][]float64) {
 		panic(err)
 	}
 	bars7.LineStyle.Width = vg.Length(0)
-	bars7.Color = plotutil.Color(6)
+	bars7.Color = plotutil.Color(1)
 	bars7.Offset = 1.5 * w
 
 	bars8, err := plotter.NewBarChart(group8, w)
@@ -128,7 +139,7 @@ func plotResults(iterationResults map[int][]float64) {
 		panic(err)
 	}
 	bars8.LineStyle.Width = vg.Length(0)
-	bars8.Color = plotutil.Color(7)
+	bars8.Color = plotutil.Color(1)
 	bars8.Offset = 2.5 * w
 
 	bars9, err := plotter.NewBarChart(group9, w)
@@ -136,7 +147,7 @@ func plotResults(iterationResults map[int][]float64) {
 		panic(err)
 	}
 	bars9.LineStyle.Width = vg.Length(0)
-	bars9.Color = plotutil.Color(8)
+	bars9.Color = plotutil.Color(1)
 	bars9.Offset = 3.5 * w
 
 	bars10, err := plotter.NewBarChart(group10, w)
@@ -144,40 +155,94 @@ func plotResults(iterationResults map[int][]float64) {
 		panic(err)
 	}
 	bars10.LineStyle.Width = vg.Length(0)
-	bars10.Color = plotutil.Color(9)
-	bars10.Offset = -4.5 * w
+	bars10.Color = plotutil.Color(1)
+	bars10.Offset = 4.5 * w
 
-	p.Add(bars1, bars2, bars3, bars4, bars5, bars6, bars7, bars8, bars9, bars10)
-	p.Legend.Add("1st run", bars1)
-	p.Legend.Add("2nd run", bars2)
-	p.Legend.Add("3rd run", bars3)
-	p.Legend.Add("4th run", bars4)
-	p.Legend.Add("5th run", bars5)
-	p.Legend.Add("6th run", bars6)
-	p.Legend.Add("7th run", bars7)
-	p.Legend.Add("8th run", bars8)
-	p.Legend.Add("9th run", bars9)
-	p.Legend.Add("10th run", bars10)
+	// back bars
+	backbars1, err := plotter.NewBarChart(backdrop1, w)
+	if err != nil {
+		panic(err)
+	}
+	backbars1.LineStyle.Width = vg.Length(0)
+	backbars1.Color = plotutil.Color(1)
+	backbars1.Offset = -4.5 * w
 
-	// bars := []*plotter.BarChart{}
-	// for _, group := range  {
-	// 	aBar, err := plotter.NewBarChart(group, w)
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	// 	aBar.LineStyle.Width = vg.Length(0)
-	// 	aBar.Color = plotutil.Color(0)
-	// 	aBar.Offset = -w
-	// 	bars = append(bars, aBar)
+	backbars2, err := plotter.NewBarChart(backdrop2, w)
+	if err != nil {
+		panic(err)
+	}
+	backbars2.LineStyle.Width = vg.Length(0)
+	backbars2.Color = plotutil.Color(1)
+	backbars2.Offset = -3.5 * w
 
-	// }
-	// for i, bar := range bars {
-	// 	p.Add(bar)
-	// 	p.Legend.Add("iteration: "+fmt.Sprint(i), bar)
-	// }
+	backbars3, err := plotter.NewBarChart(backdrop3, w)
+	if err != nil {
+		panic(err)
+	}
+	backbars3.LineStyle.Width = vg.Length(0)
+	backbars3.Color = plotutil.Color(1)
+	backbars3.Offset = -2.5 * w
+
+	backbars4, err := plotter.NewBarChart(backdrop4, w)
+	if err != nil {
+		panic(err)
+	}
+	backbars4.LineStyle.Width = vg.Length(0)
+	backbars4.Color = plotutil.Color(1)
+	backbars4.Offset = -1.5 * w
+
+	backbars5, err := plotter.NewBarChart(backdrop5, w)
+	if err != nil {
+		panic(err)
+	}
+	backbars5.LineStyle.Width = vg.Length(0)
+	backbars5.Color = plotutil.Color(1)
+	backbars5.Offset = -0.5 * w
+
+	backbars6, err := plotter.NewBarChart(backdrop6, w)
+	if err != nil {
+		panic(err)
+	}
+	backbars6.LineStyle.Width = vg.Length(0)
+	backbars6.Color = plotutil.Color(1)
+	backbars6.Offset = 0.5 * w
+
+	backbars7, err := plotter.NewBarChart(backdrop7, w)
+	if err != nil {
+		panic(err)
+	}
+	backbars7.LineStyle.Width = vg.Length(0)
+	backbars7.Color = plotutil.Color(1)
+	backbars7.Offset = 1.5 * w
+
+	backbars8, err := plotter.NewBarChart(backdrop8, w)
+	if err != nil {
+		panic(err)
+	}
+	backbars8.LineStyle.Width = vg.Length(0)
+	backbars8.Color = plotutil.Color(1)
+	backbars8.Offset = 2.5 * w
+
+	backbars9, err := plotter.NewBarChart(backdrop9, w)
+	if err != nil {
+		panic(err)
+	}
+	backbars9.LineStyle.Width = vg.Length(0)
+	backbars9.Color = plotutil.Color(1)
+	backbars9.Offset = 3.5 * w
+
+	backbars10, err := plotter.NewBarChart(backdrop10, w)
+	if err != nil {
+		panic(err)
+	}
+	backbars10.LineStyle.Width = vg.Length(0)
+	backbars10.Color = plotutil.Color(1)
+	backbars10.Offset = 4.5 * w
+
+	p.Add(bars1, bars2, bars3, bars4, bars5, bars6, bars7, bars8, bars9, bars10, backbars1, backbars2, backbars3, backbars4, backbars5, backbars6, backbars7, backbars8, backbars9, backbars10)
+
 	p.Legend.Top = true
-
-	// p.NominalX("10", "100", "1000", "10000")
+	p.NominalX("10", "100", "1000", "10000")
 
 	if err := p.Save(10*vg.Inch, 6*vg.Inch, "barchart.png"); err != nil {
 		panic(err)
