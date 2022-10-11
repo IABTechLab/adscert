@@ -48,7 +48,7 @@ func plotResults(iterationResults map[int][]float64) {
 	// group9 := plotter.Values{}
 	// group10 := plotter.Values{}
 
-	for i := 0; i <= 4; i+ {
+	for i := 0; i <= 4; i++ {
 		group1 = append(group1, iterationResults[int(math.Pow(10, float64(i+1)))][i])
 		// group2 = append(group2, iterationResults[int(math.Pow(10, float64(i+1)))][i+1])
 		// group3 = append(group3, iterationResults[int(math.Pow(10, float64(i+1)))][i+2])
