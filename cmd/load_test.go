@@ -166,8 +166,6 @@ func plotResults(iterationResults map[int][]float64, maxNumOfRequests int) {
 	p.Legend.Top = true
 
 	// p.NominalX("10", "100", "1000", "10000")
-	p.X.Min = 100
-	p.X.Max = float64(maxNumOfRequests)
 	if err := p.Save(10*vg.Inch, 6*vg.Inch, "barchart.png"); err != nil {
 		panic(err)
 	}
