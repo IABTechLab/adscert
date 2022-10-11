@@ -23,9 +23,9 @@ func TestLoadSigningRequest(t *testing.T) {
 	c := make(chan api.SignatureOperationStatus)
 	iterationResults := map[int][]float64{}
 	lowestSuccessPercent := 1.00
-	numOfRequests := 0
+	numOfRequests := 100
 	for lowestSuccessPercent > 0.90 {
-		numOfRequests += 100
+		numOfRequests *= 2
 		for i := 0; i < testsPerTestSize; i++ {
 			iterationResult := sendSignatureRequests(numOfRequests, testsignParams, c)
 			iterationResultSuccessPercent := float64(iterationResult[1]) / float64(iterationResult[0])
@@ -54,7 +54,7 @@ func plotResults(iterationResults map[int][]float64, maxNumOfRequests int) {
 	group9 := plotter.Values{}
 	group10 := plotter.Values{}
 
-	for i := 100; i <= maxNumOfRequests; i += 100 {
+	for i := 100; i <= maxNumOfRequests; i *= 2 {
 		group1 = append(group1, (iterationResults[i][0]/float64(i))*100)
 		group2 = append(group2, (iterationResults[i][1]/float64(i))*100)
 		group3 = append(group3, (iterationResults[i][2]/float64(i))*100)
