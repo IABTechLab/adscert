@@ -86,7 +86,7 @@ func plotResults(iterationResults map[int][]float64) {
 	}
 	for i, bar := range bars {
 		p.Add(bar)
-		p.Legend.Add("iteration: "+string(i), bar)
+		p.Legend.Add("iteration: "+fmt.Sprint(i), bar)
 	}
 	p.Legend.Top = true
 	p.NominalX("10", "100", "1000", "10000")
