@@ -69,7 +69,7 @@ func plotResults(iterationResults map[int][]float64, maxNumOfRequests int) {
 
 	p := plot.New()
 
-	p.Title.Text = "Percent of messages successfully signing during 2^X concurrent requests. 100 runs per batch size."
+	p.Title.Text = "Percent of messages successfully signing during 2^X concurrent requests. 10 runs per batch size. Timeout: 100 Millisecond"
 	p.Y.Label.Text = "Percent Successful Signing Attemps"
 
 	w := vg.Points(4)
