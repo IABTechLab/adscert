@@ -176,9 +176,8 @@ func plotResults(iterationResults map[int][]float64) {
 	// 	p.Legend.Add("iteration: "+fmt.Sprint(i), bar)
 	// }
 	p.Legend.Top = true
-	p.Legend.Left = true
 
-	p.NominalX("10", "100", "1000", "10000")
+	// p.NominalX("10", "100", "1000", "10000")
 
 	if err := p.Save(10*vg.Inch, 6*vg.Inch, "barchart.png"); err != nil {
 		panic(err)
