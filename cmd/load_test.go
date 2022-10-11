@@ -65,7 +65,7 @@ func plotResults(iterationResults map[int][]float64) {
 	p.Title.Text = "Bar chart"
 	p.Y.Label.Text = "Heights"
 
-	w := vg.Points(4)
+	w := vg.Points(10)
 
 	bars1, err := plotter.NewBarChart(group1, w)
 	if err != nil {
@@ -148,16 +148,16 @@ func plotResults(iterationResults map[int][]float64) {
 	bars10.Offset = -4.5 * w
 
 	p.Add(bars1, bars2, bars3, bars4, bars5, bars6, bars7, bars8, bars9, bars10)
-	p.Legend.Add("Group 1", bars1)
-	p.Legend.Add("Group 2", bars2)
-	p.Legend.Add("Group 3", bars3)
-	p.Legend.Add("Group 4", bars4)
-	p.Legend.Add("Group 5", bars5)
-	p.Legend.Add("Group 6", bars6)
-	p.Legend.Add("Group 7", bars7)
-	p.Legend.Add("Group 8", bars8)
-	p.Legend.Add("Group 9", bars9)
-	p.Legend.Add("Group 10", bars10)
+	p.Legend.Add("1st run", bars1)
+	p.Legend.Add("2nd run", bars2)
+	p.Legend.Add("3rd run", bars3)
+	p.Legend.Add("4th run", bars4)
+	p.Legend.Add("5th run", bars5)
+	p.Legend.Add("6th run", bars6)
+	p.Legend.Add("7th run", bars7)
+	p.Legend.Add("8th run", bars8)
+	p.Legend.Add("9th run", bars9)
+	p.Legend.Add("10th run", bars10)
 
 	// bars := []*plotter.BarChart{}
 	// for _, group := range  {
@@ -176,6 +176,8 @@ func plotResults(iterationResults map[int][]float64) {
 	// 	p.Legend.Add("iteration: "+fmt.Sprint(i), bar)
 	// }
 	p.Legend.Top = true
+	p.Legend.Left = true
+
 	p.NominalX("10", "100", "1000", "10000")
 
 	if err := p.Save(10*vg.Inch, 6*vg.Inch, "barchart.png"); err != nil {
