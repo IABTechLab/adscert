@@ -164,7 +164,7 @@ func plotResults(iterationResults map[int][]float64) {
 		panic(err)
 	}
 	backbars1.LineStyle.Width = vg.Length(0)
-	backbars1.Color = plotutil.Color(1)
+	backbars1.Color = plotutil.Color(0)
 	backbars1.Offset = -4.5 * w
 
 	backbars2, err := plotter.NewBarChart(backdrop2, w)
@@ -172,7 +172,7 @@ func plotResults(iterationResults map[int][]float64) {
 		panic(err)
 	}
 	backbars2.LineStyle.Width = vg.Length(0)
-	backbars2.Color = plotutil.Color(1)
+	backbars2.Color = plotutil.Color(0)
 	backbars2.Offset = -3.5 * w
 
 	backbars3, err := plotter.NewBarChart(backdrop3, w)
@@ -180,7 +180,7 @@ func plotResults(iterationResults map[int][]float64) {
 		panic(err)
 	}
 	backbars3.LineStyle.Width = vg.Length(0)
-	backbars3.Color = plotutil.Color(1)
+	backbars3.Color = plotutil.Color(0)
 	backbars3.Offset = -2.5 * w
 
 	backbars4, err := plotter.NewBarChart(backdrop4, w)
@@ -188,7 +188,7 @@ func plotResults(iterationResults map[int][]float64) {
 		panic(err)
 	}
 	backbars4.LineStyle.Width = vg.Length(0)
-	backbars4.Color = plotutil.Color(1)
+	backbars4.Color = plotutil.Color(0)
 	backbars4.Offset = -1.5 * w
 
 	backbars5, err := plotter.NewBarChart(backdrop5, w)
@@ -196,7 +196,7 @@ func plotResults(iterationResults map[int][]float64) {
 		panic(err)
 	}
 	backbars5.LineStyle.Width = vg.Length(0)
-	backbars5.Color = plotutil.Color(1)
+	backbars5.Color = plotutil.Color(0)
 	backbars5.Offset = -0.5 * w
 
 	backbars6, err := plotter.NewBarChart(backdrop6, w)
@@ -204,7 +204,7 @@ func plotResults(iterationResults map[int][]float64) {
 		panic(err)
 	}
 	backbars6.LineStyle.Width = vg.Length(0)
-	backbars6.Color = plotutil.Color(1)
+	backbars6.Color = plotutil.Color(0)
 	backbars6.Offset = 0.5 * w
 
 	backbars7, err := plotter.NewBarChart(backdrop7, w)
@@ -212,7 +212,7 @@ func plotResults(iterationResults map[int][]float64) {
 		panic(err)
 	}
 	backbars7.LineStyle.Width = vg.Length(0)
-	backbars7.Color = plotutil.Color(1)
+	backbars7.Color = plotutil.Color(0)
 	backbars7.Offset = 1.5 * w
 
 	backbars8, err := plotter.NewBarChart(backdrop8, w)
@@ -220,7 +220,7 @@ func plotResults(iterationResults map[int][]float64) {
 		panic(err)
 	}
 	backbars8.LineStyle.Width = vg.Length(0)
-	backbars8.Color = plotutil.Color(1)
+	backbars8.Color = plotutil.Color(0)
 	backbars8.Offset = 2.5 * w
 
 	backbars9, err := plotter.NewBarChart(backdrop9, w)
@@ -228,7 +228,7 @@ func plotResults(iterationResults map[int][]float64) {
 		panic(err)
 	}
 	backbars9.LineStyle.Width = vg.Length(0)
-	backbars9.Color = plotutil.Color(1)
+	backbars9.Color = plotutil.Color(0)
 	backbars9.Offset = 3.5 * w
 
 	backbars10, err := plotter.NewBarChart(backdrop10, w)
@@ -236,10 +236,10 @@ func plotResults(iterationResults map[int][]float64) {
 		panic(err)
 	}
 	backbars10.LineStyle.Width = vg.Length(0)
-	backbars10.Color = plotutil.Color(1)
+	backbars10.Color = plotutil.Color(0)
 	backbars10.Offset = 4.5 * w
 
-	p.Add(bars1, bars2, bars3, bars4, bars5, bars6, bars7, bars8, bars9, bars10, backbars1, backbars2, backbars3, backbars4, backbars5, backbars6, backbars7, backbars8, backbars9, backbars10)
+	p.Add(backbars1, backbars2, backbars3, backbars4, backbars5, backbars6, backbars7, backbars8, backbars9, backbars10, bars1, bars2, bars3, bars4, bars5, bars6, bars7, bars8, bars9, bars10)
 
 	p.Legend.Top = true
 	p.NominalX("10", "100", "1000", "10000")
