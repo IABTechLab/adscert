@@ -30,10 +30,10 @@ func TestLoadSigningRequest(t *testing.T) {
 			iterationResult := sendSignatureRequests(numOfRequests, testsignParams, c)
 			iterationResults[iterationResult[0]] = append(iterationResults[iterationResult[0]], float64(iterationResult[1]))
 			successPercent := (float64(iterationResult[1]) / float64(iterationResult[0])) * 100
+			println("!!!!!!!!!!!!!!!!!!!!!")
+			println(successPercent)
 			if successPercent < lowestSuccessRate {
 				lowestSuccessRate = successPercent
-				println("!!!!!!!!!!!!!!!!!!!!!")
-				println(lowestSuccessRate)
 			}
 		}
 	}
