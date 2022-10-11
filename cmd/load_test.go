@@ -22,14 +22,14 @@ func TestLoadSigningRequest(t *testing.T) {
 	testsPerTestSize := 10
 	c := make(chan api.SignatureOperationStatus)
 	iterationResults := map[int][]float64{}
-	lowestSuccessRate := 100
+	lowestSuccessRate := 100.00
 	numOfRequests := 1
 	for lowestSuccessRate > 50 {
 		for i := 0; i < testsPerTestSize; i++ {
 			numOfRequests *= 10
 			iterationResult := sendSignatureRequests(numOfRequests, testsignParams, c)
 			iterationResults[iterationResult[0]] = append(iterationResults[iterationResult[0]], float64(iterationResult[1]))
-			successPercent := (iterationResult[1] / iterationResult[0]) * 100
+			successPercent := (float64(iterationResult[1]) / float64(iterationResult[0])) * 100
 			if successPercent < lowestSuccessRate {
 				lowestSuccessRate = successPercent
 				println("!!!!!!!!!!!!!!!!!!!!!")
