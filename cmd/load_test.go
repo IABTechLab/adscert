@@ -62,8 +62,8 @@ func plotResults(iterationResults map[int][]float64) {
 	for i := 10; i <= 10000; i *= 10 {
 		for j, group := range groups {
 			group = append(group, iterationResults[i][j])
-			print("result!!")
-			print(iterationResults[i][j])
+			println("result!!")
+			println(int(iterationResults[i][j]))
 		}
 	}
 
