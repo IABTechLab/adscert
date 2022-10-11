@@ -71,6 +71,9 @@ func plotResults(iterationResults map[int][]float64) {
 	p.Y.Label.Text = "Heights"
 
 	w := vg.Points(2)
+	println("group1!!")
+	println(group1.Len())
+	println(group1.Len())
 
 	barsA, err := plotter.NewBarChart(group1, w)
 	if err != nil {
