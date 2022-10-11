@@ -38,27 +38,27 @@ func TestLoadSigningRequest(t *testing.T) {
 
 func plotResults(iterationResults map[int][]float64) {
 	group1 := plotter.Values{}
-	// group2 := plotter.Values{}
-	// group3 := plotter.Values{}
-	// group4 := plotter.Values{}
-	// group5 := plotter.Values{}
-	// group6 := plotter.Values{}
-	// group7 := plotter.Values{}
-	// group8 := plotter.Values{}
-	// group9 := plotter.Values{}
-	// group10 := plotter.Values{}
+	group2 := plotter.Values{}
+	group3 := plotter.Values{}
+	group4 := plotter.Values{}
+	group5 := plotter.Values{}
+	group6 := plotter.Values{}
+	group7 := plotter.Values{}
+	group8 := plotter.Values{}
+	group9 := plotter.Values{}
+	group10 := plotter.Values{}
 
 	for i := 0; i < 4; i++ {
 		group1 = append(group1, iterationResults[int(math.Pow(10, float64(i+1)))][i])
-		// group2 = append(group2, iterationResults[int(math.Pow(10, float64(i+1)))][i+1])
-		// group3 = append(group3, iterationResults[int(math.Pow(10, float64(i+1)))][i+2])
-		// group4 = append(group4, iterationResults[int(math.Pow(10, float64(i+1)))][i+3])
-		// group5 = append(group5, iterationResults[int(math.Pow(10, float64(i+1)))][i+4])
-		// group6 = append(group6, iterationResults[int(math.Pow(10, float64(i+1)))][i+5])
-		// group7 = append(group7, iterationResults[int(math.Pow(10, float64(i+1)))][i+6])
-		// group8 = append(group8, iterationResults[int(math.Pow(10, float64(i+1)))][i+7])
-		// group9 = append(group9, iterationResults[int(math.Pow(10, float64(i+1)))][i+8])
-		// group10 = append(group10, iterationResults[int(math.Pow(10, float64(i+1)))][i+9])
+		group2 = append(group2, iterationResults[int(math.Pow(10, float64(i+1)))][i+1])
+		group3 = append(group3, iterationResults[int(math.Pow(10, float64(i+1)))][i+2])
+		group4 = append(group4, iterationResults[int(math.Pow(10, float64(i+1)))][i+3])
+		group5 = append(group5, iterationResults[int(math.Pow(10, float64(i+1)))][i+4])
+		group6 = append(group6, iterationResults[int(math.Pow(10, float64(i+1)))][i+5])
+		group7 = append(group7, iterationResults[int(math.Pow(10, float64(i+1)))][i+6])
+		group8 = append(group8, iterationResults[int(math.Pow(10, float64(i+1)))][i+7])
+		group9 = append(group9, iterationResults[int(math.Pow(10, float64(i+1)))][i+8])
+		group10 = append(group10, iterationResults[int(math.Pow(10, float64(i+1)))][i+9])
 	}
 
 	p := plot.New()
@@ -68,16 +68,96 @@ func plotResults(iterationResults map[int][]float64) {
 
 	w := vg.Points(2)
 
-	barsA, err := plotter.NewBarChart(group1, w)
+	bars1, err := plotter.NewBarChart(group1, w)
 	if err != nil {
 		panic(err)
 	}
-	barsA.LineStyle.Width = vg.Length(0)
-	barsA.Color = plotutil.Color(0)
-	barsA.Offset = -w
+	bars1.LineStyle.Width = vg.Length(0)
+	bars1.Color = plotutil.Color(0)
+	bars1.Offset = -w
 
-	p.Add(barsA)
-	p.Legend.Add("Group 1", barsA)
+	bars2, err := plotter.NewBarChart(group2, w)
+	if err != nil {
+		panic(err)
+	}
+	bars2.LineStyle.Width = vg.Length(0)
+	bars2.Color = plotutil.Color(0)
+	bars2.Offset = -w
+
+	bars3, err := plotter.NewBarChart(group3, w)
+	if err != nil {
+		panic(err)
+	}
+	bars3.LineStyle.Width = vg.Length(0)
+	bars3.Color = plotutil.Color(0)
+	bars3.Offset = -w
+
+	bars4, err := plotter.NewBarChart(group4, w)
+	if err != nil {
+		panic(err)
+	}
+	bars4.LineStyle.Width = vg.Length(0)
+	bars4.Color = plotutil.Color(0)
+	bars4.Offset = -w
+
+	bars5, err := plotter.NewBarChart(group5, w)
+	if err != nil {
+		panic(err)
+	}
+	bars5.LineStyle.Width = vg.Length(0)
+	bars5.Color = plotutil.Color(0)
+	bars5.Offset = -w
+
+	bars6, err := plotter.NewBarChart(group6, w)
+	if err != nil {
+		panic(err)
+	}
+	bars6.LineStyle.Width = vg.Length(0)
+	bars6.Color = plotutil.Color(0)
+	bars6.Offset = -w
+
+	bars7, err := plotter.NewBarChart(group7, w)
+	if err != nil {
+		panic(err)
+	}
+	bars7.LineStyle.Width = vg.Length(0)
+	bars7.Color = plotutil.Color(0)
+	bars7.Offset = -w
+
+	bars8, err := plotter.NewBarChart(group8, w)
+	if err != nil {
+		panic(err)
+	}
+	bars8.LineStyle.Width = vg.Length(0)
+	bars8.Color = plotutil.Color(0)
+	bars8.Offset = -w
+
+	bars9, err := plotter.NewBarChart(group9, w)
+	if err != nil {
+		panic(err)
+	}
+	bars9.LineStyle.Width = vg.Length(0)
+	bars9.Color = plotutil.Color(0)
+	bars9.Offset = -w
+
+	bars10, err := plotter.NewBarChart(group10, w)
+	if err != nil {
+		panic(err)
+	}
+	bars10.LineStyle.Width = vg.Length(0)
+	bars10.Color = plotutil.Color(0)
+	bars10.Offset = -w
+
+	p.Add(bars1, bars2, bars3, bars4, bars5, bars6, bars7, bars8, bars9, bars10)
+	p.Legend.Add("Group 1", bars1)
+	p.Legend.Add("Group 2", bars2)
+	p.Legend.Add("Group 3", bars3)
+	p.Legend.Add("Group 4", bars4)
+	p.Legend.Add("Group 5", bars6)
+	p.Legend.Add("Group 6", bars7)
+	p.Legend.Add("Group 7", bars8)
+	p.Legend.Add("Group 8", bars9)
+	p.Legend.Add("Group 9", bars10)
 
 	// bars := []*plotter.BarChart{}
 	// for _, group := range  {
