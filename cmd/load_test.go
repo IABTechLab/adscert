@@ -32,6 +32,8 @@ func TestLoadSigningRequest(t *testing.T) {
 			successPercent := (iterationResult[1] / iterationResult[0]) * 100
 			if successPercent < lowestSuccessRate {
 				lowestSuccessRate = successPercent
+				println("!!!!!!!!!!!!!!!!!!!!!")
+				println(lowestSuccessRate)
 			}
 		}
 	}
