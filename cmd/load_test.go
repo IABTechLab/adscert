@@ -46,7 +46,7 @@ func plotResults(iterationResults map[int][]float64) {
 	p.Title.Text = "Bar chart"
 	p.Y.Label.Text = "Heights"
 
-	w := vg.Points(20)
+	w := vg.Points(2)
 
 	barsA, err := plotter.NewBarChart(groupA, w)
 	if err != nil {
@@ -87,7 +87,7 @@ func plotResults(iterationResults map[int][]float64) {
 	p.Legend.Top = true
 	p.NominalX("1", "2", "3", "4", "5", "6", "7", "8", "9", "10")
 
-	if err := p.Save(5*vg.Inch, 3*vg.Inch, "barchart.png"); err != nil {
+	if err := p.Save(10*vg.Inch, 6*vg.Inch, "barchart.png"); err != nil {
 		panic(err)
 	}
 }
