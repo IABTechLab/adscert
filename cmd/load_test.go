@@ -61,7 +61,15 @@ func plotResults(iterationResults map[int][]float64) {
 	}
 	for i := 10; i <= 10000; i *= 10 {
 		for j, group := range groups {
+			println("group b4")
+			println(group)
+			println(group.Len())
 			group = append(group, iterationResults[i][j])
+			println("iter res")
+			println(int(iterationResults[i][j]))
+			println("group after")
+			println(group)
+			println(group.Len())
 		}
 	}
 
@@ -71,9 +79,6 @@ func plotResults(iterationResults map[int][]float64) {
 	p.Y.Label.Text = "Heights"
 
 	w := vg.Points(2)
-	println("group1!!")
-	println(group1.Len())
-	println(group1.Len())
 
 	barsA, err := plotter.NewBarChart(group1, w)
 	if err != nil {
