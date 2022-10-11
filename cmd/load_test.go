@@ -24,7 +24,7 @@ func TestLoadSigningRequest(t *testing.T) {
 	iterationResults := map[int][]float64{}
 	lowestSuccessPercent := 1.00
 	numOfRequests := 1
-	for lowestSuccessPercent > 0.90 {
+	for lowestSuccessPercent > 0.10 {
 		numOfRequests *= 2
 		for i := 0; i < testsPerTestSize; i++ {
 			iterationResult := sendSignatureRequests(numOfRequests, testsignParams, c)
