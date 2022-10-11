@@ -8,6 +8,7 @@ import (
 	"gonum.org/v1/plot/plotter"
 	"gonum.org/v1/plot/plotutil"
 	"gonum.org/v1/plot/vg"
+	"math"
 	"testing"
 	"time"
 )
@@ -37,40 +38,27 @@ func TestLoadSigningRequest(t *testing.T) {
 
 func plotResults(iterationResults map[int][]float64) {
 	group1 := plotter.Values{}
-	group2 := plotter.Values{}
-	group3 := plotter.Values{}
-	group4 := plotter.Values{}
-	group5 := plotter.Values{}
-	group6 := plotter.Values{}
-	group7 := plotter.Values{}
-	group8 := plotter.Values{}
-	group9 := plotter.Values{}
-	group10 := plotter.Values{}
+	// group2 := plotter.Values{}
+	// group3 := plotter.Values{}
+	// group4 := plotter.Values{}
+	// group5 := plotter.Values{}
+	// group6 := plotter.Values{}
+	// group7 := plotter.Values{}
+	// group8 := plotter.Values{}
+	// group9 := plotter.Values{}
+	// group10 := plotter.Values{}
 
-	groups := []plotter.Values{
-		group1,
-		group2,
-		group3,
-		group4,
-		group5,
-		group6,
-		group7,
-		group8,
-		group9,
-		group10,
-	}
-	for i := 10; i <= 10000; i *= 10 {
-		for j, group := range groups {
-			println("group b4")
-			println(group)
-			println(group.Len())
-			group = append(group, iterationResults[i][j])
-			println("iter res")
-			println(int(iterationResults[i][j]))
-			println("group after")
-			println(group)
-			println(group.Len())
-		}
+	for i := 0; i <= 4; i+ {
+		group1 = append(group1, iterationResults[int(math.Pow(10, float64(i+1)))][i])
+		// group2 = append(group2, iterationResults[int(math.Pow(10, float64(i+1)))][i+1])
+		// group3 = append(group3, iterationResults[int(math.Pow(10, float64(i+1)))][i+2])
+		// group4 = append(group4, iterationResults[int(math.Pow(10, float64(i+1)))][i+3])
+		// group5 = append(group5, iterationResults[int(math.Pow(10, float64(i+1)))][i+4])
+		// group6 = append(group6, iterationResults[int(math.Pow(10, float64(i+1)))][i+5])
+		// group7 = append(group7, iterationResults[int(math.Pow(10, float64(i+1)))][i+6])
+		// group8 = append(group8, iterationResults[int(math.Pow(10, float64(i+1)))][i+7])
+		// group9 = append(group9, iterationResults[int(math.Pow(10, float64(i+1)))][i+8])
+		// group10 = append(group10, iterationResults[int(math.Pow(10, float64(i+1)))][i+9])
 	}
 
 	p := plot.New()
@@ -92,7 +80,7 @@ func plotResults(iterationResults map[int][]float64) {
 	p.Legend.Add("Group 1", barsA)
 
 	// bars := []*plotter.BarChart{}
-	// for _, group := range groups {
+	// for _, group := range  {
 	// 	aBar, err := plotter.NewBarChart(group, w)
 	// 	if err != nil {
 	// 		panic(err)
