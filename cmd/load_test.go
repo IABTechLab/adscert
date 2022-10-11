@@ -23,9 +23,9 @@ func TestLoadSigningRequest(t *testing.T) {
 	c := make(chan api.SignatureOperationStatus)
 	iterationResults := map[int][]float64{}
 	iterationResultSuccessPercent := 1.00
-	numOfRequests := 1
+	numOfRequests := 100
 	for iterationResultSuccessPercent > 0.8 {
-		numOfRequests *= 10
+		numOfRequests += 100
 		for i := 0; i < testsPerTestSize; i++ {
 			iterationResult := sendSignatureRequests(numOfRequests, testsignParams, c)
 			iterationResultSuccessPercent = float64(iterationResult[1]) / float64(iterationResult[0])
@@ -163,26 +163,11 @@ func plotResults(iterationResults map[int][]float64, maxNumOfRequests int) {
 	p.Legend.Add("9th run", bars9)
 	p.Legend.Add("10th run", bars10)
 
-	// bars := []*plotter.BarChart{}
-	// for _, group := range  {
-	// 	aBar, err := plotter.NewBarChart(group, w)
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	// 	aBar.LineStyle.Width = vg.Length(0)
-	// 	aBar.Color = plotutil.Color(0)
-	// 	aBar.Offset = -w
-	// 	bars = append(bars, aBar)
-
-	// }
-	// for i, bar := range bars {
-	// 	p.Add(bar)
-	// 	p.Legend.Add("iteration: "+fmt.Sprint(i), bar)
-	// }
 	p.Legend.Top = true
 
 	// p.NominalX("10", "100", "1000", "10000")
-
+	p.X.Min = 100
+	p.X.Max = float64(maxNumOfRequests)
 	if err := p.Save(10*vg.Inch, 6*vg.Inch, "barchart.png"); err != nil {
 		panic(err)
 	}
