@@ -36,10 +36,34 @@ func TestLoadSigningRequest(t *testing.T) {
 }
 
 func plotResults(iterationResults map[int][]float64) {
-	groupA := append(plotter.Values{}, iterationResults[10]...)
-	groupB := append(plotter.Values{}, iterationResults[100]...)
-	groupC := append(plotter.Values{}, iterationResults[1000]...)
-	groupD := append(plotter.Values{}, iterationResults[10000]...)
+	group1 := plotter.Values{}
+	group2 := plotter.Values{}
+	group3 := plotter.Values{}
+	group4 := plotter.Values{}
+	group5 := plotter.Values{}
+	group6 := plotter.Values{}
+	group7 := plotter.Values{}
+	group8 := plotter.Values{}
+	group9 := plotter.Values{}
+	group10 := plotter.Values{}
+
+	groups := []plotter.Values{
+		group1,
+		group2,
+		group3,
+		group4,
+		group5,
+		group6,
+		group7,
+		group8,
+		group9,
+		group10,
+	}
+	for i := 10; i <= 10000; i *= 10 {
+		for j, group := range groups {
+			group = append(group, iterationResults[i][j])
+		}
+	}
 
 	p := plot.New()
 
@@ -48,44 +72,24 @@ func plotResults(iterationResults map[int][]float64) {
 
 	w := vg.Points(2)
 
-	barsA, err := plotter.NewBarChart(groupA, w)
-	if err != nil {
-		panic(err)
-	}
-	barsA.LineStyle.Width = vg.Length(0)
-	barsA.Color = plotutil.Color(0)
-	barsA.Offset = -w
+	bars := []*plotter.BarChart{}
+	for _, group := range groups {
+		aBar, err := plotter.NewBarChart(group, w)
+		if err != nil {
+			panic(err)
+		}
+		aBar.LineStyle.Width = vg.Length(0)
+		aBar.Color = plotutil.Color(0)
+		aBar.Offset = -w
+		bars = append(bars, aBar)
 
-	barsB, err := plotter.NewBarChart(groupB, w)
-	if err != nil {
-		panic(err)
 	}
-	barsB.LineStyle.Width = vg.Length(0)
-	barsB.Color = plotutil.Color(1)
-
-	barsC, err := plotter.NewBarChart(groupC, w)
-	if err != nil {
-		panic(err)
+	for i, bar := range bars {
+		p.Add(bar)
+		p.Legend.Add("iteration: "+string(i), bar)
 	}
-	barsC.LineStyle.Width = vg.Length(0)
-	barsC.Color = plotutil.Color(2)
-	barsC.Offset = w
-
-	barsD, err := plotter.NewBarChart(groupD, w)
-	if err != nil {
-		panic(err)
-	}
-	barsD.LineStyle.Width = vg.Length(0)
-	barsD.Color = plotutil.Color(2)
-	barsD.Offset = w
-
-	p.Add(barsA, barsB, barsC, barsC)
-	p.Legend.Add("10", barsA)
-	p.Legend.Add("100", barsB)
-	p.Legend.Add("1000", barsC)
-	p.Legend.Add("10000", barsD)
 	p.Legend.Top = true
-	p.NominalX("1", "2", "3", "4", "5", "6", "7", "8", "9", "10")
+	p.NominalX("10", "100", "1000", "10000")
 
 	if err := p.Save(10*vg.Inch, 6*vg.Inch, "barchart.png"); err != nil {
 		panic(err)
