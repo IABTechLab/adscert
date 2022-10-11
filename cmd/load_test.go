@@ -49,16 +49,16 @@ func plotResults(iterationResults map[int][]float64) {
 	group10 := plotter.Values{}
 
 	for i := 0; i < 4; i++ {
-		group1 = append(group1, iterationResults[int(math.Pow(10, float64(i+1)))][i])
-		group2 = append(group2, iterationResults[int(math.Pow(10, float64(i+1)))][i+1])
-		group3 = append(group3, iterationResults[int(math.Pow(10, float64(i+1)))][i+2])
-		group4 = append(group4, iterationResults[int(math.Pow(10, float64(i+1)))][i+3])
-		group5 = append(group5, iterationResults[int(math.Pow(10, float64(i+1)))][i+4])
-		group6 = append(group6, iterationResults[int(math.Pow(10, float64(i+1)))][i+5])
-		group7 = append(group7, iterationResults[int(math.Pow(10, float64(i+1)))][i+6])
-		group8 = append(group8, iterationResults[int(math.Pow(10, float64(i+1)))][i+7])
-		group9 = append(group9, iterationResults[int(math.Pow(10, float64(i+1)))][i+8])
-		group10 = append(group10, iterationResults[int(math.Pow(10, float64(i+1)))][i+9])
+		group1 = append(group1, iterationResults[int(math.Pow(10, float64(i+1)))][0])
+		group2 = append(group2, iterationResults[int(math.Pow(10, float64(i+1)))][1])
+		group3 = append(group3, iterationResults[int(math.Pow(10, float64(i+1)))][2])
+		group4 = append(group4, iterationResults[int(math.Pow(10, float64(i+1)))][3])
+		group5 = append(group5, iterationResults[int(math.Pow(10, float64(i+1)))][4])
+		group6 = append(group6, iterationResults[int(math.Pow(10, float64(i+1)))][5])
+		group7 = append(group7, iterationResults[int(math.Pow(10, float64(i+1)))][6])
+		group8 = append(group8, iterationResults[int(math.Pow(10, float64(i+1)))][7])
+		group9 = append(group9, iterationResults[int(math.Pow(10, float64(i+1)))][8])
+		group10 = append(group10, iterationResults[int(math.Pow(10, float64(i+1)))][9])
 	}
 
 	p := plot.New()
