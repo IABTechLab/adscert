@@ -22,20 +22,27 @@ func TestLoadSigningRequest(t *testing.T) {
 	testsPerTestSize := 10
 	c := make(chan api.SignatureOperationStatus)
 	iterationResults := map[int][]float64{}
-	for numOfRequests := 10; numOfRequests <= 10000; numOfRequests *= 10 {
+	lowestSuccessRate := 100
+	numOfRequests := 1
+	for lowestSuccessRate > 50 {
 		for i := 0; i < testsPerTestSize; i++ {
+			numOfRequests *= 10
 			iterationResult := sendSignatureRequests(numOfRequests, testsignParams, c)
 			iterationResults[iterationResult[0]] = append(iterationResults[iterationResult[0]], float64(iterationResult[1]))
+			successPercent := (iterationResult[1] / iterationResult[0]) * 100
+			if successPercent < lowestSuccessRate {
+				lowestSuccessRate = successPercent
+			}
 		}
 	}
 
-	for key, value := range iterationResults {
-		fmt.Printf("%v Signing Attempts: %v succeeded\n", key, value)
+	for key, iterationResult := range iterationResults {
+		fmt.Printf("%v Signing Attempts: %v succeeded\n", key, iterationResult)
 	}
-	plotResults(iterationResults)
+	plotResults(iterationResults, numOfRequests)
 }
 
-func plotResults(iterationResults map[int][]float64) {
+func plotResults(iterationResults map[int][]float64, maxConcurrentTests int) {
 	group1 := plotter.Values{}
 	group2 := plotter.Values{}
 	group3 := plotter.Values{}
@@ -47,7 +54,7 @@ func plotResults(iterationResults map[int][]float64) {
 	group9 := plotter.Values{}
 	group10 := plotter.Values{}
 
-	for i := 10; i <= 10000; i *= 10 {
+	for i := 10; i <= maxConcurrentTests; i *= 10 {
 		group1 = append(group1, (iterationResults[i][0]/float64(i))*100)
 		group2 = append(group2, (iterationResults[i][1]/float64(i))*100)
 		group3 = append(group3, (iterationResults[i][2]/float64(i))*100)
@@ -178,7 +185,7 @@ func plotResults(iterationResults map[int][]float64) {
 	p.Legend.Top = true
 	p.Legend.Left = true
 
-	p.NominalX("10", "100", "1000", "10000")
+	// p.NominalX("10", "100", "1000", "10000")
 
 	if err := p.Save(10*vg.Inch, 6*vg.Inch, "barchart.png"); err != nil {
 		panic(err)
