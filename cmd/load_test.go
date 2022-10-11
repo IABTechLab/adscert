@@ -17,14 +17,14 @@ func TestLoadSigningRequest(t *testing.T) {
 	testsignParams.url = "https://adscerttestverifier.dev"
 	testsignParams.serverAddress = "localhost:3000"
 	testsignParams.body = ""
-	testsignParams.signingTimeout = 20 * time.Millisecond
+	testsignParams.signingTimeout = 500 * time.Millisecond
 
 	testsPerTestSize := 10
 	c := make(chan api.SignatureOperationStatus)
 	iterationResults := map[int][]float64{}
 	lowestSuccessPercent := 1.00
 	numOfRequests := 0
-	for lowestSuccessPercent > 0.5 {
+	for lowestSuccessPercent > 0.2 {
 		numOfRequests += 100
 		for i := 0; i < testsPerTestSize; i++ {
 			iterationResult := sendSignatureRequests(numOfRequests, testsignParams, c)
