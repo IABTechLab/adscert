@@ -47,10 +47,10 @@ func signBatchesAndPlot(timeout time.Duration) {
 	for key, iterationResult := range iterationResults {
 		fmt.Printf("%v Signing Attempts: %v succeeded\n", key, iterationResult)
 	}
-	plotResults(iterationResults, numOfRequests)
+	plotResults(iterationResults, numOfRequests, timeout)
 }
 
-func plotResults(iterationResults map[int][]float64, maxNumOfRequests int) {
+func plotResults(iterationResults map[int][]float64, maxNumOfRequests int, timeout time.Duration) {
 	group1 := plotter.Values{}
 	group2 := plotter.Values{}
 	group3 := plotter.Values{}
@@ -77,7 +77,7 @@ func plotResults(iterationResults map[int][]float64, maxNumOfRequests int) {
 
 	p := plot.New()
 
-	p.Title.Text = "Percent of messages successfully signing during 2^X concurrent requests. 10 runs per batch size. Timeout: 100 Millisecond"
+	p.Title.Text = fmt.Sprintf("Percent of messages successfully signing during 2^X concurrent requests. 10 runs per batch size. Timeout: %s", string(timeout))
 	p.Y.Label.Text = "Percent Successful Signing Attemps"
 
 	w := vg.Points(4)
@@ -177,7 +177,7 @@ func plotResults(iterationResults map[int][]float64, maxNumOfRequests int) {
 	p.Legend.Top = true
 
 	// p.NominalX("10", "100", "1000", "10000")
-	if err := p.Save(10*vg.Inch, 6*vg.Inch, "barchart.png"); err != nil {
+	if err := p.Save(10*vg.Inch, 6*vg.Inch, fmt.Sprintf("barchart%s.png", string(timeout))); err != nil {
 		panic(err)
 	}
 }
