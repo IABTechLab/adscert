@@ -12,12 +12,20 @@ import (
 	"time"
 )
 
-func TestLoadSigningRequest(t *testing.T) {
+func TestLoadSigningRequest100MS(t *testing.T) {
+	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1009 * time.Millisecond}
+	for _, timeout := range timeoutList {
+		signBatchesAndPlot(timeout)
+	}
+
+}
+
+func signBatchesAndPlot(timeout time.Duration) {
 	testsignParams := &testsignParameters{}
 	testsignParams.url = "https://adscerttestverifier.dev"
 	testsignParams.serverAddress = "localhost:3000"
 	testsignParams.body = ""
-	testsignParams.signingTimeout = 100 * time.Millisecond
+	testsignParams.signingTimeout = timeout
 
 	testsPerTestSize := 10
 	c := make(chan api.SignatureOperationStatus)
