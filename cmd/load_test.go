@@ -77,7 +77,7 @@ func plotResults(iterationResults map[int][]float64, maxNumOfRequests int, timeo
 
 	p := plot.New()
 
-	p.Title.Text = fmt.Sprintf("Percent of messages successfully signing during 2^X concurrent requests. 10 runs per batch size. Timeout: %s", string(timeout))
+	p.Title.Text = fmt.Sprintf("Percent of messages successfully signing during 2^X concurrent requests. 10 runs per batch size. Timeout: %s", fmt.Sprint(timeout))
 	p.Y.Label.Text = "Percent Successful Signing Attemps"
 
 	w := vg.Points(4)
@@ -177,7 +177,7 @@ func plotResults(iterationResults map[int][]float64, maxNumOfRequests int, timeo
 	p.Legend.Top = true
 
 	// p.NominalX("10", "100", "1000", "10000")
-	if err := p.Save(10*vg.Inch, 6*vg.Inch, fmt.Sprintf("barchart%s.png", string(timeout))); err != nil {
+	if err := p.Save(10*vg.Inch, 6*vg.Inch, fmt.Sprintf("barchart%s.png", fmt.Sprint(timeout))); err != nil {
 		panic(err)
 	}
 }
