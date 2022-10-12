@@ -10,7 +10,7 @@ require (
 	github.com/spf13/cobra v1.3.0
 	golang.org/x/crypto v0.0.0-20220131195533-30dcbda58838
 	golang.org/x/net v0.0.0-20220722155237-a158d28d115b
-	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
+	golang.org/x/sync v0.0.0-20220929204114-8fcdb60fdcc0
 	gonum.org/v1/plot v0.12.0
 	google.golang.org/genproto v0.0.0-20220126215142-9970aeb2e350 // indirect
 	google.golang.org/grpc v1.50.0
