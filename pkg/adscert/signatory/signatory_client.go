@@ -28,6 +28,16 @@ type AuthenticatedConnectionsSignatoryClient struct {
 	timeout time.Duration
 }
 
+func (sc *AuthenticatedConnectionsSignatoryClient) NoOperationResponse(request *api.AuthenticatedConnectionSignatureRequest) (*api.AuthenticatedConnectionSignatureResponse, error) {
+
+	// set network call context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), sc.timeout)
+	defer cancel()
+	response, err := sc.grpcClient.NoOperationResponse(ctx, request)
+
+	return response, err
+}
+
 func (sc *AuthenticatedConnectionsSignatoryClient) SignAuthenticatedConnection(request *api.AuthenticatedConnectionSignatureRequest) (*api.AuthenticatedConnectionSignatureResponse, error) {
 
 	// set network call context with timeout
