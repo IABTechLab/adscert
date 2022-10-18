@@ -34,7 +34,6 @@ func (sc *AuthenticatedConnectionsSignatoryClient) NoOperationResponse(request *
 	ctx, cancel := context.WithTimeout(context.Background(), sc.timeout)
 	defer cancel()
 	response, err := sc.grpcClient.NoOperationResponse(ctx, request)
-
 	return response, err
 }
 

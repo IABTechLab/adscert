@@ -82,7 +82,7 @@ func sendNoOp(testnoopParams *testnoopParameters) *api.AuthenticatedConnectionSi
 	signatory.SetRequestInfo(reqInfo, testnoopParams.url, []byte(testnoopParams.body))
 
 	// Request the signature.
-	logger.Infof("signing request for url: %v", testnoopParams.url)
+	logger.Infof("sending noop request")
 	signatureResponse, err := signatoryClient.NoOperationResponse(
 		&api.AuthenticatedConnectionSignatureRequest{
 			RequestInfo: reqInfo,
