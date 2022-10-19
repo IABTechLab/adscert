@@ -11,12 +11,16 @@ import (
 )
 
 func SetRequestInfo(requestInfo *api.RequestInfo, url string, body []byte) error {
-
-	_, tldPlusOne, err := parseURLComponents(url)
-	if err != nil {
-		return fmt.Errorf("unable to parse domain from URL: %v", err)
+	var err error
+	if url == "dryrun" {
+		requestInfo.InvokingDomain = "dryrun"
+	} else {
+		_, tldPlusOne, err := parseURLComponents(url)
+		if err != nil {
+			return fmt.Errorf("unable to parse domain from URL: %v", err)
+		}
+		requestInfo.InvokingDomain = tldPlusOne
 	}
-	requestInfo.InvokingDomain = tldPlusOne
 
 	urlHash := sha256.Sum256([]byte(url))
 	requestInfo.UrlHash = urlHash[:]
