@@ -43,6 +43,9 @@ type LocalAuthenticatedConnectionsSignatory struct {
 }
 
 func (s *LocalAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(request *api.AuthenticatedConnectionSignatureRequest) (*api.AuthenticatedConnectionSignatureResponse, error) {
+	if request.RequestInfo.InvokingDomain == "dryrun" {
+		return &api.AuthenticatedConnectionSignatureResponse{RequestInfo: request.RequestInfo}, errors.New("dryrun: no signature generated")
+	}
 
 	var err error
 	startTime := s.clock.Now()
