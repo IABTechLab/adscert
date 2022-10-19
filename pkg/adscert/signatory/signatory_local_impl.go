@@ -42,11 +42,6 @@ type LocalAuthenticatedConnectionsSignatory struct {
 	counterpartyManager discovery.DomainIndexer
 }
 
-func (s *LocalAuthenticatedConnectionsSignatory) NoOperationResponse(request *api.AuthenticatedConnectionSignatureRequest) (*api.AuthenticatedConnectionSignatureResponse, error) {
-	response := &api.AuthenticatedConnectionSignatureResponse{RequestInfo: request.RequestInfo}
-	return response, nil
-}
-
 func (s *LocalAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(request *api.AuthenticatedConnectionSignatureRequest) (*api.AuthenticatedConnectionSignatureResponse, error) {
 
 	var err error

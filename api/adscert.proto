@@ -90,7 +90,6 @@ enum VerificationOperationStatus {
 }
 
 service AdsCertSignatory {
-    rpc NoOperationResponse(AuthenticatedConnectionSignatureRequest) returns (AuthenticatedConnectionSignatureResponse) {}
     rpc SignAuthenticatedConnection(AuthenticatedConnectionSignatureRequest) returns (AuthenticatedConnectionSignatureResponse) {}
     rpc VerifyAuthenticatedConnection(AuthenticatedConnectionVerificationRequest) returns (AuthenticatedConnectionVerificationResponse) {}
 }

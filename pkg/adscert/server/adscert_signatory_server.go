@@ -16,11 +16,6 @@ type AdsCertSignatoryServer struct {
 	SignatoryAPI *signatory.LocalAuthenticatedConnectionsSignatory
 }
 
-func (s *AdsCertSignatoryServer) NoOperationResponse(ctx context.Context, req *api.AuthenticatedConnectionSignatureRequest) (*api.AuthenticatedConnectionSignatureResponse, error) {
-	response, err := s.SignatoryAPI.NoOperationResponse(req)
-	return response, err
-}
-
 func (s *AdsCertSignatoryServer) SignAuthenticatedConnection(ctx context.Context, req *api.AuthenticatedConnectionSignatureRequest) (*api.AuthenticatedConnectionSignatureResponse, error) {
 	response, err := s.SignatoryAPI.SignAuthenticatedConnection(req)
 	return response, err
