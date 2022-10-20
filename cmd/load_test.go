@@ -12,6 +12,14 @@ import (
 	"time"
 )
 
+func TestLoadNoOpRequest(t *testing.T) {
+	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
+	for _, timeout := range timeoutList {
+		signBatchesAndPlot(timeout, true)
+	}
+
+}
+
 func TestLoadSigningRequest(t *testing.T) {
 	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
 	for _, timeout := range timeoutList {
@@ -20,10 +28,10 @@ func TestLoadSigningRequest(t *testing.T) {
 
 }
 
-func TestLoadNoOpRequest(t *testing.T) {
+func TestLoadVerificationRequest(t *testing.T) {
 	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
 	for _, timeout := range timeoutList {
-		signBatchesAndPlot(timeout, true)
+		verifyBatchesAndPlot(timeout)
 	}
 
 }
@@ -89,6 +97,62 @@ func sendSignatureRequests(numOfRequests int, testsignParams *testsignParameters
 func signToChannel(testsignParams *testsignParameters, c chan api.SignatureOperationStatus) {
 	signatureStatus := signRequest(testsignParams)
 	c <- signatureStatus.GetSignatureOperationStatus() // send status to c
+}
+
+func verifyBatchesAndPlot(timeout time.Duration) {
+	testverifyParams := &testverifyParameters{}
+	testverifyParams.destinationURL = "https://adscerttestverifier.dev"
+	testverifyParams.serverAddress = "localhost:4000"
+	testverifyParams.body = ""
+	testverifyParams.verifyingTimeout = timeout
+	testverifyParams.signatureMessage = "from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=jsLwC53YySqG&status=1&timestamp=220816T221250&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=NfCC9zQeS3og&sigu=1tkmSdEe-5D7"
+
+	testsPerTestSize := 10
+	c := make(chan api.VerificationOperationStatus)
+	iterationResults := map[int][]float64{}
+	lowestSuccessPercent := 1.00
+	numOfRequests := 1
+	for lowestSuccessPercent > 0.50 {
+		numOfRequests *= 2
+		for i := 0; i < testsPerTestSize; i++ {
+			iterationResult := sendVerificationRequests(numOfRequests, testverifyParams, c)
+			iterationResultSuccessPercent := float64(iterationResult[1]) / float64(iterationResult[0])
+			if lowestSuccessPercent > iterationResultSuccessPercent {
+				lowestSuccessPercent = iterationResultSuccessPercent
+			}
+			iterationResults[iterationResult[0]] = append(iterationResults[iterationResult[0]], float64(iterationResult[1]))
+		}
+	}
+
+	for key, iterationResult := range iterationResults {
+		fmt.Printf("%v Verification Attempts: %v succeeded\n", key, iterationResult)
+	}
+	plotResults(iterationResults, numOfRequests, timeout, "verify")
+
+}
+
+func sendVerificationRequests(numOfRequests int, testverifyParams *testverifyParameters, c chan api.VerificationOperationStatus) []int {
+	for i := 0; i < numOfRequests; i++ {
+		go verifyToChannel(testverifyParams, c)
+	}
+
+	var res []api.VerificationOperationStatus
+	successfulVerificationAttempts := 0
+	for i := 0; i < numOfRequests; i++ {
+		operationStatus := <-c
+		if operationStatus == api.VerificationOperationStatus_VERIFICATION_OPERATION_STATUS_OK {
+			successfulVerificationAttempts += 1
+		}
+		res = append(res, operationStatus)
+	}
+
+	iterationResult := []int{len(res), successfulVerificationAttempts}
+	return iterationResult
+}
+
+func verifyToChannel(testvrifyParams *testverifyParameters, c chan api.VerificationOperationStatus) {
+	signatureStatus := verifyRequest(testverifyParams)
+	c <- signatureStatus.GetVerificationOperationStatus() // send status to c
 }
 
 func plotResults(iterationResults map[int][]float64, maxNumOfRequests int, timeout time.Duration, opType string) {
