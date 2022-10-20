@@ -118,7 +118,13 @@ func plotResults(iterationResults map[int][]float64, maxNumOfRequests int, timeo
 
 	p := plot.New()
 
-	p.Title.Text = fmt.Sprintf("Percent of messages successfully signing during 2^X concurrent requests. 10 runs per batch size. Timeout: %s", fmt.Sprint(timeout))
+	if opType == "noop" {
+		p.Title.Text = fmt.Sprintf("NOOP: Percent of messages successfully returned per batch of size 2^X concurrent requests. 10 runs per batch. Timeout: %s", fmt.Sprint(timeout))
+
+	} else {
+		p.Title.Text = fmt.Sprintf("SIGNING: Percent of successful signed requests per batch of size 2^X concurrent requests. 10 runs per batch. Timeout: %s", fmt.Sprint(timeout))
+
+	}
 	p.Y.Label.Text = "Percent Successful Signing Attemps"
 
 	w := vg.Points(4)
