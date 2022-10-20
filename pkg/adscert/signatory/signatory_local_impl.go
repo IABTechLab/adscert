@@ -43,13 +43,14 @@ type LocalAuthenticatedConnectionsSignatory struct {
 }
 
 func (s *LocalAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(request *api.AuthenticatedConnectionSignatureRequest) (*api.AuthenticatedConnectionSignatureResponse, error) {
-	if request.RequestInfo.InvokingDomain == "dryrun" {
-		return &api.AuthenticatedConnectionSignatureResponse{RequestInfo: request.RequestInfo}, nil
-	}
-
 	var err error
 	startTime := s.clock.Now()
 	response := &api.AuthenticatedConnectionSignatureResponse{RequestInfo: request.RequestInfo}
+
+	if request.RequestInfo.InvokingDomain == "dryrun" {
+		response.SignatureOperationStatus = api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK
+		return response, nil
+	}
 
 	if request.RequestInfo == nil || request.RequestInfo.InvokingDomain == "" || len(request.RequestInfo.UrlHash) == 0 {
 		response.SignatureOperationStatus = api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_MALFORMED_REQUEST
