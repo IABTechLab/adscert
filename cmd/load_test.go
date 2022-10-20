@@ -59,7 +59,12 @@ func signBatchesAndPlot(timeout time.Duration, isNoOp bool) {
 	for key, iterationResult := range iterationResults {
 		fmt.Printf("%v Signing Attempts: %v succeeded\n", key, iterationResult)
 	}
-	plotResults(iterationResults, numOfRequests, timeout, "sign")
+	if isNoOp {
+		plotResults(iterationResults, numOfRequests, timeout, "noop")
+	} else {
+		plotResults(iterationResults, numOfRequests, timeout, "sign")
+	}
+
 }
 
 func sendSignatureRequests(numOfRequests int, testsignParams *testsignParameters, c chan api.SignatureOperationStatus) []int {
