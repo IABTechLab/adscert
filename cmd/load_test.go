@@ -20,13 +20,13 @@ func TestLoadSigningRequest(t *testing.T) {
 
 }
 
-// func TestLoadNoOpRequest(t *testing.T) {
-// 	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
-// 	for _, timeout := range timeoutList {
-// 		signBatchesAndPlot(timeout, true)
-// 	}
+func TestLoadNoOpRequest(t *testing.T) {
+	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
+	for _, timeout := range timeoutList {
+		signBatchesAndPlot(timeout, true)
+	}
 
-// }
+}
 
 func signBatchesAndPlot(timeout time.Duration, isNoOp bool) {
 	testsignParams := &testsignParameters{}
