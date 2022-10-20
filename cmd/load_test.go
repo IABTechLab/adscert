@@ -12,17 +12,29 @@ import (
 	"time"
 )
 
-func TestLoadSigningRequest100MS(t *testing.T) {
+func TestLoadSigningRequest(t *testing.T) {
 	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
 	for _, timeout := range timeoutList {
-		signBatchesAndPlot(timeout)
+		signBatchesAndPlot(timeout, false)
 	}
 
 }
 
-func signBatchesAndPlot(timeout time.Duration) {
+func TestLoadNoOpRequest(t *testing.T) {
+	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
+	for _, timeout := range timeoutList {
+		signBatchesAndPlot(timeout, true)
+	}
+
+}
+
+func signBatchesAndPlot(timeout time.Duration, isNoOp bool) {
 	testsignParams := &testsignParameters{}
-	testsignParams.url = "https://adscerttestverifier.dev"
+	if isNoOp {
+		testsignParams.url = "dryrun"
+	} else {
+		testsignParams.url = "https://adscerttestverifier.dev"
+	}
 	testsignParams.serverAddress = "localhost:3000"
 	testsignParams.body = ""
 	testsignParams.signingTimeout = timeout
@@ -47,10 +59,34 @@ func signBatchesAndPlot(timeout time.Duration) {
 	for key, iterationResult := range iterationResults {
 		fmt.Printf("%v Signing Attempts: %v succeeded\n", key, iterationResult)
 	}
-	plotResults(iterationResults, numOfRequests, timeout)
+	plotResults(iterationResults, numOfRequests, timeout, "sign")
 }
 
-func plotResults(iterationResults map[int][]float64, maxNumOfRequests int, timeout time.Duration) {
+func sendSignatureRequests(numOfRequests int, testsignParams *testsignParameters, c chan api.SignatureOperationStatus) []int {
+	for i := 0; i < numOfRequests; i++ {
+		go signToChannel(testsignParams, c)
+	}
+
+	var res []api.SignatureOperationStatus
+	successfulSignatureAttempts := 0
+	for i := 0; i < numOfRequests; i++ {
+		operationStatus := <-c
+		if operationStatus == api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK {
+			successfulSignatureAttempts += 1
+		}
+		res = append(res, operationStatus)
+	}
+
+	iterationResult := []int{len(res), successfulSignatureAttempts}
+	return iterationResult
+}
+
+func signToChannel(testsignParams *testsignParameters, c chan api.SignatureOperationStatus) {
+	signatureStatus := signRequest(testsignParams)
+	c <- signatureStatus.GetSignatureOperationStatus() // send status to c
+}
+
+func plotResults(iterationResults map[int][]float64, maxNumOfRequests int, timeout time.Duration, opType string) {
 	group1 := plotter.Values{}
 	group2 := plotter.Values{}
 	group3 := plotter.Values{}
@@ -177,33 +213,9 @@ func plotResults(iterationResults map[int][]float64, maxNumOfRequests int, timeo
 	p.Legend.Top = true
 
 	// p.NominalX("10", "100", "1000", "10000")
-	if err := p.Save(10*vg.Inch, 6*vg.Inch, fmt.Sprintf("barchart%s.png", fmt.Sprint(timeout))); err != nil {
+	if err := p.Save(10*vg.Inch, 6*vg.Inch, fmt.Sprintf("%sLoadTest%s.png", opType, fmt.Sprint(timeout))); err != nil {
 		panic(err)
 	}
-}
-
-func sendSignatureRequests(numOfRequests int, testsignParams *testsignParameters, c chan api.SignatureOperationStatus) []int {
-	for i := 0; i < numOfRequests; i++ {
-		go signToChannel(testsignParams, c)
-	}
-
-	var res []api.SignatureOperationStatus
-	successfulSignatureAttempts := 0
-	for i := 0; i < numOfRequests; i++ {
-		operationStatus := <-c
-		if operationStatus == api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK {
-			successfulSignatureAttempts += 1
-		}
-		res = append(res, operationStatus)
-	}
-
-	iterationResult := []int{len(res), successfulSignatureAttempts}
-	return iterationResult
-}
-
-func signToChannel(testsignParams *testsignParameters, c chan api.SignatureOperationStatus) {
-	signatureStatus := signRequest(testsignParams)
-	c <- signatureStatus.GetSignatureOperationStatus() // send status to c
 }
 
 // func LoadTestWebReceiver(b *testing.B) {
