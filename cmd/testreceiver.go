@@ -50,7 +50,7 @@ func init() {
 
 	testreceiverCmd.Flags().StringVar(&testreceiverParams.serverPort, "server_port", "5000", "port to run local web server")
 	testreceiverCmd.Flags().StringVar(&testreceiverParams.verifierAddress, "verifier_address", "localhost:4000", "address of verification server")
-	testreceiverCmd.Flags().DurationVar(&testreceiverParams.verifyingTimeout, "verifying_timeout", 5*time.Millisecond, "Specifies how long this client will wait for verification to finish before abandoning.")
+	testreceiverCmd.Flags().DurationVar(&testreceiverParams.verifyingTimeout, "verifying_timeout", 1000*time.Millisecond, "Specifies how long this client will wait for verification to finish before abandoning.")
 }
 
 func startServer(testreceiverParams *testreceiverParameters) {
