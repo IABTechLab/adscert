@@ -262,15 +262,20 @@ func plotResults(iterationResults map[int][]float64, maxNumOfRequests int, timeo
 	}
 
 	p := plot.New()
-
-	if opType == "noop" {
-		p.Title.Text = fmt.Sprintf("NOOP: Percent of messages successfully returned per batch of size 2^X concurrent requests. 10 runs per batch. Timeout: %s", fmt.Sprint(timeout))
-
-	} else {
-		p.Title.Text = fmt.Sprintf("SIGNING: Percent of successful signed requests per batch of size 2^X concurrent requests. 10 runs per batch. Timeout: %s", fmt.Sprint(timeout))
-
+	switch {
+	case opType == "noop":
+		p.Title.Text = fmt.Sprintf("NOOP: Percent of messages successfully returned per batch of size 2^X concurrent requests. 10 runs per batch size. Timeout: %s", fmt.Sprint(timeout))
+		p.Y.Label.Text = "Percent Successful No Operation Attemps"
+	case opType == "sign":
+		p.Title.Text = fmt.Sprintf("SIGNING: Percent of successful signed requests per batch of size 2^X concurrent requests. 10 runs per batch size. Timeout: %s", fmt.Sprint(timeout))
+		p.Y.Label.Text = "Percent Successful Signing Attemps"
+	case opType == "verify":
+		p.Title.Text = fmt.Sprintf("VERIFYING: Percent of successful verified requests per batch of size 2^X concurrent requests. 10 runs per batch size. Timeout: %s", fmt.Sprint(timeout))
+		p.Y.Label.Text = "Percent Successful Verification Attemps"
+	case opType == "web":
+		p.Title.Text = fmt.Sprintf("WEB RECEIVER: Percent of successful verified requests per batch of size 2^X concurrent requests. 10 runs per batch size. Timeout: %s", fmt.Sprint(timeout))
+		p.Y.Label.Text = "Percent Successful Web Verification Attemps"
 	}
-	p.Y.Label.Text = "Percent Successful Signing Attemps"
 
 	w := vg.Points(4)
 
