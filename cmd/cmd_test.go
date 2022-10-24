@@ -52,7 +52,7 @@ func TestVerificationRequest(t *testing.T) {
 
 }
 
-func TestWebReciever(t *testing.T) {
+func TestWebReceiver(t *testing.T) {
 	req, err := http.NewRequest("GET", "http://adscerttestverifier.dev:5000", nil)
 	if err != nil {
 		fmt.Println("Errored when creating request")
@@ -76,6 +76,7 @@ func TestWebReciever(t *testing.T) {
 		t.Fail()
 	}
 
+	//json.NewDecoder(r.Body).Decode(target)
 	responseBodyString := string(responseBody)
 	fmt.Println(resp.Status)
 	fmt.Println(responseBodyString)

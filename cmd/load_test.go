@@ -3,16 +3,20 @@ package cmd
 import (
 	// "net/http"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/IABTechLab/adscert/pkg/adscert/api"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
 	"gonum.org/v1/plot/plotutil"
 	"gonum.org/v1/plot/vg"
-	"testing"
-	"time"
 )
 
-func TestLoadNoOpRequest(t *testing.T) {
+func TestLoadNoOp(t *testing.T) {
 	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
 	for _, timeout := range timeoutList {
 		signBatchesAndPlot(timeout, true)
@@ -20,7 +24,7 @@ func TestLoadNoOpRequest(t *testing.T) {
 
 }
 
-func TestLoadSigningRequest(t *testing.T) {
+func TestLoadSigning(t *testing.T) {
 	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
 	for _, timeout := range timeoutList {
 		signBatchesAndPlot(timeout, false)
@@ -28,10 +32,18 @@ func TestLoadSigningRequest(t *testing.T) {
 
 }
 
-func TestLoadVerificationRequest(t *testing.T) {
+func TestLoadVerification(t *testing.T) {
 	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
 	for _, timeout := range timeoutList {
 		verifyBatchesAndPlot(timeout)
+	}
+
+}
+
+func TestLoadWebReceiver(t *testing.T) {
+	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
+	for _, timeout := range timeoutList {
+		webReceiverBatchesAndPlot(timeout)
 	}
 
 }
@@ -153,6 +165,75 @@ func sendVerificationRequests(numOfRequests int, testverifyParams *testverifyPar
 func verifyToChannel(testvrifyParams *testverifyParameters, c chan api.VerificationOperationStatus) {
 	signatureStatus := verifyRequest(testverifyParams)
 	c <- signatureStatus.GetVerificationOperationStatus() // send status to c
+}
+
+func webReceiverBatchesAndPlot(timeout time.Duration) {
+	testsPerTestSize := 10
+	c := make(chan string)
+	iterationResults := map[int][]float64{}
+	lowestSuccessPercent := 1.00
+	numOfRequests := 1
+	for lowestSuccessPercent > 0.50 {
+		numOfRequests *= 2
+		for i := 0; i < testsPerTestSize; i++ {
+			iterationResult := sendWebRequests(numOfRequests, c)
+			iterationResultSuccessPercent := float64(iterationResult[1]) / float64(iterationResult[0])
+			if lowestSuccessPercent > iterationResultSuccessPercent {
+				lowestSuccessPercent = iterationResultSuccessPercent
+			}
+			iterationResults[iterationResult[0]] = append(iterationResults[iterationResult[0]], float64(iterationResult[1]))
+		}
+	}
+
+	for key, iterationResult := range iterationResults {
+		fmt.Printf("%v Web Server Verification Attempts: %v succeeded\n", key, iterationResult)
+	}
+	plotResults(iterationResults, numOfRequests, timeout, "web")
+
+}
+
+func sendWebRequests(numOfRequests int, c chan string) []int {
+	for i := 0; i < numOfRequests; i++ {
+		go webResponseToChannel(c)
+	}
+
+	var res []string
+	successfulWebAttempts := 0
+	for i := 0; i < numOfRequests; i++ {
+		operationStatus := <-c
+		if !strings.Contains(operationStatus, "SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID") {
+			successfulWebAttempts += 1
+		}
+		res = append(res, operationStatus)
+	}
+
+	iterationResult := []int{len(res), successfulWebAttempts}
+	return iterationResult
+}
+
+func webResponseToChannel(c chan string) {
+	req, err := http.NewRequest("GET", "http://adscerttestverifier.dev:5000", nil)
+	if err != nil {
+		fmt.Println("Errored when creating request")
+	}
+
+	req.Header.Add("X-Ads-Cert-Auth", "from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=Ppq82bU_LjD-&status=1&timestamp=220914T143647&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=uKm1qVmfrMeT&sigu=jkKZoB9TKzd_")
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		fmt.Println("Errored when sending request to the server")
+	}
+
+	defer resp.Body.Close()
+	responseBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Errored on body read")
+	}
+
+	responseBodyString := string(responseBody)
+
+	c <- responseBodyString // send status to c
 }
 
 func plotResults(iterationResults map[int][]float64, maxNumOfRequests int, timeout time.Duration, opType string) {
