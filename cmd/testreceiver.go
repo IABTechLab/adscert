@@ -17,11 +17,13 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
-	"google.golang.org/protobuf/encoding/prototext"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
+
+	"github.com/spf13/cobra"
+	"google.golang.org/protobuf/encoding/prototext"
 )
 
 // testreceiverCmd represents the test receivergit command
@@ -63,7 +65,15 @@ func startServer(testreceiverParams *testreceiverParameters) {
 		testverifyParams.signatureMessage = signatureMessage
 		testverifyParams.serverAddress = testreceiverParams.verifierAddress
 		testverifyParams.body = ""
-		testverifyParams.verifyingTimeout = testreceiverParams.verifyingTimeout
+		if _, ok := req.Header["Timeout"]; ok {
+			timeoutInt, err := strconv.Atoi((req.Header["Timeout"][0]))
+			if err != nil {
+				fmt.Printf("Error converting timeout to int")
+			}
+			testverifyParams.verifyingTimeout = time.Duration(timeoutInt) * time.Millisecond
+		} else {
+			testverifyParams.verifyingTimeout = testreceiverParams.verifyingTimeout
+		}
 
 		fmt.Fprint(w, prototext.Format(verifyRequest(testverifyParams)))
 	})
