@@ -233,6 +233,7 @@ func webResponseToChannel(c chan string) {
 	}
 
 	responseBodyString := string(responseBody)
+	fmt.Println(responseBodyString)
 
 	c <- responseBodyString // send status to c
 }
