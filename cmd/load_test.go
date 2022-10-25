@@ -221,7 +221,11 @@ func sendWebRequests(numOfRequests int, timeoutString string, c chan string) []i
 func webResponseToChannel(timeoutString string, c chan string) {
 	req, err := http.NewRequest("GET", "http://adscerttestverifier.dev:5000", nil)
 	if err != nil {
-		fmt.Println("Errored when creating request")
+		responseBodyString := "Errored when creating request"
+		fmt.Println(err)
+		fmt.Println(responseBodyString)
+		c <- responseBodyString
+		return
 	}
 
 	req.Header.Add("X-Ads-Cert-Auth", "from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=Ppq82bU_LjD-&status=1&timestamp=220914T143647&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=uKm1qVmfrMeT&sigu=jkKZoB9TKzd_")
@@ -229,19 +233,26 @@ func webResponseToChannel(timeoutString string, c chan string) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
+		responseBodyString := "Errored when sending request to the server"
 		fmt.Println(err)
-		fmt.Println("Errored when sending request to the server")
+		fmt.Println(responseBodyString)
+		c <- responseBodyString
+		return
 	}
 
 	defer resp.Body.Close()
 	responseBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("Errored on body read")
+	if err !=gi nil {
+		responseBodyString := "Errored on body read"
+		fmt.Println(err)
+		fmt.Println(responseBodyString)
+		c <- responseBodyString
+		return
 	}
 
 	responseBodyString := string(responseBody)
-
 	c <- responseBodyString // send status to c
+
 }
 
 func plotResults(iterationResults map[int][]float64, maxNumOfRequests int, timeout time.Duration, opType string) {
