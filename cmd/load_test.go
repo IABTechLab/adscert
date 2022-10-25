@@ -222,7 +222,6 @@ func webResponseToChannel(timeoutString string, c chan string) {
 	req, err := http.NewRequest("GET", "http://adscerttestverifier.dev:5000", nil)
 	if err != nil {
 		responseBodyString := "Errored when creating request"
-		fmt.Println(err)
 		fmt.Println(responseBodyString)
 		c <- responseBodyString
 		return
@@ -234,7 +233,6 @@ func webResponseToChannel(timeoutString string, c chan string) {
 	resp, err := client.Do(req)
 	if err != nil {
 		responseBodyString := "Errored when sending request to the server"
-		fmt.Println(err)
 		fmt.Println(responseBodyString)
 		c <- responseBodyString
 		return
@@ -244,7 +242,6 @@ func webResponseToChannel(timeoutString string, c chan string) {
 	responseBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		responseBodyString := "Error on body read"
-		fmt.Println(err)
 		fmt.Println(responseBodyString)
 		c <- responseBodyString
 		return
