@@ -17,29 +17,29 @@ import (
 	"gonum.org/v1/plot/vg"
 )
 
-// func TestLoadNoOp(t *testing.T) {
-// 	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
-// 	for _, timeout := range timeoutList {
-// 		signBatchesAndPlot(timeout, true)
-// 	}
+func TestLoadNoOp(t *testing.T) {
+	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
+	for _, timeout := range timeoutList {
+		signBatchesAndPlot(timeout, true)
+	}
 
-// }
+}
 
-// func TestLoadSigning(t *testing.T) {
-// 	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
-// 	for _, timeout := range timeoutList {
-// 		signBatchesAndPlot(timeout, false)
-// 	}
+func TestLoadSigning(t *testing.T) {
+	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
+	for _, timeout := range timeoutList {
+		signBatchesAndPlot(timeout, false)
+	}
 
-// }
+}
 
-// func TestLoadVerification(t *testing.T) {
-// 	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
-// 	for _, timeout := range timeoutList {
-// 		verifyBatchesAndPlot(timeout)
-// 	}
+func TestLoadVerification(t *testing.T) {
+	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
+	for _, timeout := range timeoutList {
+		verifyBatchesAndPlot(timeout)
+	}
 
-// }
+}
 
 func TestLoadWebReceiver(t *testing.T) {
 	timeoutList := []string{"10", "100", "1000"}
@@ -393,20 +393,6 @@ func plotResults(iterationResults map[int][]float64, maxNumOfRequests int, timeo
 		panic(err)
 	}
 }
-
-// func LoadTestWebReceiver(b *testing.B) {
-// 	for i := 0; i < b.N; i++ {
-// 		req, err := http.NewRequest("GET", "http://adscerttestverifier.dev:5000", nil)
-// 		if err != nil {
-// 			fmt.Println("Errored when creating request")
-// 			b.Fail()
-// 		}
-
-// 		req.Header.Add("X-Ads-Cert-Auth", "from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=Ppq82bU_LjD-&status=1&timestamp=220914T143647&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=uKm1qVmfrMeT&sigu=jkKZoB9TKzd_")
-// 		client := &http.Client{}
-// 		client.Do(req)
-// 	}
-// }
 
 // func LoadTestSignSendAndVerify(b *testing.B) {
 // 	for i := 0; i < b.N; i++ {
