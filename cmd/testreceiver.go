@@ -66,7 +66,7 @@ func startServer(testreceiverParams *testreceiverParameters) {
 		testverifyParams.serverAddress = testreceiverParams.verifierAddress
 		testverifyParams.body = ""
 		if _, ok := req.Header["Timeout"]; ok {
-			timeoutInt, err := strconv.Atoi((req.Header["Timeout"][0]))
+			timeoutInt, err := strconv.Atoi(req.Header["Timeout"][0])
 			if err != nil {
 				fmt.Printf("Error converting timeout to int")
 			}
