@@ -17,21 +17,21 @@ import (
 	"gonum.org/v1/plot/vg"
 )
 
-func TestLoadNoOp(t *testing.T) {
-	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond} //, 1000 * time.Millisecond}
-	for _, timeout := range timeoutList {
-		signBatchesAndPlot(timeout, true)
-	}
+// func TestLoadNoOp(t *testing.T) {
+// 	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond} //, 1000 * time.Millisecond}
+// 	for _, timeout := range timeoutList {
+// 		signBatchesAndPlot(timeout, true)
+// 	}
 
-}
+// }
 
-func TestLoadSigning(t *testing.T) {
-	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond} //, 1000 * time.Millisecond}
-	for _, timeout := range timeoutList {
-		signBatchesAndPlot(timeout, false)
-	}
+// func TestLoadSigning(t *testing.T) {
+// 	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond} //, 1000 * time.Millisecond}
+// 	for _, timeout := range timeoutList {
+// 		signBatchesAndPlot(timeout, false)
+// 	}
 
-}
+// }
 
 func TestLoadVerification(t *testing.T) {
 	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond} //, 1000 * time.Millisecond}
@@ -41,13 +41,13 @@ func TestLoadVerification(t *testing.T) {
 
 }
 
-func TestLoadWebReceiver(t *testing.T) {
-	timeoutList := []string{"10", "100"} //, "1000"}
-	for _, timeoutString := range timeoutList {
-		webReceiverBatchesAndPlot(timeoutString)
-	}
+// func TestLoadWebReceiver(t *testing.T) {
+// 	timeoutList := []string{"10", "100"} //, "1000"}
+// 	for _, timeoutString := range timeoutList {
+// 		webReceiverBatchesAndPlot(timeoutString)
+// 	}
 
-}
+// }
 
 func signBatchesAndPlot(timeout time.Duration, isNoOp bool) {
 	testsignParams := &testsignParameters{}
@@ -114,11 +114,11 @@ func signToChannel(testsignParams *testsignParameters, c chan api.SignatureOpera
 
 func verifyBatchesAndPlot(timeout time.Duration) {
 	testverifyParams := &testverifyParameters{}
-	testverifyParams.destinationURL = "https://adscerttestverifier.dev"
+	testverifyParams.destinationURL = "http://adscerttestverifier.dev:5000"
 	testverifyParams.serverAddress = "localhost:4000"
 	testverifyParams.body = ""
 	testverifyParams.verifyingTimeout = timeout
-	testverifyParams.signatureMessage = "from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=jsLwC53YySqG&status=1&timestamp=220816T221250&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=NfCC9zQeS3og&sigu=1tkmSdEe-5D7"
+	testverifyParams.signatureMessage = "from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=Ppq82bU_LjD-&status=1&timestamp=220914T143647&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=uKm1qVmfrMeT&sigu=jkKZoB9TKzd_"
 
 	testsPerTestSize := 10
 	c := make(chan api.VerificationOperationStatus)
