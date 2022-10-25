@@ -242,8 +242,8 @@ func webResponseToChannel(timeoutString string, c chan string) {
 
 	defer resp.Body.Close()
 	responseBody, err := ioutil.ReadAll(resp.Body)
-	if err !=gi nil {
-		responseBodyString := "Errored on body read"
+	if err != nil {
+		responseBodyString := "Error on body read"
 		fmt.Println(err)
 		fmt.Println(responseBodyString)
 		c <- responseBodyString
