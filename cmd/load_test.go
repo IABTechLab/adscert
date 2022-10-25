@@ -41,7 +41,7 @@ import (
 // }
 
 func TestLoadWebReceiver(t *testing.T) {
-	timeoutList := []time.Duration{10 * time.Millisecond} //, 100 * time.Millisecond, 1000 * time.Millisecond}
+	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
 	for _, timeout := range timeoutList {
 		webReceiverBatchesAndPlot(timeout)
 	}
@@ -202,7 +202,7 @@ func sendWebRequests(numOfRequests int, c chan string) []int {
 	for i := 0; i < numOfRequests; i++ {
 		operationStatus := <-c
 		fmt.Println(operationStatus)
-		if !strings.Contains(operationStatus, "SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID") {
+		if strings.Contains(operationStatus, "SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID") {
 			successfulWebAttempts += 1
 		}
 		res = append(res, operationStatus)
