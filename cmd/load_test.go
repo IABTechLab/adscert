@@ -42,7 +42,7 @@ import (
 // }
 
 func TestLoadWebReceiver(t *testing.T) {
-	timeoutList := []string{"10", "100"} //, "1000"}
+	timeoutList := []string{"10", "100", "1000"}
 	for _, timeoutString := range timeoutList {
 		webReceiverBatchesAndPlot(timeoutString)
 	}
