@@ -15,29 +15,29 @@ import (
 	"gonum.org/v1/plot/vg"
 )
 
-// func TestLoadNoOp(t *testing.T) {
-// 	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
-// 	for _, timeout := range timeoutList {
-// 		signBatchesAndPlot(timeout, true)
-// 	}
+func TestLoadNoOp(t *testing.T) {
+	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
+	for _, timeout := range timeoutList {
+		signBatchesAndPlot(timeout, true)
+	}
 
-// }
+}
 
-// func TestLoadSigning(t *testing.T) {
-// 	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
-// 	for _, timeout := range timeoutList {
-// 		signBatchesAndPlot(timeout, false)
-// 	}
+func TestLoadSigning(t *testing.T) {
+	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
+	for _, timeout := range timeoutList {
+		signBatchesAndPlot(timeout, false)
+	}
 
-// }
+}
 
-// func TestLoadVerification(t *testing.T) {
-// 	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
-// 	for _, timeout := range timeoutList {
-// 		verifyBatchesAndPlot(timeout)
-// 	}
+func TestLoadVerification(t *testing.T) {
+	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
+	for _, timeout := range timeoutList {
+		verifyBatchesAndPlot(timeout)
+	}
 
-// }
+}
 
 func TestLoadWebReceiver(t *testing.T) {
 	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
