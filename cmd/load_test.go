@@ -196,6 +196,7 @@ func webReceiverBatchesAndPlot(timeoutString string) {
 	timeoutInt, err := strconv.Atoi(timeoutString)
 	if err != nil {
 		fmt.Printf("Error converting timeout to int")
+		return
 	}
 	timeoutDuration := time.Duration(timeoutInt) * time.Millisecond
 	plotResults(iterationResults, numOfRequests, timeoutDuration, "web")
@@ -233,7 +234,9 @@ func webResponseToChannel(timeoutString string, c chan string) {
 
 	req.Header.Add("X-Ads-Cert-Auth", "from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=Ppq82bU_LjD-&status=1&timestamp=220914T143647&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=uKm1qVmfrMeT&sigu=jkKZoB9TKzd_")
 	req.Header.Add("Timeout", timeoutString)
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		responseBodyString := "Errored when sending request to the server"
