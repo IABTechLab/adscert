@@ -114,14 +114,14 @@ func signToChannel(testsignParams *testsignParameters, c chan api.SignatureOpera
 
 func verifyBatchesAndPlot(timeout time.Duration) {
 	testverifyParams := &testverifyParameters{}
-	testverifyParams.destinationURL = "http://adscerttestverifier.dev:5000"
+	testverifyParams.destinationURL = "https://adscerttestverifier.dev"
 	testverifyParams.serverAddress = "localhost:4000"
 	testverifyParams.body = ""
 	testverifyParams.verifyingTimeout = timeout
-	testverifyParams.signatureMessage = "from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=Ppq82bU_LjD-&status=1&timestamp=220914T143647&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=uKm1qVmfrMeT&sigu=jkKZoB9TKzd_"
+	testverifyParams.signatureMessage = "from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=jsLwC53YySqG&status=1&timestamp=220816T221250&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=NfCC9zQeS3og&sigu=1tkmSdEe-5D7"
 
 	testsPerTestSize := 10
-	c := make(chan api.VerificationOperationStatus)
+	c := make(chan api.SignatureDecodeStatus)
 	iterationResults := map[int][]float64{}
 	lowestSuccessPercent := 1.00
 	numOfRequests := 1
@@ -144,16 +144,16 @@ func verifyBatchesAndPlot(timeout time.Duration) {
 
 }
 
-func sendVerificationRequests(numOfRequests int, testverifyParams *testverifyParameters, c chan api.VerificationOperationStatus) []int {
+func sendVerificationRequests(numOfRequests int, testverifyParams *testverifyParameters, c chan api.SignatureDecodeStatus) []int {
 	for i := 0; i < numOfRequests; i++ {
 		go verifyToChannel(testverifyParams, c)
 	}
 
-	var res []api.VerificationOperationStatus
+	var res []api.SignatureDecodeStatus
 	successfulVerificationAttempts := 0
 	for i := 0; i < numOfRequests; i++ {
 		operationStatus := <-c
-		if operationStatus == api.VerificationOperationStatus_VERIFICATION_OPERATION_STATUS_OK {
+		if operationStatus == api.SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID {
 			successfulVerificationAttempts += 1
 		}
 		res = append(res, operationStatus)
@@ -163,9 +163,9 @@ func sendVerificationRequests(numOfRequests int, testverifyParams *testverifyPar
 	return iterationResult
 }
 
-func verifyToChannel(testvrifyParams *testverifyParameters, c chan api.VerificationOperationStatus) {
-	signatureStatus := verifyRequest(testverifyParams)
-	c <- signatureStatus.GetVerificationOperationStatus() // send status to c
+func verifyToChannel(testvrifyParams *testverifyParameters, c chan api.SignatureDecodeStatus) {
+	signatureStatus := verifyRequest(testverifyParams).GetVerificationInfo()[0].GetSignatureDecodeStatus()[0]
+	c <- signatureStatus // send status to c
 }
 
 func webReceiverBatchesAndPlot(timeoutString string) {
