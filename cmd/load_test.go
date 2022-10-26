@@ -164,11 +164,13 @@ func sendVerificationRequests(numOfRequests int, testverifyParams *testverifyPar
 }
 
 func verifyToChannel(testverifyParams *testverifyParameters, c chan api.SignatureDecodeStatus) {
-	fmt.Println("params being verified")
-	fmt.Println(testverifyParams.destinationURL)
-	fmt.Println(testverifyParams.signatureMessage)
-	signatureStatus := verifyRequest(testverifyParams).GetVerificationInfo()[0].GetSignatureDecodeStatus()[0]
-	c <- signatureStatus // send status to c
+	verificationResponse := verifyRequest(testverifyParams)
+	if len(verificationResponse.GetVerificationInfo()) > 0 && len(verificationResponse.GetVerificationInfo()[0].GetSignatureDecodeStatus()) > 0 {
+		signatureStatus := verificationResponse.GetVerificationInfo()[0].GetSignatureDecodeStatus()[0]
+		c <- signatureStatus // send status to c
+	} else {
+		c <- api.SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_UNDEFINED
+	}
 }
 
 func webReceiverBatchesAndPlot(timeoutString string) {
