@@ -164,6 +164,9 @@ func sendVerificationRequests(numOfRequests int, testverifyParams *testverifyPar
 }
 
 func verifyToChannel(testvrifyParams *testverifyParameters, c chan api.SignatureDecodeStatus) {
+	fmt.Println("params being verified")
+	fmt.Println(testverifyParams.destinationURL)
+	fmt.Println(testverifyParams.signatureMessage)
 	signatureStatus := verifyRequest(testverifyParams).GetVerificationInfo()[0].GetSignatureDecodeStatus()[0]
 	c <- signatureStatus // send status to c
 }
