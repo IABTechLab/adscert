@@ -41,9 +41,9 @@ import (
 // }
 
 func TestLoadWebReceiver(t *testing.T) {
-	timeoutList := []string{"10", "100", "1000"}
-	for _, timeoutString := range timeoutList {
-		webReceiverBatchesAndPlot(timeoutString)
+	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
+	for _, timeout := range timeoutList {
+		webReceiverBatchesAndPlot(timeout)
 	}
 
 }
@@ -172,7 +172,7 @@ func verifyToChannel(testverifyParams *testverifyParameters, c chan api.Signatur
 	}
 }
 
-func webReceiverBatchesAndPlot(timeoutString string) {
+func webReceiverBatchesAndPlot(timeout time.Duration) {
 	testsPerTestSize := 10
 	c := make(chan string)
 	iterationResults := map[int][]float64{}
@@ -181,7 +181,7 @@ func webReceiverBatchesAndPlot(timeoutString string) {
 	for lowestSuccessPercent > 0.50 {
 		numOfRequests *= 2
 		for i := 0; i < testsPerTestSize; i++ {
-			iterationResult := sendWebRequests(numOfRequests, timeoutString, c)
+			iterationResult := sendWebRequests(numOfRequests, timeout, c)
 			iterationResultSuccessPercent := float64(iterationResult[1]) / float64(iterationResult[0])
 			if lowestSuccessPercent > iterationResultSuccessPercent {
 				lowestSuccessPercent = iterationResultSuccessPercent
@@ -193,19 +193,14 @@ func webReceiverBatchesAndPlot(timeoutString string) {
 	for key, iterationResult := range iterationResults {
 		fmt.Printf("%v Web Server Verification Attempts: %v succeeded\n", key, iterationResult)
 	}
-	timeoutInt, err := strconv.Atoi(timeoutString)
-	if err != nil {
-		fmt.Printf("Error converting timeout to int")
-		return
-	}
-	timeoutDuration := time.Duration(timeoutInt) * time.Millisecond
-	plotResults(iterationResults, numOfRequests, timeoutDuration, "web")
+
+	plotResults(iterationResults, numOfRequests, timeout, "web")
 
 }
 
-func sendWebRequests(numOfRequests int, timeoutString string, c chan string) []int {
+func sendWebRequests(numOfRequests int, timeout time.Duration, c chan string) []int {
 	for i := 0; i < numOfRequests; i++ {
-		go webResponseToChannel(timeoutString, c)
+		go webResponseToChannel(timeout, c)
 	}
 
 	var res []string
@@ -223,7 +218,7 @@ func sendWebRequests(numOfRequests int, timeoutString string, c chan string) []i
 	return iterationResult
 }
 
-func webResponseToChannel(timeoutString string, c chan string) {
+func webResponseToChannel(timeout time.Duration, c chan string) {
 	req, err := http.NewRequest("GET", "http://adscerttestverifier.dev:5000", nil)
 	if err != nil {
 		responseBodyString := "Errored when creating request"
@@ -233,9 +228,8 @@ func webResponseToChannel(timeoutString string, c chan string) {
 	}
 
 	req.Header.Add("X-Ads-Cert-Auth", "from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=Ppq82bU_LjD-&status=1&timestamp=220914T143647&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=uKm1qVmfrMeT&sigu=jkKZoB9TKzd_")
-	req.Header.Add("Timeout", timeoutString)
 	client := &http.Client{
-		Timeout: 100 * time.Millisecond,
+		Timeout: timeout,
 	}
 	resp, err := client.Do(req)
 	if err != nil {
