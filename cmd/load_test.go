@@ -235,7 +235,7 @@ func webResponseToChannel(timeoutString string, c chan string) {
 	req.Header.Add("X-Ads-Cert-Auth", "from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=Ppq82bU_LjD-&status=1&timestamp=220914T143647&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=uKm1qVmfrMeT&sigu=jkKZoB9TKzd_")
 	req.Header.Add("Timeout", timeoutString)
 	client := &http.Client{
-		Timeout: 10 * time.Second,
+		Timeout: 100 * time.Millisecond,
 	}
 	resp, err := client.Do(req)
 	if err != nil {
