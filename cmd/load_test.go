@@ -163,7 +163,7 @@ func sendVerificationRequests(numOfRequests int, testverifyParams *testverifyPar
 	return iterationResult
 }
 
-func verifyToChannel(testvrifyParams *testverifyParameters, c chan api.SignatureDecodeStatus) {
+func verifyToChannel(testverifyParams *testverifyParameters, c chan api.SignatureDecodeStatus) {
 	fmt.Println("params being verified")
 	fmt.Println(testverifyParams.destinationURL)
 	fmt.Println(testverifyParams.signatureMessage)
