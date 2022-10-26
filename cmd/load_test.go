@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	// "net/http"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -17,21 +16,21 @@ import (
 	"gonum.org/v1/plot/vg"
 )
 
-// func TestLoadNoOp(t *testing.T) {
-// 	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond} //, 1000 * time.Millisecond}
-// 	for _, timeout := range timeoutList {
-// 		signBatchesAndPlot(timeout, true)
-// 	}
+func TestLoadNoOp(t *testing.T) {
+	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond} //, 1000 * time.Millisecond}
+	for _, timeout := range timeoutList {
+		signBatchesAndPlot(timeout, true)
+	}
 
-// }
+}
 
-// func TestLoadSigning(t *testing.T) {
-// 	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond} //, 1000 * time.Millisecond}
-// 	for _, timeout := range timeoutList {
-// 		signBatchesAndPlot(timeout, false)
-// 	}
+func TestLoadSigning(t *testing.T) {
+	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond} //, 1000 * time.Millisecond}
+	for _, timeout := range timeoutList {
+		signBatchesAndPlot(timeout, false)
+	}
 
-// }
+}
 
 func TestLoadVerification(t *testing.T) {
 	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
@@ -41,13 +40,13 @@ func TestLoadVerification(t *testing.T) {
 
 }
 
-// func TestLoadWebReceiver(t *testing.T) {
-// 	timeoutList := []string{"10", "100"} //, "1000"}
-// 	for _, timeoutString := range timeoutList {
-// 		webReceiverBatchesAndPlot(timeoutString)
-// 	}
+func TestLoadWebReceiver(t *testing.T) {
+	timeoutList := []string{"10", "100"} //, "1000"}
+	for _, timeoutString := range timeoutList {
+		webReceiverBatchesAndPlot(timeoutString)
+	}
 
-// }
+}
 
 func signBatchesAndPlot(timeout time.Duration, isNoOp bool) {
 	testsignParams := &testsignParameters{}
