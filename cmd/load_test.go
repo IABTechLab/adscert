@@ -147,6 +147,8 @@ func verifyBatchesAndPlot(timeout time.Duration) {
 		numOfRequests *= 2
 		retries := 2
 		for retries > 0 {
+			iterationResults[numOfRequests] = []float64{}
+			lowestSuccessPercent = 1.00
 			for i := 0; i < testsPerTestSize; i++ {
 				iterationResult := sendVerificationRequests(numOfRequests, testverifyParams, c)
 				iterationResultSuccessPercent := float64(iterationResult[1]) / float64(numOfRequests)
@@ -209,6 +211,8 @@ func webReceiverBatchesAndPlot(timeout time.Duration) {
 		numOfRequests *= 2
 		retries := 2
 		for retries > 0 {
+			iterationResults[numOfRequests] = []float64{}
+			lowestSuccessPercent = 1.00
 			for i := 0; i < testsPerTestSize; i++ {
 				iterationResult := sendWebRequests(numOfRequests, timeout, c)
 				iterationResultSuccessPercent := float64(iterationResult[1]) / float64(numOfRequests)
@@ -298,6 +302,8 @@ func e2eBatchesAndPlot(timeout time.Duration) {
 		numOfRequests *= 2
 		retries := 2
 		for retries > 0 {
+			iterationResults[numOfRequests] = []float64{}
+			lowestSuccessPercent = 1.00
 			for i := 0; i < testsPerTestSize; i++ {
 				iterationResult := sendEndToEndRequests(numOfRequests, timeout, c)
 				iterationResultSuccessPercent := float64(iterationResult[1]) / float64(numOfRequests)
