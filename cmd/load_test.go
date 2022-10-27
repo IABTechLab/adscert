@@ -77,14 +77,15 @@ func signBatchesAndPlot(timeout time.Duration, isNoOp bool) {
 		numOfRequests *= 2
 		retries := 2
 		for retries > 0 {
+			iterationResults[numOfRequests] = []float64{}
 			lowestSuccessPercent = 1.00
 			for i := 0; i < testsPerTestSize; i++ {
 				iterationResult := sendSignatureRequests(numOfRequests, testsignParams, c)
-				iterationResultSuccessPercent := float64(iterationResult[1]) / float64(iterationResult[0])
+				iterationResultSuccessPercent := float64(iterationResult[1]) / float64(numOfRequests)
 				if lowestSuccessPercent > iterationResultSuccessPercent {
 					lowestSuccessPercent = iterationResultSuccessPercent
 				}
-				iterationResults[iterationResult[0]] = append(iterationResults[iterationResult[0]], float64(iterationResult[1]))
+				iterationResults[numOfRequests] = append(iterationResults[numOfRequests], float64(iterationResult[1]))
 			}
 			if lowestSuccessPercent < 0.50 {
 				retries -= 1
