@@ -89,7 +89,7 @@ func signBatchesAndPlot(timeout time.Duration, isNoOp bool) {
 				iterationResults[numOfRequests] = append(iterationResults[numOfRequests], float64(iterationResult[1]))
 			}
 			if lowestSuccessPercent < 0.50 {
-				retries -= 1
+				retries--
 			} else {
 				retries = 0
 			}
@@ -117,7 +117,7 @@ func sendSignatureRequests(numOfRequests int, testsignParams *testsignParameters
 	for i := 0; i < numOfRequests; i++ {
 		operationStatus := <-c
 		if operationStatus == api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK {
-			successfulSignatureAttempts += 1
+			successfulSignatureAttempts++
 		}
 		res = append(res, operationStatus)
 	}
@@ -162,7 +162,7 @@ func verifyBatchesAndPlot(timeout time.Duration) {
 				iterationResults[numOfRequests] = append(iterationResults[numOfRequests], float64(iterationResult[1]))
 			}
 			if lowestSuccessPercent < 0.50 {
-				retries -= 1
+				retries--
 			} else {
 				retries = 0
 			}
@@ -186,7 +186,7 @@ func sendVerificationRequests(numOfRequests int, testverifyParams *testverifyPar
 	for i := 0; i < numOfRequests; i++ {
 		operationStatus := <-c
 		if operationStatus == api.SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID {
-			successfulVerificationAttempts += 1
+			successfulVerificationAttempts++
 		}
 		res = append(res, operationStatus)
 	}
@@ -229,7 +229,7 @@ func webReceiverBatchesAndPlot(timeout time.Duration) {
 				iterationResults[numOfRequests] = append(iterationResults[numOfRequests], float64(iterationResult[1]))
 			}
 			if lowestSuccessPercent < 0.50 {
-				retries -= 1
+				retries--
 			} else {
 				retries = 0
 			}
@@ -255,7 +255,7 @@ func sendWebRequests(numOfRequests int, timeout time.Duration, c chan string) []
 		operationStatus := <-c
 		fmt.Println(operationStatus)
 		if strings.Contains(operationStatus, "SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID") {
-			successfulWebAttempts += 1
+			successfulWebAttempts++
 		}
 		res = append(res, operationStatus)
 	}
@@ -323,7 +323,7 @@ func e2eBatchesAndPlot(timeout time.Duration) {
 				iterationResults[numOfRequests] = append(iterationResults[numOfRequests], float64(iterationResult[1]))
 			}
 			if lowestSuccessPercent < 0.50 {
-				retries -= 1
+				retries--
 			} else {
 				retries = 0
 			}
@@ -349,7 +349,7 @@ func sendEndToEndRequests(numOfRequests int, timeout time.Duration, c chan strin
 		operationStatus := <-c
 		fmt.Println(operationStatus)
 		if strings.Contains(operationStatus, "SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID") {
-			successfulE2eAttempts += 1
+			successfulE2eAttempts++
 		}
 		res = append(res, operationStatus)
 	}

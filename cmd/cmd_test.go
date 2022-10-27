@@ -76,7 +76,6 @@ func TestWebReceiver(t *testing.T) {
 		t.Fail()
 	}
 
-	//json.NewDecoder(r.Body).Decode(target)
 	responseBodyString := string(responseBody)
 	fmt.Println(resp.Status)
 	fmt.Println(responseBodyString)
