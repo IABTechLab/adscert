@@ -145,13 +145,21 @@ func verifyBatchesAndPlot(timeout time.Duration) {
 	numOfRequests := 1
 	for lowestSuccessPercent > 0.50 {
 		numOfRequests *= 2
-		for i := 0; i < testsPerTestSize; i++ {
-			iterationResult := sendVerificationRequests(numOfRequests, testverifyParams, c)
-			iterationResultSuccessPercent := float64(iterationResult[1]) / float64(iterationResult[0])
-			if lowestSuccessPercent > iterationResultSuccessPercent {
-				lowestSuccessPercent = iterationResultSuccessPercent
+		retries := 2
+		for retries > 0 {
+			for i := 0; i < testsPerTestSize; i++ {
+				iterationResult := sendVerificationRequests(numOfRequests, testverifyParams, c)
+				iterationResultSuccessPercent := float64(iterationResult[1]) / float64(numOfRequests)
+				if lowestSuccessPercent > iterationResultSuccessPercent {
+					lowestSuccessPercent = iterationResultSuccessPercent
+				}
+				iterationResults[numOfRequests] = append(iterationResults[numOfRequests], float64(iterationResult[1]))
 			}
-			iterationResults[iterationResult[0]] = append(iterationResults[iterationResult[0]], float64(iterationResult[1]))
+			if lowestSuccessPercent < 0.50 {
+				retries -= 1
+			} else {
+				retries = 0
+			}
 		}
 	}
 
@@ -199,13 +207,21 @@ func webReceiverBatchesAndPlot(timeout time.Duration) {
 	numOfRequests := 1
 	for lowestSuccessPercent > 0.50 {
 		numOfRequests *= 2
-		for i := 0; i < testsPerTestSize; i++ {
-			iterationResult := sendWebRequests(numOfRequests, timeout, c)
-			iterationResultSuccessPercent := float64(iterationResult[1]) / float64(iterationResult[0])
-			if lowestSuccessPercent > iterationResultSuccessPercent {
-				lowestSuccessPercent = iterationResultSuccessPercent
+		retries := 2
+		for retries > 0 {
+			for i := 0; i < testsPerTestSize; i++ {
+				iterationResult := sendWebRequests(numOfRequests, timeout, c)
+				iterationResultSuccessPercent := float64(iterationResult[1]) / float64(numOfRequests)
+				if lowestSuccessPercent > iterationResultSuccessPercent {
+					lowestSuccessPercent = iterationResultSuccessPercent
+				}
+				iterationResults[numOfRequests] = append(iterationResults[numOfRequests], float64(iterationResult[1]))
 			}
-			iterationResults[iterationResult[0]] = append(iterationResults[iterationResult[0]], float64(iterationResult[1]))
+			if lowestSuccessPercent < 0.50 {
+				retries -= 1
+			} else {
+				retries = 0
+			}
 		}
 	}
 
@@ -280,13 +296,21 @@ func e2eBatchesAndPlot(timeout time.Duration) {
 	numOfRequests := 1
 	for lowestSuccessPercent > 0.50 {
 		numOfRequests *= 2
-		for i := 0; i < testsPerTestSize; i++ {
-			iterationResult := sendEndToEndRequests(numOfRequests, timeout, c)
-			iterationResultSuccessPercent := float64(iterationResult[1]) / float64(iterationResult[0])
-			if lowestSuccessPercent > iterationResultSuccessPercent {
-				lowestSuccessPercent = iterationResultSuccessPercent
+		retries := 2
+		for retries > 0 {
+			for i := 0; i < testsPerTestSize; i++ {
+				iterationResult := sendEndToEndRequests(numOfRequests, timeout, c)
+				iterationResultSuccessPercent := float64(iterationResult[1]) / float64(numOfRequests)
+				if lowestSuccessPercent > iterationResultSuccessPercent {
+					lowestSuccessPercent = iterationResultSuccessPercent
+				}
+				iterationResults[numOfRequests] = append(iterationResults[numOfRequests], float64(iterationResult[1]))
 			}
-			iterationResults[iterationResult[0]] = append(iterationResults[iterationResult[0]], float64(iterationResult[1]))
+			if lowestSuccessPercent < 0.50 {
+				retries -= 1
+			} else {
+				retries = 0
+			}
 		}
 	}
 
