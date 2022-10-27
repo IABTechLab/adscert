@@ -15,8 +15,6 @@ import (
 	"gonum.org/v1/plot/vg"
 )
 
-//todo: run failing batch twice, parameterize max load test size
-
 func TestLoadNoOp(t *testing.T) {
 	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
 	for _, timeout := range timeoutList {
@@ -75,7 +73,7 @@ func signBatchesAndPlot(timeout time.Duration, isNoOp bool) {
 	numOfRequests := 1
 	for lowestSuccessPercent > 0.50 {
 		numOfRequests *= 2
-		retries := 2
+		retries := 1
 		if numOfRequests == 2 {
 			retries = 20
 		}
@@ -148,7 +146,7 @@ func verifyBatchesAndPlot(timeout time.Duration) {
 	numOfRequests := 1
 	for lowestSuccessPercent > 0.50 {
 		numOfRequests *= 2
-		retries := 2
+		retries := 1
 		if numOfRequests == 2 {
 			retries = 20
 		}
@@ -215,7 +213,7 @@ func webReceiverBatchesAndPlot(timeout time.Duration) {
 	numOfRequests := 1
 	for lowestSuccessPercent > 0.50 {
 		numOfRequests *= 2
-		retries := 2
+		retries := 1
 		if numOfRequests == 2 {
 			retries = 20
 		}
@@ -309,7 +307,7 @@ func e2eBatchesAndPlot(timeout time.Duration) {
 	numOfRequests := 1
 	for lowestSuccessPercent > 0.50 {
 		numOfRequests *= 2
-		retries := 2
+		retries := 1
 		if numOfRequests == 2 {
 			retries = 20
 		}
@@ -362,7 +360,7 @@ func sendEndToEndRequests(numOfRequests int, timeout time.Duration, c chan strin
 
 func e2eToChannelWithTimeout(timeout time.Duration, c chan string) {
 	c2 := make(chan string)
-	go e2eToChannel(c2)
+	go e2eToChannel(timeout, c2)
 	select {
 	case <-time.After(timeout):
 		c <- "end to end test timed out"
@@ -371,14 +369,14 @@ func e2eToChannelWithTimeout(timeout time.Duration, c chan string) {
 	}
 }
 
-func e2eToChannel(c chan string) {
+func e2eToChannel(timeout time.Duration, c chan string) {
 	testURL := "http://adscerttestverifier.dev:5000"
 
 	testsignParams := &testsignParameters{}
 	testsignParams.url = testURL
 	testsignParams.serverAddress = "localhost:3000"
 	testsignParams.body = ""
-	testsignParams.signingTimeout = 1000 * time.Millisecond // maximum timeout, replace with param
+	testsignParams.signingTimeout = timeout
 	signatureResponse := signRequest(testsignParams)
 	if signatureResponse.GetSignatureOperationStatus() != api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK {
 		responseBodyString := "Signing request failed"
