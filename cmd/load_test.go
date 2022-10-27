@@ -50,7 +50,7 @@ import (
 // }
 
 func TestLoadEndToEnd(t *testing.T) {
-	timeoutList := []time.Duration{1 * time.Second, 10 * time.Second, 100 * time.Second}
+	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
 	for _, timeout := range timeoutList {
 		e2eBatchesAndPlot(timeout)
 	}
