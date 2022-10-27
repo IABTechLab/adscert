@@ -145,7 +145,7 @@ func verifyBatchesAndPlot(timeout time.Duration) {
 	numOfRequests := 1
 	for lowestSuccessPercent > 0.50 {
 		numOfRequests *= 2
-		retries := 2
+		retries := 20
 		for retries > 0 {
 			iterationResults[numOfRequests] = []float64{}
 			lowestSuccessPercent = 1.00
