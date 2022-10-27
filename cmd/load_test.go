@@ -15,6 +15,8 @@ import (
 	"gonum.org/v1/plot/vg"
 )
 
+//todo: run failing batch twice
+
 func TestLoadNoOp(t *testing.T) {
 	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
 	for _, timeout := range timeoutList {
@@ -43,6 +45,14 @@ func TestLoadWebReceiver(t *testing.T) {
 	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
 	for _, timeout := range timeoutList {
 		webReceiverBatchesAndPlot(timeout)
+	}
+
+}
+
+func TestLoadEndToEnd(t *testing.T) {
+	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
+	for _, timeout := range timeoutList {
+		e2eBatchesAndPlot(timeout)
 	}
 
 }
@@ -252,6 +262,109 @@ func webResponseToChannel(timeout time.Duration, c chan string) {
 
 }
 
+func e2eBatchesAndPlot(timeout time.Duration) {
+	testsPerTestSize := 10
+	c := make(chan string)
+	iterationResults := map[int][]float64{}
+	lowestSuccessPercent := 1.00
+	numOfRequests := 1
+	for lowestSuccessPercent > 0.50 {
+		numOfRequests *= 2
+		for i := 0; i < testsPerTestSize; i++ {
+			iterationResult := sendEndToEndRequests(numOfRequests, timeout, c)
+			iterationResultSuccessPercent := float64(iterationResult[1]) / float64(iterationResult[0])
+			if lowestSuccessPercent > iterationResultSuccessPercent {
+				lowestSuccessPercent = iterationResultSuccessPercent
+			}
+			iterationResults[iterationResult[0]] = append(iterationResults[iterationResult[0]], float64(iterationResult[1]))
+		}
+	}
+
+	for key, iterationResult := range iterationResults {
+		fmt.Printf("%v End-to-End Attempts: %v succeeded\n", key, iterationResult)
+	}
+
+	plotResults(iterationResults, numOfRequests, timeout, "e2e")
+
+}
+
+func sendEndToEndRequests(numOfRequests int, timeout time.Duration, c chan string) []int {
+	for i := 0; i < numOfRequests; i++ {
+		go e2eToChannel(c)
+	}
+
+	var res []string
+	successfulE2eAttempts := 0
+	for i := 0; i < numOfRequests; i++ {
+		select {
+		case <-time.After(timeout):
+			operationStatus := "end to end test timed out"
+			fmt.Println(operationStatus)
+			res = append(res, operationStatus)
+		case operationStatus := <-c:
+			fmt.Println(operationStatus)
+			if strings.Contains(operationStatus, "SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID") {
+				successfulE2eAttempts += 1
+			}
+			res = append(res, operationStatus)
+		}
+	}
+
+	iterationResult := []int{len(res), successfulE2eAttempts}
+	return iterationResult
+}
+
+func e2eToChannel(c chan string) {
+	testURL := "http://adscerttestverifier.dev:5000"
+
+	testsignParams := &testsignParameters{}
+	testsignParams.url = testURL
+	testsignParams.serverAddress = "localhost:3000"
+	testsignParams.body = ""
+	testsignParams.signingTimeout = 1000 * time.Millisecond // maximum timeout, replace with param
+	signatureResponse := signRequest(testsignParams)
+	if signatureResponse.GetSignatureOperationStatus() != api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK {
+		responseBodyString := "Signing request failed"
+		fmt.Println(responseBodyString)
+		c <- responseBodyString
+		return
+	}
+	signatureMessage := signatureResponse.GetRequestInfo().SignatureInfo[0].SignatureMessage
+
+	// Send Request to Web Server
+	req, err := http.NewRequest("GET", testURL, nil)
+	if err != nil {
+		responseBodyString := "Errored when creating request"
+		fmt.Println(responseBodyString)
+		c <- responseBodyString
+		return
+	}
+
+	req.Header.Add("X-Ads-Cert-Auth", signatureMessage)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		responseBodyString := "Errored when sending request to the server"
+		fmt.Println(responseBodyString)
+		c <- responseBodyString
+		return
+	}
+
+	defer resp.Body.Close()
+	responseBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		responseBodyString := "Error on response body read"
+		fmt.Println(responseBodyString)
+		c <- responseBodyString
+		return
+	}
+
+	responseBodyString := string(responseBody)
+	c <- responseBodyString // send status to c
+
+}
+
 func plotResults(iterationResults map[int][]float64, maxNumOfRequests int, timeout time.Duration, opType string) {
 	group1 := plotter.Values{}
 	group2 := plotter.Values{}
@@ -291,6 +404,9 @@ func plotResults(iterationResults map[int][]float64, maxNumOfRequests int, timeo
 	case opType == "web":
 		p.Title.Text = fmt.Sprintf("WEB RECEIVER: Percent of successful verified requests per batch of size 2^X concurrent requests. 10 runs per batch size. Timeout: %s", fmt.Sprint(timeout))
 		p.Y.Label.Text = "Percent Successful Web Verification Attemps"
+	case opType == "e2e":
+		p.Title.Text = fmt.Sprintf("End To End: Percent of successful signed, sent, and verified requests per batch of size 2^X concurrent requests. 10 runs per batch size. Timeout: %s", fmt.Sprint(timeout))
+		p.Y.Label.Text = "Percent Successful End to End Attemps"
 	}
 
 	w := vg.Points(4)
@@ -393,38 +509,3 @@ func plotResults(iterationResults map[int][]float64, maxNumOfRequests int, timeo
 		panic(err)
 	}
 }
-
-// func LoadTestSignSendAndVerify(b *testing.B) {
-// 	for i := 0; i < b.N; i++ {
-// 		testURL := "http://adscerttestverifier.dev:5000"
-
-// 		// Sign Request
-// 		retries := 10
-// 		testsignParams := &testsignParameters{}
-// 		testsignParams.url = testURL
-// 		testsignParams.serverAddress = "localhost:3000"
-// 		testsignParams.body = ""
-// 		testsignParams.signingTimeout = 10 * time.Millisecond
-// 		signatureResponse := signRequest(testsignParams)
-// 		for signatureResponse.GetSignatureOperationStatus() != api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_OK && retries > 0 {
-// 			time.Sleep(5 * time.Second)
-// 			signatureResponse = signRequest(testsignParams)
-// 		}
-// 		if retries == 0 {
-// 			b.Fail()
-// 		}
-// 		signatureMessage := signatureResponse.GetRequestInfo().SignatureInfo[0].SignatureMessage
-
-// 		// Send Request to Web Server
-// 		req, err := http.NewRequest("GET", testURL, nil)
-// 		if err != nil {
-// 			fmt.Println("Errored when creating request")
-// 			b.Fail()
-// 		}
-
-// 		req.Header.Add("X-Ads-Cert-Auth", signatureMessage)
-
-// 		client := &http.Client{}
-// 		client.Do(req)
-// 	}
-// }
