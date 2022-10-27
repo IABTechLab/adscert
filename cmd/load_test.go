@@ -76,6 +76,9 @@ func signBatchesAndPlot(timeout time.Duration, isNoOp bool) {
 	for lowestSuccessPercent > 0.50 {
 		numOfRequests *= 2
 		retries := 2
+		if numOfRequests == 2 {
+			retries = 20
+		}
 		for retries > 0 {
 			iterationResults[numOfRequests] = []float64{}
 			lowestSuccessPercent = 1.00
@@ -145,7 +148,10 @@ func verifyBatchesAndPlot(timeout time.Duration) {
 	numOfRequests := 1
 	for lowestSuccessPercent > 0.50 {
 		numOfRequests *= 2
-		retries := 20
+		retries := 2
+		if numOfRequests == 2 {
+			retries = 20
+		}
 		for retries > 0 {
 			iterationResults[numOfRequests] = []float64{}
 			lowestSuccessPercent = 1.00
@@ -210,6 +216,9 @@ func webReceiverBatchesAndPlot(timeout time.Duration) {
 	for lowestSuccessPercent > 0.50 {
 		numOfRequests *= 2
 		retries := 2
+		if numOfRequests == 2 {
+			retries = 20
+		}
 		for retries > 0 {
 			iterationResults[numOfRequests] = []float64{}
 			lowestSuccessPercent = 1.00
@@ -301,6 +310,9 @@ func e2eBatchesAndPlot(timeout time.Duration) {
 	for lowestSuccessPercent > 0.50 {
 		numOfRequests *= 2
 		retries := 2
+		if numOfRequests == 2 {
+			retries = 20
+		}
 		for retries > 0 {
 			iterationResults[numOfRequests] = []float64{}
 			lowestSuccessPercent = 1.00
