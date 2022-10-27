@@ -290,28 +290,33 @@ func e2eBatchesAndPlot(timeout time.Duration) {
 
 func sendEndToEndRequests(numOfRequests int, timeout time.Duration, c chan string) []int {
 	for i := 0; i < numOfRequests; i++ {
-		go e2eToChannel(c)
+		go e2eToChannelWithTimeout(timeout, c)
 	}
 
 	var res []string
 	successfulE2eAttempts := 0
 	for i := 0; i < numOfRequests; i++ {
-		select {
-		case <-time.After(timeout):
-			operationStatus := "end to end test timed out"
-			fmt.Println(operationStatus)
-			res = append(res, operationStatus)
-		case operationStatus := <-c:
-			fmt.Println(operationStatus)
-			if strings.Contains(operationStatus, "SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID") {
-				successfulE2eAttempts += 1
-			}
-			res = append(res, operationStatus)
+		operationStatus := <-c
+		fmt.Println(operationStatus)
+		if strings.Contains(operationStatus, "SIGNATURE_DECODE_STATUS_BODY_AND_URL_VALID") {
+			successfulE2eAttempts += 1
 		}
+		res = append(res, operationStatus)
 	}
 
 	iterationResult := []int{len(res), successfulE2eAttempts}
 	return iterationResult
+}
+
+func e2eToChannelWithTimeout(timeout time.Duration, c chan string) {
+	c2 := make(chan string)
+	go e2eToChannel(c2)
+	select {
+	case <-time.After(timeout):
+		c <- "end to end test timed out"
+	case operationStatus := <-c2:
+		c <- operationStatus
+	}
 }
 
 func e2eToChannel(c chan string) {
