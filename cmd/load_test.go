@@ -560,7 +560,7 @@ func plotResults(iterationResults map[int][]float64, maxNumOfRequests int, timeo
 
 	p.Legend.Top = true
 
-	if err := p.Save(10*vg.Inch, 6*vg.Inch, fmt.Sprintf("%sLoadTest%s.png", opType, fmt.Sprint(timeout))); err != nil {
+	if err := p.Save(10*vg.Inch, 6*vg.Inch, fmt.Sprintf("load_test_results/%sLoadTest%s.png", opType, fmt.Sprint(timeout))); err != nil {
 		panic(err)
 	}
 }
