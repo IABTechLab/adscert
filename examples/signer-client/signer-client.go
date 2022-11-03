@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"time"
 
@@ -10,7 +9,6 @@ import (
 	"github.com/IABTechLab/adscert/pkg/adscert/signatory"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/protobuf/encoding/prototext"
 )
 
@@ -33,10 +31,6 @@ func main() {
 		logger.Fatalf("Failed to dial: %v", err)
 	}
 	defer conn.Close()
-
-	// Optional: performs a health check against the server before actually
-	// trying to invoke the signatory service.
-	performOptionalHealthCheckRPC(conn)
 
 	// Create a reusable Signatory Client that provides a lightweight wrapper
 	// around the RPC client stub.  This code performs some basic request
@@ -66,18 +60,5 @@ func main() {
 		logger.Infof("signature response:\n%s", prototext.Format(signatureResponse))
 	} else {
 		logger.Warningf("signature response is missing")
-	}
-}
-
-func performOptionalHealthCheckRPC(conn *grpc.ClientConn) {
-	hctx, hcancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
-	defer hcancel()
-	healthClient := grpc_health_v1.NewHealthClient(conn)
-	healthCheckResponse, err := healthClient.Check(hctx, &grpc_health_v1.HealthCheckRequest{})
-	if err != nil {
-		logger.Fatalf("Failed to pass heath check: %v", err)
-	}
-	if healthCheckResponse.Status != grpc_health_v1.HealthCheckResponse_SERVING {
-		logger.Fatalf("Failed to pass heath status: %v", healthCheckResponse.Status)
 	}
 }

@@ -16,7 +16,6 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -35,7 +34,6 @@ func SetUpAdsCertSignatoryServer(grpcServer *grpc.Server, adscertCallSign string
 		SignatoryAPI: signatoryApi,
 	}
 	api.RegisterAdsCertSignatoryServer(grpcServer, handler)
-	grpc_health_v1.RegisterHealthServer(grpcServer, handler)
 	reflection.Register(grpcServer)
 }
 
