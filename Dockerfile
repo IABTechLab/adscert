@@ -1,4 +1,4 @@
-FROM golang:1.16.5 as builder
+FROM golang:1.17 as builder
 COPY . /src
 WORKDIR /src
 RUN GRPC_HEALTH_PROBE_VERSION=v0.3.1 && \

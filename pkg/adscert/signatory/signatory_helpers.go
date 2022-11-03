@@ -11,18 +11,27 @@ import (
 )
 
 func SetRequestInfo(requestInfo *api.RequestInfo, url string, body []byte) error {
+	var err error
+	if url == "dryrun" {
+		requestInfo.InvokingDomain = "dryrun"
+		urlHash := []byte{}
+		requestInfo.UrlHash = urlHash[:]
 
-	_, tldPlusOne, err := parseURLComponents(url)
-	if err != nil {
-		return fmt.Errorf("unable to parse domain from URL: %v", err)
+		bodyHash := []byte{}
+		requestInfo.BodyHash = bodyHash[:]
+	} else {
+		_, tldPlusOne, err := parseURLComponents(url)
+		if err != nil {
+			return fmt.Errorf("unable to parse domain from URL: %v", err)
+		}
+		requestInfo.InvokingDomain = tldPlusOne
+
+		urlHash := sha256.Sum256([]byte(url))
+		requestInfo.UrlHash = urlHash[:]
+
+		bodyHash := sha256.Sum256(body)
+		requestInfo.BodyHash = bodyHash[:]
 	}
-	requestInfo.InvokingDomain = tldPlusOne
-
-	urlHash := sha256.Sum256([]byte(url))
-	requestInfo.UrlHash = urlHash[:]
-
-	bodyHash := sha256.Sum256(body)
-	requestInfo.BodyHash = bodyHash[:]
 
 	return err
 }
