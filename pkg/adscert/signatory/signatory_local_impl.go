@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/IABTechLab/adscert/internal/adscerterrors"
@@ -26,12 +27,31 @@ func NewLocalAuthenticatedConnectionsSignatory(
 	domainCheckInterval time.Duration,
 	domainRenewalInterval time.Duration,
 	base64PrivateKeys []string) *LocalAuthenticatedConnectionsSignatory {
+	if originCallsign != "" {
+		for i := range base64PrivateKeys {
+			if !strings.Contains(strings.TrimRight(base64PrivateKeys[i], "="), "=") {
+				base64PrivateKeys[i] = originCallsign + "=" + base64PrivateKeys[i]
+			}
+		}
+	}
 	return &LocalAuthenticatedConnectionsSignatory{
 		originCallsign:      originCallsign,
 		secureRandom:        secureRandom,
 		clock:               clock,
-		counterpartyManager: discovery.NewDefaultDomainIndexer(dnsResolver, domainStore, domainCheckInterval, domainRenewalInterval, base64PrivateKeys),
+		counterpartyManager: discovery.NewDefaultDomainIndexer(dnsResolver, domainStore, domainCheckInterval, domainRenewalInterval, dedupKeys(base64PrivateKeys)),
 	}
+}
+
+func dedupKeys(privateKeys []string) []string {
+	m := make(map[string]bool)
+	for _, k := range privateKeys {
+		m[k] = true
+	}
+	var dedup []string
+	for k := range m {
+		dedup = append(dedup, k)
+	}
+	return dedup
 }
 
 type LocalAuthenticatedConnectionsSignatory struct {
@@ -95,9 +115,15 @@ func (s *LocalAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(req
 }
 
 func (s *LocalAuthenticatedConnectionsSignatory) signSingleMessage(request *api.AuthenticatedConnectionSignatureRequest, domainInfo discovery.DomainInfo) (*api.SignatureInfo, error) {
-
 	sigInfo := &api.SignatureInfo{}
-	acs, err := formats.NewAuthenticatedConnectionSignature(formats.StatusOK, s.originCallsign, request.RequestInfo.InvokingDomain)
+
+	var originCallsign string
+	if request.RequestInfo.OriginDomain != "" {
+		originCallsign = request.RequestInfo.OriginDomain
+	} else {
+		originCallsign = s.originCallsign
+	}
+	acs, err := formats.NewAuthenticatedConnectionSignature(formats.StatusOK, originCallsign, request.RequestInfo.InvokingDomain)
 	if err != nil {
 		acs.SetStatus(formats.StatusErrorOnSignature)
 		setSignatureInfoFromAuthenticatedConnection(sigInfo, acs)
@@ -110,7 +136,7 @@ func (s *LocalAuthenticatedConnectionsSignatory) signSingleMessage(request *api.
 		return sigInfo, fmt.Errorf("domain info is not available: %v", err)
 	}
 
-	sharedSecret, hasSecret := domainInfo.GetSharedSecret()
+	sharedSecret, hasSecret := domainInfo.GetSharedSecret(originCallsign)
 	if hasSecret {
 		err = acs.AddParametersForSignature(sharedSecret.LocalKeyID(), domainInfo.GetAdsCertIdentityDomain(), sharedSecret.RemoteKeyID(), request.Timestamp, request.Nonce)
 		if err != nil {
@@ -128,7 +154,7 @@ func (s *LocalAuthenticatedConnectionsSignatory) signSingleMessage(request *api.
 	acs.SetStatus(formats.StatusOK)
 	setSignatureInfoFromAuthenticatedConnection(sigInfo, acs)
 	message := acs.EncodeMessage()
-	bodyHMAC, urlHMAC := generateSignatures(domainInfo, []byte(message), request.RequestInfo.BodyHash[:], request.RequestInfo.UrlHash[:])
+	bodyHMAC, urlHMAC := generateSignatures(originCallsign, domainInfo, []byte(message), request.RequestInfo.BodyHash[:], request.RequestInfo.UrlHash[:])
 	sigInfo.SignatureMessage = message + formats.EncodeSignatureSuffix(bodyHMAC, urlHMAC)
 
 	return sigInfo, nil
@@ -179,13 +205,13 @@ func (s *LocalAuthenticatedConnectionsSignatory) checkSingleSignature(requestInf
 	}
 
 	for _, domainInfo := range domainInfos {
-		if _, hasSecret := domainInfo.GetSharedSecret(); !hasSecret {
+		if _, hasSecret := domainInfo.GetSharedSecret(requestInfo.OriginDomain); !hasSecret {
 			logger.Infof("no shared secret")
 			metrics.RecordVerify(adscerterrors.ErrVerifyMissingSharedSecret)
 			return api.SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_NO_SHARED_SECRET_AVAILABLE
 		}
 
-		bodyHMAC, urlHMAC := generateSignatures(domainInfo, []byte(acs.EncodeMessage()), requestInfo.BodyHash[:], requestInfo.UrlHash[:])
+		bodyHMAC, urlHMAC := generateSignatures(requestInfo.OriginDomain, domainInfo, []byte(acs.EncodeMessage()), requestInfo.BodyHash[:], requestInfo.UrlHash[:])
 		bodyValid, urlValid := acs.CompareSignatures(bodyHMAC, urlHMAC)
 		if bodyValid && urlValid {
 			metrics.RecordVerify(nil)
@@ -204,9 +230,9 @@ func (s *LocalAuthenticatedConnectionsSignatory) IsHealthy() bool {
 	return time.Since(s.counterpartyManager.GetLastRun()) <= 5*time.Minute
 }
 
-func generateSignatures(domainInfo discovery.DomainInfo, message []byte, bodyHash []byte, urlHash []byte) ([]byte, []byte) {
+func generateSignatures(originDomain string, domainInfo discovery.DomainInfo, message []byte, bodyHash []byte, urlHash []byte) ([]byte, []byte) {
 
-	sharedSecret, _ := domainInfo.GetSharedSecret()
+	sharedSecret, _ := domainInfo.GetSharedSecret(originDomain)
 	h := hmac.New(sha256.New, sharedSecret.Secret()[:])
 
 	h.Write([]byte(message))
@@ -229,4 +255,8 @@ func (s *LocalAuthenticatedConnectionsSignatory) generateNonce() (string, error)
 		return "", fmt.Errorf("unexpected number of random values: %d", n)
 	}
 	return formats.B64truncate(nonce[:], 12), nil
+}
+
+func (s *LocalAuthenticatedConnectionsSignatory) GetOriginCallsigns() []string {
+	return s.counterpartyManager.GetOriginCallsigns()
 }

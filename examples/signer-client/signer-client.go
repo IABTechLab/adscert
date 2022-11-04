@@ -14,6 +14,7 @@ import (
 
 var (
 	serverAddress  = flag.String("server_address", "localhost:3000", "address of grpc server")
+	originDomain   = flag.String("origin_domain", "", "Origin domain")
 	destinationURL = flag.String("url", "https://google.com/gen_204", "URL to invoke")
 	body           = flag.String("body", "", "POST request body")
 	signingTimeout = flag.Duration("signing_timeout", 5*time.Millisecond, "Specifies how long this client will wait for signing to finish before abandoning.")
@@ -43,6 +44,9 @@ func main() {
 	// destination URL and body, setting these value on the RequestInfo message.
 	reqInfo := &api.RequestInfo{}
 	signatory.SetRequestInfo(reqInfo, *destinationURL, []byte(*body))
+	if originDomain != nil {
+		reqInfo.OriginDomain = *originDomain
+	}
 
 	// Request the signature.
 	logger.Infof("signing request for url: %v", *destinationURL)

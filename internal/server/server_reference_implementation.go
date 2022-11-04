@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/IABTechLab/adscert/pkg/adscert/api"
 	"github.com/IABTechLab/adscert/pkg/adscert/discovery"
+	"github.com/IABTechLab/adscert/pkg/adscert/logger"
 	"github.com/IABTechLab/adscert/pkg/adscert/metrics"
 	"github.com/IABTechLab/adscert/pkg/adscert/server"
 	"github.com/IABTechLab/adscert/pkg/adscert/signatory"
@@ -29,6 +31,8 @@ func SetUpAdsCertSignatoryServer(grpcServer *grpc.Server, adscertCallSign string
 		domainCheckInterval,
 		domainRenewalInterval,
 		privateKeys)
+
+	logger.Debugf("Origin ads.cert Call Sign domains: %v", strings.Join(signatoryApi.GetOriginCallsigns(), ","))
 
 	handler := &server.AdsCertSignatoryServer{
 		SignatoryAPI: signatoryApi,
