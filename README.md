@@ -1,31 +1,29 @@
-Please visit [https://iabtechlab.com/ads-cert](https://iabtechlab.com/ads-cert) for more information about the ads.cert 2.0 suite of protocols.
+[Full Authenticated Connections Protocol Specification](https://iabtechlab.com/wp-content/uploads/2021/09/3-ads-cert-authenticated-connections-pc.pdf)
 
-Please review the IAB Tech Lab Open Source Initiative Governance guidelines [here](http://iabtechlab.com/opensource) for contributing to this project.
+For more information about the ads.cert 2.0 suite of protocols, visit [https://iabtechlab.com/ads-cert](https://iabtechlab.com/ads-cert)
+
+Contributing? Please review the IAB Tech Lab Open Source Initiative Governance guidelines [here](http://iabtechlab.com/opensource).
 
 # ads.cert
-
-![Build/Test](https://github.com/IABTechLab/adscert/actions/workflows/go.yml/badge.svg)
+## Authenticated Connections Protocol
 
 **This is a proof of concept and not meant for use in its current form.**
 
-This open-source library implements the Authenticated Connections protocol, published by IAB Tech Lab let advertising industry participants secure programmatic ad buying and selling using industry-standard cryptographic security protocols.
+This open-source library implements the **Authenticated Connections protocol**, published by the IAB Tech Lab, to enable advertising industry participants to secure programmatic ad buying and selling using industry-standard cryptographic security protocols.
 
-
-
-
-## Authenticated Connections Protocol
-
-Authenticated Connections uses a standardized HTTP request header containing a signature that secures:
+Authenticated Connections uses a standardized **HTTP request header** containing a **signature** that secures the:
 
 - URL being invoked
 - Body of POST requests
 - Timestamp, origin, and destination values
 
-The signature and these factors show that the request came from the originator as claimed and hasn't been tampered with. The request header looks like the following:
+The signature over these elements authenticates that the request came from the claimed originator, and that its contents haven't been tampered with. 
+
+Example request header:
 
 ```
-X-Ads-Cert-Auth:
-from=ssai-serving.tk&from_key=w8f316&invoking=ad-exchange.tk&nonce=u_sDzKMIp0eD&status=0&timestamp=210519T174337&to=exchange-holding-company.ga&to_key=bBvfZU; sigb=t1TupK6wn8pn&sigu=FQ5OQ6TmF2xU
+X-Ads-Cert-Auth: 
+from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=6Rpf4qD2LP_9&status=1&timestamp=220912T200513&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=OcQzM62rkJk0&sigu=_44H63NN69Nb"
 ```
 
 | Field | Description |
@@ -42,14 +40,15 @@ from=ssai-serving.tk&from_key=w8f316&invoking=ad-exchange.tk&nonce=u_sDzKMIp0eD&
 
 ## Architecture
 
-- **Signatory`**- Main library that handles signing and verification operations.
+- **Signatory**- Main library that handles signing and verification operations.
 - **Dns Resolver** - Discovers TXT records for a domain name (with the appropriate subdomains for policy and key records)
 - **Domain Store** - Stores domain information for invoking and identity domains and the associated keys
 - **Domain Indexer** - Uses the above components to maintain a list of domains used in signing/verification operations, runs background crawls to update domain records, stores private keys, calculates shared secrets for use by the Signatory.
 
 ## API Usage
 
-The `Signatory` is available as a [standalone GRPC server](cmd/server/main.go). See the [GRPC/Protobuf interface](api/adscert.proto) for the full API details. The main function defintions are below:
+The `Signatory` is available as a [gRPC server with ads.cert signing/verification capabilities](cmd/signatory.go). 
+See the [GRPC/Protobuf interface](api/adscert.proto) for the full API details. The main function defintions are below:
 
 - `rpc SignAuthenticatedConnection(AuthenticatedConnectionSignatureRequest) returns (AuthenticatedConnectionSignatureResponse) {}`
 - `rpc VerifyAuthenticatedConnection(AuthenticatedConnectionVerificationRequest) returns (AuthenticatedConnectionVerificationResponse) {}`
@@ -58,6 +57,9 @@ Clients are available for various langauges:
 - Golang - [GRPC client available here](api/golang) or the Signatory can be use as an [in-process Go library](pkg/adscert/signatory/signatory_local_impl.go) directly.
 - Java - Coming soon...
 - C++ - Coming soon...
+
+
+Commands are also provided to test the signing and verification functionality; details for running them is included below, see "Examples"
 
 ## Docker
 
@@ -68,71 +70,138 @@ $ make build-grpc-server-container
 $ docker run -p 3000:3000 -p 3001:3001 adscert:latest --origin publica-ssai.com --private_key "${ADSCERT_SECRET}"
 ```
 
-## Examples
+## Example Domains
+Two domains, hosted by the tech lab, are availible for testing the signing and verification process:
 
-### Start the verifier
+- `aderttestsigner.dev`
 
---host_callsign is the domain of the verifying server
+- Public key:  LxqTmAIw8Beujvf42ni9V7r1wpVPPxtrD5nFRxlwy0U
 
-In this example we use exchange-holding-company.ga which
-is leveraged in this insecure example to generate a consistent
-private key.
+- Private key: Ys83NKuuYxCVDUbmA671x3zAFsQ-EnNxmC2JLuBlGAU
 
-Note: The private key generated here should never be used in a production environment.  This is for demo purposes only.
+- `aderttestverifier.dev`
 
-Its corresponding public key can be found by looking it up
-```
-dig TXT _delivery._adscert.exchange-holding-company.ga
-TXT "v=adcrtd k=x25519 h=sha256 p=bBvfZUTPDGIFiOq-WivBoOEYWM5mA1kaEfpDaoYtfHg"
-```
+- Public key:  uNzTFA2_QsCcxsVET8q-IDtEaDn_D3Q6xscev1TFsjc
 
-Start the verifying server
-```
-go run examples/verifier/server/verifier-server.go --host_callsign=exchange-holding-company.ga --logtostderr
-```
+- Private key: 6mkLbsTBKs0UwYLkBdw5ttJHzjpSZxof0A2rako-0qs
 
-### Start the signer
+DNS records containing a public key have been published for each.
 
-The signer willl periodically send requests to the verifying server.
+`_delivery._adscert.adscerttestsigner.dev. 3600 IN TXT "v=adcrtd k=x25519 h=sha256 p=LxqTmAIw8Beujvf42ni9V7r1wpVPPxtrD5nFRxlwy0U"`
 
---origin-callsign is the domain of the signer.
+`_delivery._adscert.adscerttestverifier.dev. 3600 IN TXT "v=adcrtd k=x25519 h=sha256 p=uNzTFA2_QsCcxsVET8q-IDtEaDn_D3Q6xscev1TFsjc"`
 
-Like above, we use the domain to generate an inconsistent consistent private key for ssai-serving.tk
+The DNS record consists of the following fields:
 
---url is the full url that we wish to send a signed request too.
-This gets signed along with the --body in the request.
+`v`
+Set to the constant value “adcrtd” to indicate that this record provides an ads.cert delivery key. This token MUST appear at the start of the DNS record value.
 
-In this example we use ads.ad-exchange.tk which is not exchange-holding-company.ga.  We can see the link between the two based on the TXT records.
-```
-dig TXT _adscert.ad-exchange.tk
-TXT	"v=adpf a=exchange-holding-company.ga"
-dig TXT _delivery._adscert.exchange-holding-company.ga
-TXT "v=adcrtd k=x25519 h=sha256 p=bBvfZUTPDGIFiOq-WivBoOEYWM5mA1kaEfpDaoYtfHg"
-```
+`k`
+Set to key algorithm identifier, designed for forward compatibility if we need to transition to another scheme in the future.  Currently this will always be set to “x25519” representing the X25519 Diffie-Hellman key exchange algorithm.
 
-Start the signing server in a second shell.
-```
-go run examples/signer/example-signer.go --frequency 5s --logtostderr --body '{"sample": "request"}' --origin_callsign=ssai-serving.tk --url='http://ads.ad-exchange.tk:8090/request?param1=example&param2=another' --send_requests
-```
+`h`
+Set to the hash algorithm identifier, again designed for forward compatibility.  Currently this will always be set to “sha256” representing the SHA-256 secure hashing algorithm.
 
-The two services will output log to stderr
+`p`
+Values are 32 byte public keys represented as 43 byte base64 encoded strings, RFC 4648 “URL-safe” variant.
+
+To retrieve the current, complete dns records for these test domains, run the following dig commands:
+
+`dig _delivery._adscert.adscerttestsigner.dev TXT`
+
+`dig _delivery._adscert.adscerttestverifier.dev TXT`
+
+
+## Examples:
+The following examples take advantage of the example domains above to test the signing and verification process against a signatory and web server. The signatory and web server can be run locally, or within a docker container.
+
+To build and test the ads.cert authenticted connections binary **locally**, run the following command from within a local copy of this directory
+
+### To generate an insecure private and public key pair, run:
+
+`go run . basicinsecurekeygen`
+
+**NOTE**
+
+The private key generated in this fashion should never be used in a production environment, and are for demo purposes only.
+
+The adscerttestsigner and adscerttestverifier used in these examples employ an insecure private and public key pair. 
+
+The private keys of these domains are disclosed here, but any production implementation should **never** publicly disclose its private key 
+
+
+### To sign and verify a message between adscerttestsigner.dev and adscerttestverifier.dev, follow these steps:
+
+
+**Run the Test Signer Signatory:**
+
+`go run . signatory --server_port 3000 --metrics_port 3001 --private_key "Ys83NKuuYxCVDUbmA671x3zAFsQ-EnNxmC2JLuBlGAU" --origin "adscerttestsigner.dev"`
+- add an "&" to the end of the command to run in background, or run in a separate shell
+
+**Sign a message to adscerttestverifier.dev (run against adscerttestsigner signatory):**
+
+`go run . testsign --url "https://adscerttestver ifier.dev"`
+- run twice
+- will fail on first run because credentials for the invoked url do not yet exist in the signatory; credentials will be updated after the failure, and the signing attempt will succeed on the second run
+receiving party must have a published public key for signing to succeed
+
+**(Optional) kill the Test Signer Signatory:**
+
+`ps`
+- to find the psid the signatory is running under
+
+`sudo kill -9 <psid>`
+
+**Run the Test Verifier signatory:**
+
+`go run . signatory --server_port 4000 --metrics_port 4001 --private_key "6mkLbsTBKs0UwYLkBdw5ttJHzjpSZxof0A2rako-0qs" --origin "adscerttestverifier.dev"`
+- add an "&" to the end of the command to run in background, or run in a separate shell
+
+**Verify the message (run against adscerttestverifier signatory):**
+
+`go run . testverify --url "https://adscerttestverifier.dev" --signatureMessage "from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=mBJo7EYj9XF9&status=1&timestamp=220810T142237&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=ugN9tqMd6h0p&sigu=pxQd8BV20lHg"`
+- run twice
+- will fail on first run because credentials for the signer do not yet exist in the verifier signatory; credentials will be updated after the failure, and the verification attempt will succeed on the second run
+the signing and receiving/verifying parties must have published public keys for verification to succeed
+
+### To Sign a Request, invoke it against a local web server, and verify the signature, do the following:
+
+**Run the Test Signer Signatory:**
+
+`go run . signatory --server_port 3000 --metrics_port 3001 --private_key "Ys83NKuuYxCVDUbmA671x3zAFsQ-EnNxmC2JLuBlGAU" --origin "adscerttestsigner.dev"`
+- add an "&" to the end of the command to run in background, or run in a separate shell
+
+**Sign a message to adscerttestverifier.dev (run against adscerttestsigner signatory):**
+
+`go run . testsign --url "https://adscerttestverifier.dev"`
+- run twice
+- will fail on first run because credentials for the invoked url do not yet exist in the signatory; credentials will be updated after the failure, and the signing attempt will succeed on the second run
+receiving party must have a published public key for signing to succeed
+
+**(Optional) kill the Test Signer Signatory:**
+
+`ps`
+- to find the psid the signatory is running under
+
+`sudo kill -9 <psid>`
+
+**Run the Test Verifier signatory:**
+
+`go run . signatory --server_port 4000 --metrics_port 4001 --private_key "6mkLbsTBKs0UwYLkBdw5ttJHzjpSZxof0A2rako-0qs" --origin "adscerttestverifier.dev"`
+- add an "&" to the end of the command to run in background, or run in a separate shell
+
+**Run the testreceiver web server:**
+
+`go run . testreceiver --server_port 5000 --verifier_address localhost:4000`
+- add an "&" to the end of the command to run in background, or run in a separate shell
+
+**Send a signed request to the web server:**
+
+`curl http://adscerttestverifier.dev:5000 -H "X-Ads-Cert-Auth: from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=6Rpf4qD2LP_9&status=1&timestamp=220912T200513&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=OcQzM62rkJk0&sigu=_44H63NN69Nb"`
+
 
 ### Sign requests and log to file
-Alternatively, you can start the signing server to periodically log the invocating url, signature, hashed url, and hashed request to a log file that can be verified offline.
-
-Start the signing server to log to signature_log_file path.
-```
-go run examples/signer/example-signer.go --frequency 1s --logtostderr --body '{"sample": "request"}' --origin_callsign=ssai-serving.tk --url='http://ads.ad-exchange.tk:8090/request?param1=example&param2=another' --signature_log_file=requests.log
-```
-
-### Verify log file
-The log parser verifier will verify all entries in the log file and output a summary.
-```
-go run examples/verifier/log-parser/verifier-parser.go --origin_callsign=ssai-serving.tk --host_callsign=exchange-holding-company.ga --logtostderr --signature_log_file=requests.log
-```
-
-### Use logger interface
-`./pkg/adscert/logger` directory holds global logger interface along with a `standard_golang_logger` implementation which is being used as default logger. Default log level is INFO. Using the `SetLoggerImpl()` method in `./pkg/adscert/logger/logger.go` interface you can implement any custom logger and set it as global logger in your application.
+logging for cmd based verification to be added
 
 ### Modify workflows
 You can add custom workflows and github actions to `.github/workflows` folder. Currently `go.yml` includes the build and release steps including creating and pushing a new tag. A new release and tag only gets created only on main branch and push event.
@@ -140,6 +209,5 @@ You can add custom workflows and github actions to `.github/workflows` folder. C
 
 ## Contributing
 Report bugs, request features and suggest improvements [on Github](https://github.com/InteractiveAdvertisingBureau/adscert_server/issues)
-
 
 Or open up a [pull request](https://github.com/InteractiveAdvertisingBureau/adscert_server/compare)
