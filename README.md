@@ -140,7 +140,7 @@ The private keys of these domains are disclosed here, but any production impleme
 
 **Sign a message to adscerttestverifier.dev (run against adscerttestsigner signatory):**
 
-`go run . testsign --url "https://adscerttestver ifier.dev"`
+`go run . testsign --url "https://adscerttestverifier.dev"`
 - run twice
 - will fail on first run because credentials for the invoked url do not yet exist in the signatory; credentials will be updated after the failure, and the signing attempt will succeed on the second run
 receiving party must have a published public key for signing to succeed
