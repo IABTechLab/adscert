@@ -73,13 +73,13 @@ $ docker run -p 3000:3000 -p 3001:3001 adscert:latest --origin publica-ssai.com 
 ## Example Domains
 Two domains, hosted by the tech lab, are availible for testing the signing and verification process:
 
-- `aderttestsigner.dev`
+- `adscerttestsigner.dev`
 
 - Public key:  LxqTmAIw8Beujvf42ni9V7r1wpVPPxtrD5nFRxlwy0U
 
 - Private key: Ys83NKuuYxCVDUbmA671x3zAFsQ-EnNxmC2JLuBlGAU
 
-- `aderttestverifier.dev`
+- `adscerttestverifier.dev`
 
 - Public key:  uNzTFA2_QsCcxsVET8q-IDtEaDn_D3Q6xscev1TFsjc
 
