@@ -62,7 +62,7 @@ Clients are available for various langauges:
 Commands are also provided to test the signing and verification functionality; details for running them is included below, see "Examples"
 
 ## Docker
-
+-- deprecated --
 The `Signatory` can be run from inside a Docker container:
 
 ```
