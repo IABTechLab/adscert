@@ -200,14 +200,6 @@ receiving party must have a published public key for signing to succeed
 
 
 
-
-
-
-
-
-
-
-
 ## Docker Examples:
 
 The following examples take advantage of the example domains above to test the signing and verification process against a signatory and web server running in a docker container. The signatory and web server can be run locally, or within a docker container.
@@ -304,17 +296,6 @@ receiving party must have a published public key for signing to succeed
 **Send a signed request to the web server:**
 
 `curl http://adscerttestverifier.dev:5000 -H "X-Ads-Cert-Auth: from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=6Rpf4qD2LP_9&status=1&timestamp=220912T200513&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=OcQzM62rkJk0&sigu=_44H63NN69Nb"`
-
-
-
-
-
-
-
-
-
-
-
 
 
 
