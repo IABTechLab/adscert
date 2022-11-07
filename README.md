@@ -224,7 +224,7 @@ The adscerttestsigner and adscerttestverifier used in these examples employ an i
 The private keys of these domains are disclosed here, but any production implementation should **never** publicly disclose its private key 
 
 
-### To sign and verify a message between adscerttestsigner.dev and adscerttestverifier.dev within the docker containers, follow these steps:
+### To sign and verify a message between adscerttestsigner.dev and adscerttestverifier.dev, follow these steps:
 
 **Run the Signer docker container:**
 
@@ -260,7 +260,7 @@ receiving party must have a published public key for signing to succeed
 - will fail on first run because credentials for the signer do not yet exist in the verifier signatory; credentials will be updated after the failure, and the verification attempt will succeed on the second run
 the signing and receiving/verifying parties must have published public keys for verification to succeed
 
-### To Sign a Request, invoke it against a local web server, and verify the signature, within the docker containers do the following:
+### To Sign a Request, invoke it against a local web server, and verify the signature, do the following:
 
 
 **Run the signer docker container:**
