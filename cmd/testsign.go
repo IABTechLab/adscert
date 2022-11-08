@@ -17,7 +17,7 @@ package cmd
 
 import (
 	"bytes"
-	"fmt"
+	"encoding/hex"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -57,12 +57,12 @@ var (
 				if err != nil {
 					logger.Fatalf("Failed to invoke HTTP request: %v", err)
 				}
-				fmt.Printf("client: status code: %d\n", resp.StatusCode)
+				logger.Infof("HTTP response status code: %d\n", resp.StatusCode)
 				respBody, err := ioutil.ReadAll(resp.Body)
 				if err != nil {
 					logger.Fatalf("Failed to read response: %v", err)
 				}
-				fmt.Print(string(respBody))
+				logger.Info("Received HTTP response body:\n" + string(respBody))
 			}
 		},
 	}
@@ -92,6 +92,8 @@ func init() {
 
 func signRequest(testsignParams *testsignParameters) *api.AuthenticatedConnectionSignatureResponse {
 
+	logger.Infof("Connecting to signatory server at %s\n", testsignParams.serverAddress)
+
 	// Establish the gRPC connection that the client will use to connect to the
 	// signatory server.  This basic example uses unauthenticated connections
 	// which should not be used in a production environment.
@@ -112,6 +114,7 @@ func signRequest(testsignParams *testsignParameters) *api.AuthenticatedConnectio
 	var urlToSign string
 	if strings.HasPrefix(testsignParams.url, "http://") && testsignParams.signURLAsHTTPS {
 		urlToSign = "https://" + testsignParams.url[7:]
+		logger.Infof("Rewrote URL to HTTPS (from %s to %s)", testsignParams.url, urlToSign)
 	} else {
 		urlToSign = testsignParams.url
 	}
@@ -122,8 +125,10 @@ func signRequest(testsignParams *testsignParameters) *api.AuthenticatedConnectio
 	reqInfo := &api.RequestInfo{}
 	signatory.SetRequestInfo(reqInfo, urlToSign, []byte(testsignParams.body))
 
+	logger.Infof("Calculated hashes:\n\t URL: %s\n\tBody: %s", hex.EncodeToString(reqInfo.UrlHash), hex.EncodeToString(reqInfo.BodyHash))
+
 	// Request the signature.
-	logger.Infof("signing request for URL: %v", urlToSign)
+	logger.Infof("Signing request for URL: %v", urlToSign)
 	signatureResponse, err := signatoryClient.SignAuthenticatedConnection(
 		&api.AuthenticatedConnectionSignatureRequest{
 			RequestInfo: reqInfo,

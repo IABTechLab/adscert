@@ -12,7 +12,6 @@ import (
 	"github.com/IABTechLab/adscert/internal/formats"
 	"github.com/IABTechLab/adscert/pkg/adscert/api"
 	"github.com/IABTechLab/adscert/pkg/adscert/discovery"
-	"github.com/IABTechLab/adscert/pkg/adscert/logger"
 	"github.com/IABTechLab/adscert/pkg/adscert/metrics"
 	"github.com/benbjohnson/clock"
 )
@@ -72,7 +71,6 @@ func (s *LocalAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(req
 
 	domainInfos, err := s.counterpartyManager.LookupIdentitiesForDomain(request.RequestInfo.InvokingDomain)
 	if err != nil || len(domainInfos) == 0 {
-		logger.Infof("counterparty lookup error")
 		metrics.RecordSigning(adscerterrors.ErrSigningCounterpartyLookup)
 		response.SignatureOperationStatus = api.SignatureOperationStatus_SIGNATURE_OPERATION_STATUS_SIGNATORY_INTERNAL_ERROR
 		return response, err
@@ -144,7 +142,6 @@ func (s *LocalAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(r
 
 		for _, signatureInfo := range requestInfo.SignatureInfo {
 			decodeStatus := s.checkSingleSignature(requestInfo, signatureInfo)
-			logger.Infof("%v", decodeStatus)
 			verificationInfo.SignatureDecodeStatus = append(verificationInfo.SignatureDecodeStatus, decodeStatus)
 		}
 
@@ -166,21 +163,18 @@ func (s *LocalAuthenticatedConnectionsSignatory) checkSingleSignature(requestInf
 
 	// Validate invocation hostname matches request
 	if acs.GetAttributeInvoking() != requestInfo.InvokingDomain {
-		logger.Infof("unrelated signature %s versus %s", acs.GetAttributeInvoking(), requestInfo.InvokingDomain)
 		metrics.RecordVerify(adscerterrors.ErrVerifySignatureRequestHostMismatch)
 		return api.SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_UNRELATED_SIGNATURE
 	}
 
 	domainInfos, err := s.counterpartyManager.LookupIdentitiesForDomain(acs.GetAttributeFrom())
 	if err != nil || len(domainInfos) == 0 {
-		logger.Infof("counterparty lookup error")
 		metrics.RecordVerify(adscerterrors.ErrVerifyCounterpartyLookup)
 		return api.SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_COUNTERPARTY_LOOKUP_ERROR
 	}
 
 	for _, domainInfo := range domainInfos {
 		if _, hasSecret := domainInfo.GetSharedSecret(); !hasSecret {
-			logger.Infof("no shared secret")
 			metrics.RecordVerify(adscerterrors.ErrVerifyMissingSharedSecret)
 			return api.SignatureDecodeStatus_SIGNATURE_DECODE_STATUS_NO_SHARED_SECRET_AVAILABLE
 		}

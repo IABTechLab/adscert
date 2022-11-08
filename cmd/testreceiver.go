@@ -49,6 +49,7 @@ type testreceiverParameters struct {
 	verifierAddress  string
 	verifyingTimeout time.Duration
 	verifyURLAsHTTPS bool
+	logRequests      bool
 }
 
 func init() {
@@ -58,6 +59,7 @@ func init() {
 	testreceiverCmd.Flags().StringVar(&testreceiverParams.verifierAddress, "verifier_address", "localhost:4000", "address of verification server")
 	testreceiverCmd.Flags().DurationVar(&testreceiverParams.verifyingTimeout, "verifying_timeout", 1000*time.Millisecond, "Specifies how long this client will wait for verification to finish before abandoning.")
 	testreceiverCmd.Flags().BoolVar(&testreceiverParams.verifyURLAsHTTPS, "verify_as_https_url", false, "If true, assumes that URL uses https:// prefix; otherwise, assumes http://")
+	testreceiverCmd.Flags().BoolVar(&testreceiverParams.logRequests, "log_requests", false, "If true, write server responses to log in addition to returning in HTTP response")
 }
 
 func startServer(testreceiverParams *testreceiverParameters) {
@@ -118,11 +120,12 @@ func startServer(testreceiverParams *testreceiverParameters) {
 		if err != nil {
 			logger.Warningf("unable to verify message: %v", err)
 		}
-		verificationResponseProtoText := prototext.Format(verificationResponse)
+		verificationResponseText := formatResponse(urlStringReconstruction, requestDump, verificationResponse)
 
-		verificationResponseText := fmt.Sprintf("Reconstructed URL:%s\nIncoming HTTP request (approximate):\n%s\n\nVerification result:\n%s",
-			urlStringReconstruction, string(requestDump), verificationResponseProtoText)
-		logger.Info(verificationResponseText)
+		if testreceiverParams.logRequests {
+			logger.Info(verificationResponseText)
+		}
+
 		w.Write([]byte(verificationResponseText))
 	})
 
@@ -132,4 +135,17 @@ func startServer(testreceiverParams *testreceiverParameters) {
 	if err := http.ListenAndServe(port, nil); err != nil {
 		logger.Errorf("Error starting HTTP server: %v", err)
 	}
+}
+
+func formatResponse(urlStringReconstruction string, requestDump []byte, verificationResponse *api.AuthenticatedConnectionVerificationResponse) string {
+	verificationResponseProtoText := prototext.Format(verificationResponse)
+	return fmt.Sprintf(`testreceiver received HTTP request
+Reconstructed URL: %s
+
+Incoming HTTP request (approximate):
+%s
+
+Verification result:
+%s
+`, urlStringReconstruction, string(requestDump), verificationResponseProtoText)
 }
