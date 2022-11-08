@@ -118,10 +118,11 @@ func startServer(testreceiverParams *testreceiverParameters) {
 		if err != nil {
 			logger.Warningf("unable to verify message: %v", err)
 		}
-		verificationResponseText := prototext.Format(verificationResponse)
+		verificationResponseProtoText := prototext.Format(verificationResponse)
 
-		logger.Infof("Reconstructed URL:%s\nIncoming HTTP request (approximate):\n%s\n\nVerification result:\n%s",
-			urlStringReconstruction, string(requestDump), verificationResponseText)
+		verificationResponseText := fmt.Sprintf("Reconstructed URL:%s\nIncoming HTTP request (approximate):\n%s\n\nVerification result:\n%s",
+			urlStringReconstruction, string(requestDump), verificationResponseProtoText)
+		logger.Info(verificationResponseText)
 		w.Write([]byte(verificationResponseText))
 	})
 
