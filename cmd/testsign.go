@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,6 +16,11 @@ limitations under the License.
 package cmd
 
 import (
+	"bytes"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -36,7 +41,29 @@ var (
 		Use:   "testsign",
 		Short: "Given a URL to invoke (and optionally, a request body) generate a signature.",
 		Run: func(cmd *cobra.Command, args []string) {
-			signRequest(testsignParams)
+			signatureResponse := signRequest(testsignParams)
+
+			if testsignParams.sendRequest {
+				req, err := http.NewRequest(testsignParams.method, testsignParams.url, bytes.NewReader([]byte(testsignParams.body)))
+				if err != nil {
+					logger.Fatalf("Failed to construct HTTP request: %v", err)
+				}
+
+				for _, signature := range signatureResponse.GetRequestInfo().GetSignatureInfo() {
+					req.Header.Add("X-Ads-Cert-Auth", signature.GetSignatureMessage())
+				}
+
+				resp, err := http.DefaultClient.Do(req)
+				if err != nil {
+					logger.Fatalf("Failed to invoke HTTP request: %v", err)
+				}
+				fmt.Printf("client: status code: %d\n", resp.StatusCode)
+				respBody, err := ioutil.ReadAll(resp.Body)
+				if err != nil {
+					logger.Fatalf("Failed to read response: %v", err)
+				}
+				fmt.Print(string(respBody))
+			}
 		},
 	}
 )
@@ -46,15 +73,21 @@ type testsignParameters struct {
 	serverAddress  string
 	body           string
 	signingTimeout time.Duration
+	sendRequest    bool
+	method         string
+	signURLAsHTTPS bool
 }
 
 func init() {
 	rootCmd.AddCommand(testsignCmd)
 
 	testsignCmd.Flags().StringVar(&testsignParams.url, "url", "", "URL to invoke")
+	testsignCmd.Flags().BoolVar(&testsignParams.signURLAsHTTPS, "sign_as_https_url", false, "If true, rewrites an http:// URL to include an https:// prefix")
 	testsignCmd.Flags().StringVar(&testsignParams.serverAddress, "server_address", "localhost:3000", "address of grpc server")
 	testsignCmd.Flags().StringVar(&testsignParams.body, "body", "", "POST request body")
-	testsignCmd.Flags().DurationVar(&testsignParams.signingTimeout, "signing_timeout", 5*time.Millisecond, "Specifies how long this client will wait for signing to finish before abandoning.")
+	testsignCmd.Flags().DurationVar(&testsignParams.signingTimeout, "signing_timeout", 50*time.Millisecond, "Specifies how long this client will wait for signing to finish before abandoning.")
+	testsignCmd.Flags().BoolVar(&testsignParams.sendRequest, "send_request", false, "If true, invokes the specified URL on the remote server")
+	testsignCmd.Flags().StringVar(&testsignParams.method, "method", "GET", "The HTTP request method, GET or POST")
 }
 
 func signRequest(testsignParams *testsignParameters) *api.AuthenticatedConnectionSignatureResponse {
@@ -75,14 +108,22 @@ func signRequest(testsignParams *testsignParameters) *api.AuthenticatedConnectio
 	clientOpts := &signatory.AuthenticatedConnectionsSignatoryClientOptions{Timeout: testsignParams.signingTimeout}
 	signatoryClient := signatory.NewAuthenticatedConnectionsSignatoryClient(conn, clientOpts)
 
+	// Rewrite an HTTP url as HTTPS if requested by command line flag.
+	var urlToSign string
+	if strings.HasPrefix(testsignParams.url, "http://") && testsignParams.signURLAsHTTPS {
+		urlToSign = "https://" + testsignParams.url[7:]
+	} else {
+		urlToSign = testsignParams.url
+	}
+
 	// The RequestInfo proto contains details about the individual ad request
 	// being signed.  A SetRequestInfo helper function derives a hash of the
 	// destination URL and body, setting these value on the RequestInfo message.
 	reqInfo := &api.RequestInfo{}
-	signatory.SetRequestInfo(reqInfo, testsignParams.url, []byte(testsignParams.body))
+	signatory.SetRequestInfo(reqInfo, urlToSign, []byte(testsignParams.body))
 
 	// Request the signature.
-	logger.Infof("signing request for url: %v", testsignParams.url)
+	logger.Infof("signing request for URL: %v", urlToSign)
 	signatureResponse, err := signatoryClient.SignAuthenticatedConnection(
 		&api.AuthenticatedConnectionSignatureRequest{
 			RequestInfo: reqInfo,
