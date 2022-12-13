@@ -4,6 +4,11 @@ For more information about the ads.cert 2.0 suite of protocols, visit [https://i
 
 Contributing? Please review the IAB Tech Lab Open Source Initiative Governance guidelines [here](http://iabtechlab.com/opensource).
 
+Report bugs, request features and suggest improvements [on Github](https://github.com/InteractiveAdvertisingBureau/adscert_server/issues)
+
+Or open up a [pull request](https://github.com/InteractiveAdvertisingBureau/adscert_server/compare)
+
+
 # ads.cert
 ## Authenticated Connections Protocol
 
@@ -61,15 +66,6 @@ Clients are available for various langauges:
 
 Commands are also provided to test the signing and verification functionality; details for running them is included below, see "Examples"
 
-## Docker
--- deprecated --
-The `Signatory` can be run from inside a Docker container:
-
-```
-$ make build-grpc-server-container
-$ docker run -p 3000:3000 -p 3001:3001 adscert:latest --origin publica-ssai.com --private_key "${ADSCERT_SECRET}"
-```
-
 ## Example Domains
 Two domains, hosted by the tech lab, are availible for testing the signing and verification process:
 
@@ -112,7 +108,7 @@ To retrieve the current, complete dns records for these test domains, run the fo
 `dig _delivery._adscert.adscerttestverifier.dev TXT`
 
 
-## Examples:
+## Local Examples:
 The following examples take advantage of the example domains above to test the signing and verification process against a signatory and web server. The signatory and web server can be run locally, or within a docker container.
 
 To build and test the ads.cert authenticted connections binary **locally**, run the following command from within a local copy of this directory
@@ -140,7 +136,7 @@ The private keys of these domains are disclosed here, but any production impleme
 
 **Sign a message to adscerttestverifier.dev (run against adscerttestsigner signatory):**
 
-`go run . testsign --url "https://adscerttestver ifier.dev"`
+`go run . testsign --url "https://adscerttestverifier.dev"`
 - run twice
 - will fail on first run because credentials for the invoked url do not yet exist in the signatory; credentials will be updated after the failure, and the signing attempt will succeed on the second run
 receiving party must have a published public key for signing to succeed
@@ -200,14 +196,116 @@ receiving party must have a published public key for signing to succeed
 `curl http://adscerttestverifier.dev:5000 -H "X-Ads-Cert-Auth: from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=6Rpf4qD2LP_9&status=1&timestamp=220912T200513&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=OcQzM62rkJk0&sigu=_44H63NN69Nb"`
 
 
+
+
+
+
+## Docker Examples:
+
+The following examples take advantage of the example domains above to test the signing and verification process against a signatory and web server running in a docker container. The signatory and web server can be run locally, or within a docker container.
+
+To build and test the ads.cert authenticted connections binary **in a docker container**, run the following command from within a local copy of this directory
+
+### Build the latest version of the docker image:
+
+`docker build -t adscert-image .`
+
+
+### To generate an insecure private and public key pair, run:
+
+`go run . basicinsecurekeygen`
+
+**NOTE**
+
+The private key generated in this fashion should never be used in a production environment, and are for demo purposes only.
+
+The adscerttestsigner and adscerttestverifier used in these examples employ an insecure private and public key pair. 
+
+The private keys of these domains are disclosed here, but any production implementation should **never** publicly disclose its private key 
+
+
+### To sign and verify a message between adscerttestsigner.dev and adscerttestverifier.dev, follow these steps:
+
+**Run the Signer docker container:**
+
+`docker run -d -p 3000:3000 --name signer-container adscert-image ./adscert signatory --server_port 3000 --metrics_port 3001 --private_key "Ys83NKuuYxCVDUbmA671x3zAFsQ-EnNxmC2JLuBlGAU" --origin "adscerttestsigner.dev" &`
+- if the docker container already exists, start it by running:
+`docker start signer-container`
+
+
+**Sign a message to adscerttestverifier.dev (runs against the signer-container):**
+
+`go run . testsign --url "https://adscerttestverifier.dev"`
+- run twice
+- will fail on first run because credentials for the invoked url do not yet exist in the signatory; credentials will be updated after the failure, and the signing attempt will succeed on the second run
+receiving party must have a published public key for signing to succeed
+
+**(Optional) stop and remove the Test Signer Signatory container:**
+
+`docker stop signer-container`
+
+`docker rm signer-container`
+
+**Run the Verifier docker container:**
+
+`docker run -d -p 4000:4000 -p 5000:5000 --name verifier-container adscert-image ./adscert signatory --server_port 4000 --metrics_port 4001 --private_key "6mkLbsTBKs0UwYLkBdw5ttJHzjpSZxof0A2rako-0qs" --origin "adscerttestverifier.dev" &`
+- if the docker container already exists, start it by running:
+`docker start verifier-container`
+
+
+**Verify the message (runs against the verifier-container):**
+
+`go run . testverify --url "https://adscerttestverifier.dev" --signatureMessage "from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=mBJo7EYj9XF9&status=1&timestamp=220810T142237&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=ugN9tqMd6h0p&sigu=pxQd8BV20lHg"`
+- run twice
+- will fail on first run because credentials for the signer do not yet exist in the verifier signatory; credentials will be updated after the failure, and the verification attempt will succeed on the second run
+the signing and receiving/verifying parties must have published public keys for verification to succeed
+
+### To Sign a Request, invoke it against a web server, and verify the signature, do the following:
+
+
+**Run the signer docker container:**
+
+`docker run -d -p 3000:3000 --name signer-container adscert-image ./adscert signatory --server_port 3000 --metrics_port 3001 --private_key "Ys83NKuuYxCVDUbmA671x3zAFsQ-EnNxmC2JLuBlGAU" --origin "adscerttestsigner.dev" &`
+- if the docker container already exists, start it by running:
+`docker start signer-container`
+
+
+**Sign a message to adscerttestverifier.dev (runs against the signer-container):**
+
+`go run . testsign --url "https://adscerttestverifier.dev"`
+- run twice
+- will fail on first run because credentials for the invoked url do not yet exist in the signatory; credentials will be updated after the failure, and the signing attempt will succeed on the second run
+receiving party must have a published public key for signing to succeed
+
+**(Optional) stop and remove the signer-container:**
+
+`docker stop signer-container`
+
+`docker rm signer-container`
+
+**Run the Verifer docker container:**
+
+`docker run -d -p 4000:4000 -p 5000:5000 --name verifier-container adscert-image ./adscert signatory --server_port 4000 --metrics_port 4001 --private_key "6mkLbsTBKs0UwYLkBdw5ttJHzjpSZxof0A2rako-0qs" --origin "adscerttestverifier.dev" &`
+- if the docker container already exists, start it by running:
+`docker start verifier-container`
+
+**Run the testreceiver web server in the verifier-container:**
+
+`docker exec verifier-container ./adscert testreceiver --server_port 5000 --verifier_address localhost:4000 &`
+
+**Send a signed request to the web server:**
+
+`curl http://adscerttestverifier.dev:5000 -H "X-Ads-Cert-Auth: from=adscerttestsigner.dev&from_key=LxqTmA&invoking=adscerttestverifier.dev&nonce=6Rpf4qD2LP_9&status=1&timestamp=220912T200513&to=adscerttestverifier.dev&to_key=uNzTFA; sigb=OcQzM62rkJk0&sigu=_44H63NN69Nb"`
+
+
+
+
+
+
 ### Sign requests and log to file
 logging for cmd based verification to be added
 
 ### Modify workflows
+
 You can add custom workflows and github actions to `.github/workflows` folder. Currently `go.yml` includes the build and release steps including creating and pushing a new tag. A new release and tag only gets created only on main branch and push event.
 [More info](https://docs.github.com/en/actions/reference/events-that-trigger-workflows).
-
-## Contributing
-Report bugs, request features and suggest improvements [on Github](https://github.com/InteractiveAdvertisingBureau/adscert_server/issues)
-
-Or open up a [pull request](https://github.com/InteractiveAdvertisingBureau/adscert_server/compare)
