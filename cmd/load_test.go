@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"encoding/hex"
 	"github.com/IABTechLab/adscert/pkg/adscert/api"
 	"github.com/IABTechLab/adscert/pkg/adscert/logger"
 	"github.com/IABTechLab/adscert/pkg/adscert/signatory"
@@ -18,11 +17,10 @@ import (
 	"gonum.org/v1/plot/vg"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/protobuf/encoding/prototext"
 )
 
 func TestLoadNoOp(t *testing.T) {
-	timeoutList := []time.Duration{1 * time.Millisecond}
+	timeoutList := []time.Duration{1 * time.Millisecond, 10 * time.Millisecond}
 	for _, timeout := range timeoutList {
 		signBatchesAndPlot(timeout, true)
 	}
@@ -30,7 +28,7 @@ func TestLoadNoOp(t *testing.T) {
 }
 
 func TestLoadSigning(t *testing.T) {
-	timeoutList := []time.Duration{1 * time.Millisecond}
+	timeoutList := []time.Duration{1 * time.Millisecond, 10 * time.Millisecond}
 	for _, timeout := range timeoutList {
 		signBatchesAndPlot(timeout, false)
 	}
@@ -583,8 +581,6 @@ func plotResults(iterationResults map[int][]float64, maxNumOfRequests int, timeo
 }
 
 func signRequestOverConnection(testsignParams *testsignParameters, conn *grpc.ClientConn) *api.AuthenticatedConnectionSignatureResponse {
-	logger.Infof("Connecting to signatory server at %s\n", testsignParams.serverAddress)
-
 	// Create a reusable Signatory Client that provides a lightweight wrapper
 	// around the RPC client stub.  This code performs some basic request
 	// timeout and error handling logic.
@@ -595,7 +591,6 @@ func signRequestOverConnection(testsignParams *testsignParameters, conn *grpc.Cl
 	var urlToSign string
 	if strings.HasPrefix(testsignParams.url, "http://") && testsignParams.signURLAsHTTPS {
 		urlToSign = "https://" + testsignParams.url[7:]
-		logger.Infof("Rewrote URL to HTTPS (from %s to %s)", testsignParams.url, urlToSign)
 	} else {
 		urlToSign = testsignParams.url
 	}
@@ -606,24 +601,11 @@ func signRequestOverConnection(testsignParams *testsignParameters, conn *grpc.Cl
 	reqInfo := &api.RequestInfo{}
 	signatory.SetRequestInfo(reqInfo, urlToSign, []byte(testsignParams.body))
 
-	logger.Infof("Calculated hashes:\n\t URL: %s\n\tBody: %s", hex.EncodeToString(reqInfo.UrlHash), hex.EncodeToString(reqInfo.BodyHash))
-
 	// Request the signature.
-	logger.Infof("Signing request for URL: %v", urlToSign)
-	signatureResponse, err := signatoryClient.SignAuthenticatedConnection(
+	signatureResponse, _ := signatoryClient.SignAuthenticatedConnection(
 		&api.AuthenticatedConnectionSignatureRequest{
 			RequestInfo: reqInfo,
 		})
-	if err != nil {
-		logger.Warningf("unable to sign message: %v", err)
-	}
 
-	// In most circumstances a signatureResponse will be returned which includes
-	// detals about the successful or failed signature attempt.
-	if signatureResponse != nil {
-		logger.Infof("signature response:\n%s", prototext.Format(signatureResponse))
-	} else {
-		logger.Warningf("signature response is missing")
-	}
 	return signatureResponse
 }
