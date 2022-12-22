@@ -22,7 +22,7 @@ import (
 )
 
 func TestLoadNoOp(t *testing.T) {
-	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
+	timeoutList := []time.Duration{1 * time.Millisecond}
 	for _, timeout := range timeoutList {
 		signBatchesAndPlot(timeout, true)
 	}
@@ -30,7 +30,7 @@ func TestLoadNoOp(t *testing.T) {
 }
 
 func TestLoadSigning(t *testing.T) {
-	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
+	timeoutList := []time.Duration{1 * time.Millisecond}
 	for _, timeout := range timeoutList {
 		signBatchesAndPlot(timeout, false)
 	}
