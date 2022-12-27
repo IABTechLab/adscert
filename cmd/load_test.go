@@ -10,7 +10,6 @@ import (
 
 	"github.com/IABTechLab/adscert/pkg/adscert/api"
 	"github.com/IABTechLab/adscert/pkg/adscert/logger"
-	"github.com/IABTechLab/adscert/pkg/adscert/signatory"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
 	"gonum.org/v1/plot/plotutil"
@@ -35,8 +34,8 @@ func TestLoadSigning(t *testing.T) {
 
 }
 
-func DeactivatedTestLoadVerification(t *testing.T) {
-	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
+func TestLoadVerification(t *testing.T) {
+	timeoutList := []time.Duration{1 * time.Millisecond, 10 * time.Millisecond}
 	for _, timeout := range timeoutList {
 		verifyBatchesAndPlot(timeout)
 	}
@@ -156,6 +155,17 @@ func verifyBatchesAndPlot(timeout time.Duration) {
 
 	testsPerTestSize := 10
 	c := make(chan api.SignatureDecodeStatus)
+
+	// Establish the gRPC connection that the client will use to connect to the
+	// signatory server.  This basic example uses unauthenticated connections
+	// which should not be used in a production environment.
+	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+	conn, err := grpc.Dial(testverifyParams.serverAddress, opts...)
+	if err != nil {
+		logger.Fatalf("Failed to dial: %v", err)
+	}
+	defer conn.Close()
+
 	iterationResults := map[int][]float64{}
 	lowestSuccessPercent := 1.00
 	numOfRequests := 1
@@ -169,7 +179,7 @@ func verifyBatchesAndPlot(timeout time.Duration) {
 			iterationResults[numOfRequests] = []float64{}
 			lowestSuccessPercent = 1.00
 			for i := 0; i < testsPerTestSize; i++ {
-				iterationResult := sendVerificationRequests(numOfRequests, testverifyParams, c)
+				iterationResult := sendVerificationRequestsOverConnection(numOfRequests, testverifyParams, c, conn)
 				iterationResultSuccessPercent := float64(iterationResult[1]) / float64(numOfRequests)
 				if lowestSuccessPercent > iterationResultSuccessPercent {
 					lowestSuccessPercent = iterationResultSuccessPercent
@@ -191,9 +201,9 @@ func verifyBatchesAndPlot(timeout time.Duration) {
 
 }
 
-func sendVerificationRequests(numOfRequests int, testverifyParams *testverifyParameters, c chan api.SignatureDecodeStatus) []int {
+func sendVerificationRequestsOverConnection(numOfRequests int, testverifyParams *testverifyParameters, c chan api.SignatureDecodeStatus, conn *grpc.ClientConn) []int {
 	for i := 0; i < numOfRequests; i++ {
-		go verifyToChannel(testverifyParams, c)
+		go verifyToChannelOverConnection(testverifyParams, c, conn)
 	}
 
 	var res []api.SignatureDecodeStatus
@@ -210,8 +220,8 @@ func sendVerificationRequests(numOfRequests int, testverifyParams *testverifyPar
 	return iterationResult
 }
 
-func verifyToChannel(testverifyParams *testverifyParameters, c chan api.SignatureDecodeStatus) {
-	verificationResponse := verifyRequest(testverifyParams)
+func verifyToChannelOverConnection(testverifyParams *testverifyParameters, c chan api.SignatureDecodeStatus, conn *grpc.ClientConn) {
+	verificationResponse := verifyRequestOverConnection(testverifyParams, conn)
 	if len(verificationResponse.GetVerificationInfo()) > 0 && len(verificationResponse.GetVerificationInfo()[0].GetSignatureDecodeStatus()) > 0 {
 		signatureStatus := verificationResponse.GetVerificationInfo()[0].GetSignatureDecodeStatus()[0]
 		c <- signatureStatus // send status to c
@@ -578,34 +588,4 @@ func plotResults(iterationResults map[int][]float64, maxNumOfRequests int, timeo
 	if err := p.Save(10*vg.Inch, 6*vg.Inch, fmt.Sprintf("load_test_results/%sLoadTest%s.png", opType, fmt.Sprint(timeout))); err != nil {
 		panic(err)
 	}
-}
-
-func signRequestOverConnection(testsignParams *testsignParameters, conn *grpc.ClientConn) *api.AuthenticatedConnectionSignatureResponse {
-	// Create a reusable Signatory Client that provides a lightweight wrapper
-	// around the RPC client stub.  This code performs some basic request
-	// timeout and error handling logic.
-	clientOpts := &signatory.AuthenticatedConnectionsSignatoryClientOptions{Timeout: testsignParams.signingTimeout}
-	signatoryClient := signatory.NewAuthenticatedConnectionsSignatoryClient(conn, clientOpts)
-
-	// Rewrite an HTTP url as HTTPS if requested by command line flag.
-	var urlToSign string
-	if strings.HasPrefix(testsignParams.url, "http://") && testsignParams.signURLAsHTTPS {
-		urlToSign = "https://" + testsignParams.url[7:]
-	} else {
-		urlToSign = testsignParams.url
-	}
-
-	// The RequestInfo proto contains details about the individual ad request
-	// being signed.  A SetRequestInfo helper function derives a hash of the
-	// destination URL and body, setting these value on the RequestInfo message.
-	reqInfo := &api.RequestInfo{}
-	signatory.SetRequestInfo(reqInfo, urlToSign, []byte(testsignParams.body))
-
-	// Request the signature.
-	signatureResponse, _ := signatoryClient.SignAuthenticatedConnection(
-		&api.AuthenticatedConnectionSignatureRequest{
-			RequestInfo: reqInfo,
-		})
-
-	return signatureResponse
 }
