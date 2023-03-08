@@ -9,7 +9,7 @@ require (
 	github.com/prometheus/client_golang v1.12.1
 	github.com/spf13/cobra v1.3.0
 	golang.org/x/crypto v0.1.0
-	golang.org/x/net v0.1.0
+	golang.org/x/net v0.7.0
 	golang.org/x/sync v0.0.0-20220929204114-8fcdb60fdcc0
 	gonum.org/v1/plot v0.12.0
 	google.golang.org/genproto v0.0.0-20220126215142-9970aeb2e350 // indirect
