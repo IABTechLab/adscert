@@ -9,30 +9,33 @@ import (
 	"time"
 
 	"github.com/IABTechLab/adscert/pkg/adscert/api"
+	"github.com/IABTechLab/adscert/pkg/adscert/logger"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
 	"gonum.org/v1/plot/plotutil"
 	"gonum.org/v1/plot/vg"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
-func DeactivatedTestLoadNoOp(t *testing.T) {
-	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
+func TestLoadNoOp(t *testing.T) {
+	timeoutList := []time.Duration{1 * time.Millisecond, 10 * time.Millisecond}
 	for _, timeout := range timeoutList {
 		signBatchesAndPlot(timeout, true)
 	}
 
 }
 
-func DeactivatedTestLoadSigning(t *testing.T) {
-	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
+func TestLoadSigning(t *testing.T) {
+	timeoutList := []time.Duration{1 * time.Millisecond, 10 * time.Millisecond}
 	for _, timeout := range timeoutList {
 		signBatchesAndPlot(timeout, false)
 	}
 
 }
 
-func DeactivatedTestLoadVerification(t *testing.T) {
-	timeoutList := []time.Duration{10 * time.Millisecond, 100 * time.Millisecond, 1000 * time.Millisecond}
+func TestLoadVerification(t *testing.T) {
+	timeoutList := []time.Duration{1 * time.Millisecond, 10 * time.Millisecond}
 	for _, timeout := range timeoutList {
 		verifyBatchesAndPlot(timeout)
 	}
@@ -68,6 +71,17 @@ func signBatchesAndPlot(timeout time.Duration, isNoOp bool) {
 
 	testsPerTestSize := 10
 	c := make(chan api.SignatureOperationStatus)
+
+	// Establish the gRPC connection that the client will use to connect to the
+	// signatory server.  This basic example uses unauthenticated connections
+	// which should not be used in a production environment.
+	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+	conn, err := grpc.Dial(testsignParams.serverAddress, opts...)
+	if err != nil {
+		logger.Fatalf("Failed to dial: %v", err)
+	}
+	defer conn.Close()
+
 	iterationResults := map[int][]float64{}
 	lowestSuccessPercent := 1.00
 	numOfRequests := 1
@@ -81,7 +95,7 @@ func signBatchesAndPlot(timeout time.Duration, isNoOp bool) {
 			iterationResults[numOfRequests] = []float64{}
 			lowestSuccessPercent = 1.00
 			for i := 0; i < testsPerTestSize; i++ {
-				iterationResult := sendSignatureRequests(numOfRequests, testsignParams, c)
+				iterationResult := sendSignatureRequestsOverConnection(numOfRequests, testsignParams, c, conn)
 				iterationResultSuccessPercent := float64(iterationResult[1]) / float64(numOfRequests)
 				if lowestSuccessPercent > iterationResultSuccessPercent {
 					lowestSuccessPercent = iterationResultSuccessPercent
@@ -107,9 +121,9 @@ func signBatchesAndPlot(timeout time.Duration, isNoOp bool) {
 
 }
 
-func sendSignatureRequests(numOfRequests int, testsignParams *testsignParameters, c chan api.SignatureOperationStatus) []int {
+func sendSignatureRequestsOverConnection(numOfRequests int, testsignParams *testsignParameters, c chan api.SignatureOperationStatus, conn *grpc.ClientConn) []int {
 	for i := 0; i < numOfRequests; i++ {
-		go signToChannel(testsignParams, c)
+		go signToChannelOverConnection(testsignParams, c, conn)
 	}
 
 	var res []api.SignatureOperationStatus
@@ -126,8 +140,8 @@ func sendSignatureRequests(numOfRequests int, testsignParams *testsignParameters
 	return iterationResult
 }
 
-func signToChannel(testsignParams *testsignParameters, c chan api.SignatureOperationStatus) {
-	signatureStatus := signRequest(testsignParams)
+func signToChannelOverConnection(testsignParams *testsignParameters, c chan api.SignatureOperationStatus, conn *grpc.ClientConn) {
+	signatureStatus := signRequestOverConnection(testsignParams, conn)
 	c <- signatureStatus.GetSignatureOperationStatus() // send status to c
 }
 
@@ -141,6 +155,17 @@ func verifyBatchesAndPlot(timeout time.Duration) {
 
 	testsPerTestSize := 10
 	c := make(chan api.SignatureDecodeStatus)
+
+	// Establish the gRPC connection that the client will use to connect to the
+	// signatory server.  This basic example uses unauthenticated connections
+	// which should not be used in a production environment.
+	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+	conn, err := grpc.Dial(testverifyParams.serverAddress, opts...)
+	if err != nil {
+		logger.Fatalf("Failed to dial: %v", err)
+	}
+	defer conn.Close()
+
 	iterationResults := map[int][]float64{}
 	lowestSuccessPercent := 1.00
 	numOfRequests := 1
@@ -154,7 +179,7 @@ func verifyBatchesAndPlot(timeout time.Duration) {
 			iterationResults[numOfRequests] = []float64{}
 			lowestSuccessPercent = 1.00
 			for i := 0; i < testsPerTestSize; i++ {
-				iterationResult := sendVerificationRequests(numOfRequests, testverifyParams, c)
+				iterationResult := sendVerificationRequestsOverConnection(numOfRequests, testverifyParams, c, conn)
 				iterationResultSuccessPercent := float64(iterationResult[1]) / float64(numOfRequests)
 				if lowestSuccessPercent > iterationResultSuccessPercent {
 					lowestSuccessPercent = iterationResultSuccessPercent
@@ -176,9 +201,9 @@ func verifyBatchesAndPlot(timeout time.Duration) {
 
 }
 
-func sendVerificationRequests(numOfRequests int, testverifyParams *testverifyParameters, c chan api.SignatureDecodeStatus) []int {
+func sendVerificationRequestsOverConnection(numOfRequests int, testverifyParams *testverifyParameters, c chan api.SignatureDecodeStatus, conn *grpc.ClientConn) []int {
 	for i := 0; i < numOfRequests; i++ {
-		go verifyToChannel(testverifyParams, c)
+		go verifyToChannelOverConnection(testverifyParams, c, conn)
 	}
 
 	var res []api.SignatureDecodeStatus
@@ -195,8 +220,8 @@ func sendVerificationRequests(numOfRequests int, testverifyParams *testverifyPar
 	return iterationResult
 }
 
-func verifyToChannel(testverifyParams *testverifyParameters, c chan api.SignatureDecodeStatus) {
-	verificationResponse := verifyRequest(testverifyParams)
+func verifyToChannelOverConnection(testverifyParams *testverifyParameters, c chan api.SignatureDecodeStatus, conn *grpc.ClientConn) {
+	verificationResponse := verifyRequestOverConnection(testverifyParams, conn)
 	if len(verificationResponse.GetVerificationInfo()) > 0 && len(verificationResponse.GetVerificationInfo()[0].GetSignatureDecodeStatus()) > 0 {
 		signatureStatus := verificationResponse.GetVerificationInfo()[0].GetSignatureDecodeStatus()[0]
 		c <- signatureStatus // send status to c
