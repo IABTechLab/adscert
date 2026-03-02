@@ -16,7 +16,6 @@ import (
 	"github.com/IABTechLab/adscert/pkg/adscert/logger"
 	"github.com/IABTechLab/adscert/pkg/adscert/metrics"
 	"github.com/IABTechLab/adscert/pkg/adscert/signatory"
-	"github.com/benbjohnson/clock"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -46,7 +45,6 @@ func main() {
 	signatoryApi := signatory.NewLocalAuthenticatedConnectionsSignatory(
 		*origin,
 		crypto_rand.Reader,
-		clock.New(),
 		discovery.NewDefaultDnsResolver(),
 		discovery.NewDefaultDomainStore(),
 		time.Duration(30*time.Second), // domain check interval

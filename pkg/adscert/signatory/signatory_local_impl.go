@@ -13,13 +13,11 @@ import (
 	"github.com/IABTechLab/adscert/pkg/adscert/api"
 	"github.com/IABTechLab/adscert/pkg/adscert/discovery"
 	"github.com/IABTechLab/adscert/pkg/adscert/metrics"
-	"github.com/benbjohnson/clock"
 )
 
 func NewLocalAuthenticatedConnectionsSignatory(
 	originCallsign string,
 	secureRandom io.Reader,
-	clock clock.Clock,
 	dnsResolver discovery.DNSResolver,
 	domainStore discovery.DomainStore,
 	domainCheckInterval time.Duration,
@@ -28,7 +26,6 @@ func NewLocalAuthenticatedConnectionsSignatory(
 	return &LocalAuthenticatedConnectionsSignatory{
 		originCallsign:      originCallsign,
 		secureRandom:        secureRandom,
-		clock:               clock,
 		counterpartyManager: discovery.NewDefaultDomainIndexer(dnsResolver, domainStore, domainCheckInterval, domainRenewalInterval, base64PrivateKeys),
 	}
 }
@@ -36,14 +33,13 @@ func NewLocalAuthenticatedConnectionsSignatory(
 type LocalAuthenticatedConnectionsSignatory struct {
 	originCallsign string
 	secureRandom   io.Reader
-	clock          clock.Clock
 
 	counterpartyManager discovery.DomainIndexer
 }
 
 func (s *LocalAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(request *api.AuthenticatedConnectionSignatureRequest) (*api.AuthenticatedConnectionSignatureResponse, error) {
 	var err error
-	startTime := s.clock.Now()
+	startTime := time.Now()
 	response := &api.AuthenticatedConnectionSignatureResponse{RequestInfo: request.RequestInfo}
 
 	if request.RequestInfo.InvokingDomain == "dryrun" {
@@ -59,7 +55,7 @@ func (s *LocalAuthenticatedConnectionsSignatory) SignAuthenticatedConnection(req
 	// add nonce and timestamp if not already provided in the request
 	// this is the typical case to keep the client's usage simple
 	if request.Timestamp == "" {
-		request.Timestamp = s.clock.Now().UTC().Format("060102T150405")
+		request.Timestamp = time.Now().UTC().Format("060102T150405")
 	}
 	if request.Nonce == "" {
 		if request.Nonce, err = s.generateNonce(); err != nil {
@@ -134,7 +130,7 @@ func (s *LocalAuthenticatedConnectionsSignatory) signSingleMessage(request *api.
 
 func (s *LocalAuthenticatedConnectionsSignatory) VerifyAuthenticatedConnection(request *api.AuthenticatedConnectionVerificationRequest) (*api.AuthenticatedConnectionVerificationResponse, error) {
 
-	startTime := s.clock.Now()
+	startTime := time.Now()
 	response := &api.AuthenticatedConnectionVerificationResponse{}
 
 	for _, requestInfo := range request.RequestInfo {
