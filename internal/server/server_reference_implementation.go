@@ -13,7 +13,6 @@ import (
 	"github.com/IABTechLab/adscert/pkg/adscert/metrics"
 	"github.com/IABTechLab/adscert/pkg/adscert/server"
 	"github.com/IABTechLab/adscert/pkg/adscert/signatory"
-	"github.com/benbjohnson/clock"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -23,7 +22,6 @@ func SetUpAdsCertSignatoryServer(grpcServer *grpc.Server, adscertCallSign string
 	signatoryApi := signatory.NewLocalAuthenticatedConnectionsSignatory(
 		adscertCallSign,
 		crypto_rand.Reader,
-		clock.New(),
 		discovery.NewDefaultDnsResolver(),
 		discovery.NewDefaultDomainStore(),
 		domainCheckInterval,

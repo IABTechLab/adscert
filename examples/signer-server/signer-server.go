@@ -13,7 +13,6 @@ import (
 	"github.com/IABTechLab/adscert/pkg/adscert/discovery"
 	"github.com/IABTechLab/adscert/pkg/adscert/logger"
 	"github.com/IABTechLab/adscert/pkg/adscert/signatory"
-	"github.com/benbjohnson/clock"
 )
 
 var (
@@ -35,7 +34,6 @@ func main() {
 	signatoryApi := signatory.NewLocalAuthenticatedConnectionsSignatory(
 		*origin,
 		crypto_rand.Reader,
-		clock.New(),
 		discovery.NewDefaultDnsResolver(),
 		discovery.NewDefaultDomainStore(),
 		time.Duration(30*time.Second), // domain check interval

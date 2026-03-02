@@ -3,7 +3,6 @@ module github.com/IABTechLab/adscert
 go 1.16
 
 require (
-	github.com/benbjohnson/clock v1.3.0
 	github.com/google/go-cmp v0.5.9
 	github.com/google/tink/go v1.6.1
 	github.com/prometheus/client_golang v1.12.1
